@@ -401,7 +401,7 @@ function wiz(step){W.step=step;show('wz');const w=$('wz');
    <label style="font-size:14px"><input type="checkbox" id="az" ${W.useAZ?'checked':''} style="width:auto;margin:0 6px 0 0" onchange="W.useAZ=this.checked;wiz(1)"> Use the A–Z suggested ideas</label>
    <div id="azl" style="display:${W.useAZ?'block':'none'};margin-top:8px;max-height:220px;overflow-y:auto">${W.dates.map((d,i)=>`<div class="erow"><span class="e">${d.e}</span><b style="width:18px">${d.l}</b><input value="${d.t}" placeholder="Idea for ${d.l}" onchange="W.dates[${i}].t=this.value"><input style="max-width:52px" value="${d.e}" onchange="W.dates[${i}].e=this.value"></div>`).join('')}</div></div>
   <button class="btn" onclick="doCreate()">Create 🚀</button>
-  <button class="btn ghost" onclick="wiz(0)">Back</button>
+  <button class="btn ghost" onclick="wiz(0)">Back</button>`;
   setTimeout(()=>{const g=id=>$(id);if(W.custom){g('cc1').onchange=e=>{W.cg1=e.target.value;wiz(1)};g('cc2').onchange=e=>{W.cg2=e.target.value;wiz(1)};g('cl').onchange=e=>{W.clight=e.target.checked}}
    g('wme').oninput=e=>W.me=e.target.value;g('wpa').oninput=e=>W.partner=e.target.value;g('wti').oninput=e=>W.title=e.target.value;
    g('wem').oninput=e=>{const v=[...e.target.value.trim()];if(v.length){W.emoji=v.join('');e.target.value='';wiz(1)}}},50)}
@@ -417,9 +417,9 @@ async function doCreate(){
  if(!W.me.trim()){toast('Add your name first');return}
  const title=W.title.trim()||((W.me.trim()||'Us')+(W.partner.trim()?' & '+W.partner.trim():'')+"'s Adventures");
  const theme=W.custom?{g1:W.cg1,g2:W.cg2,light:W.clight}:THEMES[W.theme];
- const btn=event.target;btn.textContent='Creating…';
+ const btn=(typeof event!=='undefined'&&event&&event.target)?event.target:null;if(btn)btn.textContent='Creating…';
  const r=await api('/create',{title:title,name:W.me.trim()});
- if(!r.ok){toast('Could not create: '+(r.err||'network'));btn.textContent='Create 🚀';return}
+ if(!r.ok){toast('Could not create: '+(r.err||'network'));if(btn)btn.textContent='Create 🚀';return}
  TOK=r.tok;localStorage.cbaTok=TOK;WHO=W.me.trim();localStorage.cbaWho=WHO;
  C={cu:Date.now(),title:title,emoji:W.emoji,names:[W.me.trim(),W.partner.trim()],theme:theme,
     dates:W.useAZ?W.dates.filter(d=>d.t.trim()):[]};
