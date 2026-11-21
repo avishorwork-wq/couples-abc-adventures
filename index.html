@@ -219,7 +219,7 @@ function notifySync(ev){
  const parts=doneActs.map(a=>'✅ Done: '+a);if(mediaTxt)parts.push(mediaTxt+' added!');
  if(parts.length){toast(parts.join(' · '));snd(doneActs.length?'done':'up')}}
 function merge(r){
- if(r.C&&(!C||(r.C.cu||0)>=(C.cu||0))&&JSON.stringify(r.C)!=JSON.stringify(C)){C=r.C;applyTheme();buildGrid();rHead();}
+ if(r.C&&(!C||(r.C.cu||0)>=(C.cu||0))&&JSON.stringify(r.C)!=JSON.stringify(C)){C=r.C;applyTheme();rHead();persist();refresh();}
  let ch=0;const ev=[];
  for(const l in r.S||{}){const a=r.S[l],b=S[l];if(!b||(a.u||0)>(b.u||0)){if(a.done&&!(b&&b.done))ev.push({k:'done',l:l});S[l]=a;ch=1}}
  const by={};M.forEach(m=>by[m.id]=m);let newMedia=0;
