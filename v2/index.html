@@ -423,7 +423,7 @@ function boom(n){const t=C&&C.theme?C.theme:{g1:'#ff6ec4'};const cs=['#ff6ec4','
 
 /* ====== wizard: create / join ====== */
 let W={step:0,me:'',partner:'',title:'',emoji:'💑',theme:0,custom:false,cg1:'#1a1030',cg2:'#4a1c5e',clight:false,useAZ:true,dates:JSON.parse(JSON.stringify(AZ)).map(a=>({l:a[0],e:a[1],t:a[2],d:a[3],a:a[4],b:a[5]}))};
-function show(id){['wz','main','set'].forEach(x=>$(x).style.display=x==id?'block':'none')}
+function show(id){['wz','main','set'].forEach(x=>$(x).style.display=x==id?(x=='main'?'grid':'block'):'none')}
 function wiz(step){W.step=step;show('wz');const w=$('wz');
  if(step==0){w.innerHTML=`<div class="wlogo">💑</div><div class="wt">${APP.name}</div><div class="ws">A shared alphabet of adventures for the two of you.<br>Private, synced, with real notifications.</div>
   <button class="btn" onclick="wiz(1)">✨ Create our adventure</button>
