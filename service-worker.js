@@ -1,4 +1,4 @@
-const CACHE = "cba-static-v1";
+const CACHE = "cba-static-v2";
 const FILES = ["./", "./index.html", "./manifest.json", "./qr.js", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", event => {
@@ -19,8 +19,24 @@ self.addEventListener("fetch", event => {
   const u = new URL(event.request.url);
   // never cache API/media calls
   if (u.origin !== location.origin) return;
+  // network-first for pages so app updates land immediately; cache fallback for offline
+  if (event.request.mode === "navigate" || u.pathname.endsWith("/index.html") || u.pathname.endsWith("/")) {
+    event.respondWith(
+      fetch(event.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(cache => cache.put(event.request, copy));
+        return res;
+      }).catch(() => caches.match(event.request).then(c => c || caches.match("./index.html")))
+    );
+    return;
+  }
+  // cache-first for static assets
   event.respondWith(
-    caches.open(CACHE).then(cache => cache.match(event.request)).then(cached => cached || fetch(event.request))
+    caches.open(CACHE).then(cache => cache.match(event.request)).then(cached => cached || fetch(event.request).then(res => {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => c.put(event.request, copy));
+      return res;
+    }))
   );
 });
 
