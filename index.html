@@ -104,8 +104,8 @@ textarea{min-height:88px;resize:vertical}
 .sw.on{border-color:#fff;transform:scale(1.1);box-shadow:0 4px 12px #0006}
 .erow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #fff2;font-size:14px}
 .erow:last-child{border:0}
-.erow .e{font-size:18px;width:28px;height:28px;line-height:28px;overflow:hidden;text-align:center}
-.erow input{margin:0;background:#fff2;border:0;color:var(--tx);padding:7px 10px;border-radius:10px;font-size:14px;flex:1}
+.erow .e{font-size:18px;width:28px;height:28px;line-height:28px;overflow:hidden;text-align:center;flex:none}
+.erow input{margin:0;min-width:0;background:#fff2;border:0;color:var(--tx);padding:7px 10px;border-radius:10px;font-size:14px;flex:1}
 .erow input::placeholder{color:#fff9}
 body.light .erow input{background:#0001}
 body.light .erow input::placeholder{color:#0006}
@@ -443,7 +443,7 @@ function wiz(step){W.step=step;show('wz');const w=$('wz');
     <label style="font-size:13px"><input type="checkbox" id="cl" ${W.clight?'checked':''} style="width:auto;margin:0 6px 0 0"> Light text-on-pastel</label></div></div>
   <div class="card"><h3>Date ideas</h3><div class="hint">A–Z suggested ideas - edit any, titles are optional, or start blank</div>
    <label style="font-size:14px"><input type="checkbox" id="az" ${W.useAZ?'checked':''} style="width:auto;margin:0 6px 0 0" onchange="W.useAZ=this.checked;wiz(1)"> Use the A–Z suggested ideas</label>
-   <div id="azl" style="display:${W.useAZ?'block':'none'};margin-top:8px;max-height:220px;overflow-y:auto">${W.dates.map((d,i)=>`<div class="erow"><span class="e">${d.e}</span><b style="width:18px">${d.l}</b><input value="${d.t}" placeholder="Idea for ${d.l}" onchange="W.dates[${i}].t=this.value"><input style="max-width:52px" value="${d.e}" onchange="W.dates[${i}].e=this.value"></div>`).join('')}</div></div>
+   <div id="azl" style="display:${W.useAZ?'block':'none'};margin-top:8px;max-height:220px;overflow-y:auto">${W.dates.map((d,i)=>`<div class="erow"><span class="e">${d.e}</span><b style="width:18px;flex:none;text-align:center">${d.l}</b><input value="${d.t}" placeholder="Idea for ${d.l}" onchange="W.dates[${i}].t=this.value"><input style="max-width:52px" value="${d.e}" onchange="W.dates[${i}].e=this.value"></div>`).join('')}</div></div>
   <button class="btn" onclick="doCreate()">Create 🚀</button>
   <button class="btn ghost" onclick="wiz(0)">Back</button>`;
   setTimeout(()=>{const g=id=>$(id);if(W.custom){g('cc1').onchange=e=>{W.cg1=e.target.value;wiz(1)};g('cc2').onchange=e=>{W.cg2=e.target.value;wiz(1)};g('cl').onchange=e=>{W.clight=e.target.checked}}
@@ -536,7 +536,7 @@ async function setView(){snd('tap');show('set');const s=$('set');if(!C){s.innerH
   <div class="swrow">${THEMES.map((t,i)=>`<div class="sw ${C.theme&&C.theme.g1==t.g1?'on':''}" style="background:linear-gradient(135deg,${t.g1},${t.g2})" title="${t.n}" onclick="C.theme={g1:'${t.g1}',g2:'${t.g2}',light:${t.light}};C.cu=Date.now();cfgDirty=true;applyTheme();sv();setView()"></div>`).join('')}
   <div class="sw" style="background:linear-gradient(135deg,${C.theme.g1},${C.theme.g2});display:grid;place-items:center;font-size:11px;color:#fff;text-shadow:0 1px 3px #000" onclick="customTheme()">Custom</div></div></div>
  <div class="card"><h3>Date ideas (${D().length})</h3><div class="hint">Tap one to edit or delete</div>
-  ${D().map((d,i)=>`<div class="erow"><span class="e">${(d.e||'🎯').split(' ')[0]}</span><b style="width:18px">${d.l.match(/^[A-Z]$/)?d.l:'✦'}</b><span style="flex:1">${d.t}</span><span style="cursor:pointer" onclick="ideaForm(${i})">✏️</span><span style="cursor:pointer" onclick="delIdea(${i})">🗑</span></div>`).join('')}
+  ${D().map((d,i)=>`<div class="erow"><span class="e">${(d.e||'🎯').split(' ')[0]}</span><b style="width:18px;flex:none;text-align:center">${d.l.match(/^[A-Z]$/)?d.l:'✦'}</b><span style="flex:1">${d.t}</span><span style="cursor:pointer" onclick="ideaForm(${i})">✏️</span><span style="cursor:pointer" onclick="delIdea(${i})">🗑</span></div>`).join('')}
   <button class="btn ghost" onclick="ideaForm()">＋ Add an idea</button></div>
  <div class="card" id="pair"><h3>🔗 Pairing</h3><div class="hint">Devices linked to this couple (max 2). Removing a device blocks it instantly and frees the slot.</div>
   ${r.ok?r.devices.map(d=>`<div class="dvrow">📱 <b>${d.name||'Unnamed'}</b>${d.self?' <span class="chip">this phone</span>':''}<button onclick="removeDev('${d.did}','${(d.name||'').replace(/'/g,'')}')">Remove</button></div>`).join(''):'<div class="empty">Could not load devices</div>'}
