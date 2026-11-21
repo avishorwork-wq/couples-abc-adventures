@@ -370,7 +370,7 @@ function togMode(){if(!C)return;C.theme.light=!C.theme.light;if(C.theme.light){C
 
 /* ====== render ====== */
 function rHead(){if(!C)return;const nm=(C.names||[]).filter(Boolean).join(' & ');
- if(C.title){$('hsub').textContent=nm?nm+"'s":'';$('htit').textContent=C.title}
+ if(C.title&&C.title!=nm){$('hsub').textContent=nm?nm+"'s":'';$('htit').textContent=C.title}
  else{$('hsub').textContent='';$('htit').textContent=nm||APP.name}
  document.title=C.title||APP.name}
 function dlText(l){const s=S[l];if(!s||!s.dl||s.done)return'';
