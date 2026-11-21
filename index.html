@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1030">
+<title>Couples ABC Adventures</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg1:#1a1030;--bg2:#4a1c5e;--tx:#fff;--glass:rgba(255,255,255,.13);--acc1:#ff6ec4;--acc2:#ffd86e;--field:#fff;--fieldtx:#222}
+body.light{--bg1:#ffe3ef;--bg2:#dcd3ff;--tx:#2b1a3d;--glass:rgba(255,255,255,.7)}
+body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:var(--tx);background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;overflow-x:hidden;transition:background .5s}
+header{padding:40px 16px 8px;text-align:center;position:relative}
+h1{margin:0;line-height:1.1;user-select:none}
+h1 small{display:block;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;opacity:.85;margin-bottom:5px}
+h1 span{display:block;font-size:clamp(24px,8vw,32px);font-weight:900;background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 6px #0004)}
+.hbtn{position:absolute;top:10px;background:none;border:none;font-size:22px;cursor:pointer;z-index:5;padding:4px}
+.bar{height:12px;border-radius:9px;background:var(--glass);margin:12px 6px 4px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc1),var(--acc2));border-radius:9px;transition:width .8s cubic-bezier(.2,1,.3,1)}
+#pt{font-size:13px;opacity:.85}
+#sy{font-size:11px;opacity:.7;margin-top:2px;min-height:14px}
+nav{display:flex;gap:8px;padding:8px 14px}
+nav button{flex:1;padding:11px;border:0;border-radius:14px;background:var(--glass);color:var(--tx);font-size:15px;font-weight:600;transition:.25s}
+nav button.on{background:linear-gradient(135deg,var(--acc1),#7873f5);color:#fff;transform:translateY(-2px);box-shadow:0 6px 16px #0005}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px 14px 110px}
+.c{position:relative;display:flex;flex-direction:column;border-radius:20px;padding:14px 12px;min-height:128px;color:#fff;background:linear-gradient(140deg,var(--a),var(--b));box-shadow:0 8px 18px #0004;overflow:hidden;animation:pop .5s backwards;transition:transform .15s;text-shadow:0 1px 4px #0006}
+.c:active{transform:scale(.94)}
+@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.85)}}
+.c .lt{position:absolute;right:8px;top:-8px;font-size:66px;font-weight:900;opacity:.22}
+.c .em{font-size:38px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-6deg)}}
+.c .tt{font-weight:700;font-size:15px;margin-top:6px;line-height:1.2}
+.c .ft{margin-top:auto;padding:8px 34px 0 0;display:flex;flex-wrap:wrap;gap:2px 8px;font-size:12px;line-height:1.3;opacity:.95}
+.c .ck{position:absolute;right:10px;bottom:8px;width:28px;height:28px;border-radius:50%;background:#fff3;display:grid;place-items:center;font-style:normal;font-weight:900}
+.c.done .ck{background:#fff;color:#1db954;text-shadow:none;animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px #fff3}}
+.c .dll{font-size:11px;font-weight:700;background:#0005;border-radius:8px;padding:1px 7px;display:inline-block;margin-top:4px;width:fit-content}
+.c.due .dll{background:#e11d48;animation:pulse 1.5s infinite}
+#next{margin:6px 14px 4px;padding:14px;border-radius:18px;background:var(--glass);display:flex;gap:12px;align-items:center;animation:pop .5s}
+#next .ne{font-size:34px}
+#next .nt{font-weight:800;font-size:15px}
+#next .nd{font-size:12.5px;opacity:.9;margin-top:2px}
+#next .cd{font-size:13px;font-weight:700;color:var(--acc2);margin-top:3px}
+body.light #next .cd{color:#c2185b}
+#fab{position:fixed;right:18px;bottom:24px;width:58px;height:58px;border-radius:50%;border:0;font-size:28px;color:#fff;background:linear-gradient(135deg,var(--acc1),#7873f5);box-shadow:0 8px 20px #0006;z-index:15;transition:.2s}
+#fab:active{transform:scale(.9)}
+#det{position:fixed;inset:0;z-index:20;overflow-y:auto;color:#fff;background:linear-gradient(160deg,var(--a),var(--b));transform:translateY(100%);transition:transform .5s cubic-bezier(.2,1,.3,1);text-shadow:0 1px 5px #0005}
+#det.open{transform:none}
+.fl{position:fixed;bottom:-60px;pointer-events:none;animation:rise linear infinite;opacity:.7}
+@keyframes rise{to{transform:translateY(-115vh) rotate(360deg);opacity:0}}
+.in{position:relative;z-index:2;padding:16px 16px 60px;max-width:560px;margin:auto}
+.back{border:0;background:#0004;color:#fff;border-radius:20px;padding:9px 16px;font-size:15px}
+.big{font-size:88px;text-align:center;margin-top:8px;animation:bob 2.5s infinite}
+.dl2{text-align:center;font-size:30px;font-weight:900;margin:0}
+.tg{text-align:center;opacity:.9;margin:4px 0 14px}
+.box{background:#0003;backdrop-filter:blur(8px);border-radius:18px;padding:14px;margin:12px 0}
+.dn{width:100%;padding:15px;border:0;border-radius:16px;font-size:18px;font-weight:800;background:#fff3;color:#fff;transition:.3s}
+.dn.y{background:#fff;color:#16a34a;text-shadow:none}
+input[type=date],input[type=text],input[type=datetime-local],textarea,select{width:100%;border:0;border-radius:12px;padding:11px;font:inherit;background:#fff;color:#222;margin-top:6px}
+textarea{min-height:90px;resize:vertical}
+.hs span{font-size:34px;filter:grayscale(1);opacity:.5;transition:.2s;display:inline-block}
+.hs span.on{filter:none;opacity:1;transform:scale(1.15)}
+.up{display:block;text-align:center;padding:14px;border:2px dashed #fff9;border-radius:16px;font-weight:700;margin-top:6px;cursor:pointer}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.mg div,.gg div{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#0005;animation:pop .4s backwards}
+.mg img,.gg img{width:100%;height:100%;object-fit:cover}
+.mg .vt,.gg .vt{width:100%;height:100%;display:grid;place-items:center;font-size:34px;color:#fff}
+.tag{position:absolute;left:4px;bottom:4px;background:#000a;border-radius:8px;padding:1px 6px;font-size:11px;color:#fff}
+#gal{display:none;padding:8px 14px 110px}
+.gg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+#lb{position:fixed;inset:0;z-index:40;background:#000e;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff}
+#lb img,#lb video{max-width:94vw;max-height:72vh;border-radius:14px}
+#lb button{border:0;border-radius:20px;padding:10px 20px;font-size:15px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(90px);background:#111e;color:#fff;padding:12px 18px;border-radius:16px;font-size:14px;font-weight:600;z-index:80;opacity:0;transition:.35s;max-width:86vw;text-align:center;backdrop-filter:blur(6px);pointer-events:none}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.cf{position:fixed;z-index:60;width:10px;height:14px;pointer-events:none;animation:cf 1.6s ease-out forwards}
+@keyframes cf{to{transform:translate(var(--x),var(--y)) rotate(720deg);opacity:0}}
+.empty{text-align:center;opacity:.7;padding:30px}
+/* wizard + settings */
+#wz{max-width:480px;margin:0 auto;padding:34px 18px 60px;min-height:100vh}
+.wlogo{text-align:center;font-size:64px;margin:8px 0 4px;animation:bob 3s infinite}
+.wt{text-align:center;font-size:28px;font-weight:900;background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.ws{text-align:center;opacity:.85;font-size:14px;margin:8px 0 26px}
+.card{background:var(--glass);backdrop-filter:blur(10px);border-radius:20px;padding:18px;margin:12px 0}
+.card h3{margin:0 0 4px;font-size:16px}
+.card .hint{font-size:12px;opacity:.75;margin-bottom:8px}
+.btn{display:block;width:100%;padding:15px;border:0;border-radius:16px;font-size:16px;font-weight:800;background:linear-gradient(135deg,var(--acc1),#7873f5);color:#fff;margin-top:14px;transition:.2s;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--glass);font-weight:600}
+.btn.bad{background:#e11d48}
+.row2{display:flex;gap:8px}
+.row2>*{flex:1}
+.swrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.sw{width:52px;height:52px;border-radius:16px;border:3px solid transparent;cursor:pointer;transition:.2s}
+.sw.on{border-color:#fff;transform:scale(1.1);box-shadow:0 4px 12px #0006}
+emrow{display:flex}
+.erow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #fff2;font-size:14px}
+.erow:last-child{border:0}
+.erow .e{font-size:20px;width:30px;text-align:center}
+.erow input{margin:0;background:#fff2;border:0;color:var(--tx);padding:7px 10px;border-radius:10px;font-size:14px;flex:1}
+.erow input::placeholder{color:#fff9}
+body.light .erow input{background:#0001}
+body.light .erow input::placeholder{color:#0006}
+.bigcode{text-align:center;font-size:44px;font-weight:900;letter-spacing:8px;background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;margin:6px 0}
+#qr{background:#fff;border-radius:18px;padding:12px;width:212px;margin:10px auto;display:block}
+.cdn{text-align:center;font-size:13px;opacity:.85}
+input[type=color]{width:46px;height:46px;border:0;border-radius:12px;padding:2px;background:var(--glass)}
+.clabel{font-size:12px;opacity:.8;text-align:center}
+.dvrow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #fff2;font-size:14.5px}
+.dvrow:last-child{border:0}
+.dvrow button{margin-left:auto;border:0;border-radius:10px;padding:6px 12px;background:#e11d48;color:#fff;font-size:12.5px;font-weight:700}
+.chip{display:inline-block;background:var(--glass);border-radius:20px;padding:6px 14px;font-size:13px;margin:3px 4px 0 0;cursor:pointer}
+.setsec{margin:20px 14px}
+</style></head><body class="">
+<div id="wz" style="display:none"></div>
+<div id="main" style="display:none">
+<header><h1><small id="hsub"></small><span id="htit"></span></h1>
+<button id="bell" class="hbtn" style="right:8px" onclick="enableAlerts()" title="Alerts">🔕</button>
+<button class="hbtn" style="left:8px" onclick="setView()" title="Settings">⚙️</button>
+<div class="bar"><i id="pb"></i></div><div id="pt"></div><div id="sy"></div></header>
+<div id="next" style="display:none"></div>
+<nav><button id="n1" class="on" onclick="tab(1)">✅ Checklist</button><button id="n2" onclick="tab(2)">🖼️ Gallery</button><button id="n3" onclick="togMode()" style="flex:0 0 46px">🌙</button></nav>
+<div class="grid" id="grid"></div>
+<div id="gal"><select id="fs" onchange="rG()"></select><div class="gg" id="gg"></div></div>
+<button id="fab" onclick="ideaForm()">＋</button>
+</div>
+<div id="det"></div>
+<div id="set" style="display:none;max-width:520px;margin:0 auto;padding:20px 14px 80px"></div>
+<div id="toast"></div>
+<div id="lb"><div id="lbm"></div><div id="lbc"></div><div><button onclick="delM()" style="background:#e11d48;color:#fff">🗑 Delete</button> <button onclick="lb.style.display='none';lbm.innerHTML=''">Close</button></div></div>
+<script src="qr.js"></script>
+<script>
+/* ====== APP CONFIG (rename the product here) ====== */
+const APP={
+ name:'Couples ABC Adventures',
+ short:'ABC Adventures',
+ api:'https://couples-api.avishorwork.workers.dev',
+ vpub:'BM6373UlQ6TpTz2oyPZ_r5HPvUmPgmUQIwSWCN8n2AnH3da04TSgQbhGUVN8kZglt40-orkBe_vtnqoBmTeb9xQ',
+ site:'https://avishorwork-wq.github.io/couples-abc-adventures/'
+};
+/* Suggested A-Z ideas (generic; editable in setup) */
+const AZ=[["A","🎯","Arcade","Win tickets, claim silly prizes","#ff4d8d","#6a11cb"],
+["B","🎳","Bowling","Strikes, spares & trash talk","#00c6ff","#0072ff"],
+["C","☕","Cute cafe","Sip, snack & people-watch","#d4a373","#7f5539"],
+["D","💑","Double date","Great company x4","#f857a6","#ff5858"],
+["E","🕵️","Escape room","Beat the clock together","#1f1c2c","#928dab"],
+["F","🥂","Fancy dinner","Dress up, dine slow","#8e0e00","#2b1a18"],
+["G","🎲","Game night","Board games & bragging rights","#f2994a","#eb5757"],
+["H","🥾","Hike","Trails, views, snacks","#11998e","#38ef7d"],
+["I","🍦","Ice cream crawl","Rate every scoop","#56ccf2","#2f80ed"],
+["J","☔","Jump in the rain","Puddles are mandatory","#4b79a1","#283e51"],
+["K","🎤","Karaoke","Duets, badly, proudly","#f6a04d","#e0566b"],
+["L","🧱","Lego","Build something together","#ee0979","#ff6a00"],
+["M","🍿","Movie night","Popcorn & a good seat","#200122","#8e0000"],
+["N","🍂","Nature walk","Slow down, look around","#d38312","#a83279"],
+["O","🎨","Paint & sip","Art, wine, giggles","#614385","#516395"],
+["P","🏺","Pottery","Get your hands dirty","#c86dd7","#3023ae"],
+["Q","🧭","Quest / scavenger hunt","Clues around the city","#43cea2","#185a9d"],
+["R","🚗","Road trip","A whole day out","#ff9966","#ff5e62"],
+["S","🌌","Stargazing","Blankets & constellations","#3a1c71","#d76d77"],
+["T","👕","Thrifting","Hunt for treasures","#16a085","#c9a227"],
+["U","🍴","Utensil-free dinner","Hands only!","#cb2d3e","#ef473a"],
+["V","🧺","Viewpoint picnic","Snacks with a skyline","#56ccf2","#2f80ed"],
+["W","🍷","Wine tasting","Sip & compare notes","#8e2de2","#4a00e0"],
+["X","🎁","X-change gifts","Surprise each other","#e52d27","#b31217"],
+["Y","🧘","Yoga together","Stretch, breathe, laugh","#5aa832","#1b8a5a"],
+["Z","🐒","Zoo","Say hi to the animals","#f09819","#ff512f"]];
+const THEMES=[
+ {n:'Midnight Rose',g1:'#1a1030',g2:'#4a1c5e',light:false},
+ {n:'Peach Cream',g1:'#ffe3ef',g2:'#dcd3ff',light:true},
+ {n:'Ocean Deep',g1:'#0f2027',g2:'#2c5364',light:false},
+ {n:'Sunset Sorbet',g1:'#ff9a9e',g2:'#fecfef',light:true},
+ {n:'Forest Mist',g1:'#134e5e',g2:'#71b280',light:false},
+ {n:'Candy Sky',g1:'#a18cd1',g2:'#fbc2eb',light:true}];
+const EMOJIS=['💑','❤️','🥑','🌍','✨','🔥','🌈','🎈','🧸','💫'];
+
+/* ====== state ====== */
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let TOK=localStorage.cbaTok||'',WHO=localStorage.cbaWho||'';
+let S={},M=[],C=null,cfgDirty=false,cur=-1,lbId=null,started=0,syncing=0,again=0,saveT,syncT,myEp=localStorage.cbaEp||'',pendB=null,pollT=null,cdT=null;
+function persist(){try{localStorage.cbaD=JSON.stringify({S:S,M:M})}catch(e){}}
+try{const o=JSON.parse(localStorage.cbaD||'{}');S=o.S||{};M=o.M||[]}catch(e){}
+const st=l=>S[l]||(S[l]={done:0,date:'',note:'',r:0,u:0});
+const live=()=>M.filter(m=>!m.del);
+const cnt=l=>live().filter(m=>m.l==l).length;
+const D=()=>C&&C.dates?C.dates:[];
+const dByL=l=>D().find(d=>d.l==l);
+const setSy=t=>{$('sy').textContent=t};
+
+/* ====== API ====== */
+function api(path,o){return fetch(APP.api+path,{method:'POST',body:JSON.stringify(o)}).then(r=>r.json().catch(()=>({err:'network'})))}
+function sync(){
+ if(!TOK||!started)return;
+ if(syncing){again=1;return}
+ syncing=1;
+ const o={tok:TOK,S:S,M:live().map(m=>({id:m.id,l:m.l,t:m.t,ts:m.ts,mime:m.mime,size:m.size,n:m.n,thumb:m.thumb?1:0,del:0}))};
+ if(cfgDirty&&C){o.C=C;o.cu=C.cu}
+ api('/sync',o).then(r=>{
+  if(r.err=='auth'){setSy('⚠️ this device was unpaired');toast('This device was removed from the couple');return}
+  if(r.err)throw r.err;
+  if(cfgDirty){cfgDirty=false}
+  merge(r);setSy('☁️ synced');if(pendB){const t=pendB;pendB=null;bcast(t.t,t.l)}
+ }).catch(e=>{setSy('⚠️ offline – will retry');clearTimeout(syncT);syncT=setTimeout(sync,10000)}).then(()=>{syncing=0;if(again){again=0;clearTimeout(syncT);syncT=setTimeout(sync,300)}})
+}
+function sv(){persist();clearTimeout(saveT);saveT=setTimeout(sync,400)}
+function ed(l,k,v){const s=st(l);s[k]=v;s.u=Date.now();
+ if(k=='done'&&v)noteAct((st(l).done?'completed ':'')+actName(l)+' ❤️',l);
+ sv()}
+let firstSync=1,toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),4500)}
+function actName(l){const d=dByL(l);return d?(d.l.match(/^[A-Z]$/)?d.l+' - ':'')+d.t:l}
+function notifySync(ev){
+ const doneActs=ev.filter(e=>e.k=='done').map(e=>actName(e.l));
+ const mediaN=ev.reduce((s2,e)=>s2+(e.n||0),0);
+ const mediaTxt=mediaN?'📸 '+mediaN+' new memor'+(mediaN==1?'y':'ies'):'';
+ if(firstSync){firstSync=0;
+  const parts=[];if(doneActs.length)parts.push('✅ '+doneActs.join(', '));if(mediaTxt)parts.push(mediaTxt);
+  if(parts.length)toast('While you were away: '+parts.join(' · '));return}
+ const parts=doneActs.map(a=>'✅ Done: '+a);if(mediaTxt)parts.push(mediaTxt+' added!');
+ if(parts.length){toast(parts.join(' · '));snd(doneActs.length?'done':'up')}}
+function merge(r){
+ if(r.C&&(!C||(r.C.cu||0)>=(C.cu||0))&&JSON.stringify(r.C)!=JSON.stringify(C)){C=r.C;applyTheme();buildGrid();rHead();}
+ let ch=0;const ev=[];
+ for(const l in r.S||{}){const a=r.S[l],b=S[l];if(!b||(a.u||0)>(b.u||0)){if(a.done&&!(b&&b.done))ev.push({k:'done',l:l});S[l]=a;ch=1}}
+ const by={};M.forEach(m=>by[m.id]=m);let newMedia=0;
+ (r.M||[]).forEach(x=>{const m=by[x.id];
+  if(!m){M.push(x);by[x.id]=x;ch=1;if(!x.del)newMedia++}
+  else{if(x.del&&!m.del){m.del=1;ch=1}}});
+ if(newMedia)ev.push({k:'media',n:newMedia});
+ if(ev.length)notifySync(ev);
+ if(ch){persist();refresh()}}
+function startSync(){if(started)return;started=1;
+ sync();
+ setInterval(()=>{if(!document.hidden)sync()},2500);
+ window.addEventListener('focus',()=>sync());
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()})}
+
+/* ====== push ====== */
+function noteAct(t,l){pendB={t:t,l:l||''}}
+function bcast(t,l){
+ const d=dByL(l);
+ api('/broadcast',{tok:TOK,from:myEp||'-',title:(C&&C.emoji?C.emoji+' ':'')+(C?C.title:APP.name),body:(WHO||'Your partner')+' '+t});
+}
+function b64uToU8(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+async function enableAlerts(){
+ snd('tap');
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){toast('This install cannot do background alerts 😕');return}
+ try{
+  if(!WHO){const w=prompt('Your name, so your partner knows who did it:','');WHO=w||'';localStorage.cbaWho=WHO}
+  const p=await Notification.requestPermission();
+  if(p!=='granted'){toast('Notifications are blocked - allow them in your app or site settings');return}
+  const reg=await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(APP.vpub)});
+  myEp=sub.endpoint;localStorage.cbaEp=myEp;
+  const j=await api('/subscribe',{tok:TOK,who:WHO,subscription:sub.toJSON()});
+  if(j.ok){$('bell').textContent='🔔';toast('🔔 Alerts on! You will be notified even when the app is closed')}
+  else toast('Alert setup failed - please try again');
+ }catch(e){toast('Alert setup failed: '+e)}
+}
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{const d=e.data||{};if(d.t=='sync'){if(d.body)toast(d.body);sync();if(d.l)setTimeout(()=>openByL(d.l),600)}});
+if(myEp&&'Notification' in window&&Notification.permission=='granted'){navigator.serviceWorker.ready.then(r=>r.pushManager.getSubscription()).then(sub=>{if(sub){myEp=sub.endpoint;localStorage.cbaEp=myEp;api('/subscribe',{tok:TOK,who:WHO,subscription:sub.toJSON()}).then(j=>{if(j.ok)$('bell').textContent='🔔'}).catch(()=>{})}}).catch(()=>{})}
+
+/* ====== media ====== */
+const CH=950000; // chars per chunk (~700KB raw)
+function compress(file,maxDim,q){return new Promise((ok,no)=>{
+ const img=new Image();img.onload=()=>{const sc=Math.min(1,maxDim/Math.max(img.width,img.height));
+  const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+  cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+  cv.toBlob(b=>b?ok(b):no('compress'),'image/jpeg',q)};img.onerror=()=>no('load');
+ img.src=URL.createObjectURL(file)})}
+function blobB64(b){return new Promise(ok=>{const f=new FileReader();f.onload=()=>ok(String(f.result).split(',')[1]);f.readAsDataURL(b)})}
+async function uploadOne(file){
+ const isV=file.type.indexOf('video')==0;
+ const id='m'+uid();
+ const m={id:id,l:cur>=0?D()[cur].l:'',t:isV?'v':'i',ts:Date.now(),mime:isV?file.type:'image/jpeg',_u:URL.createObjectURL(file)};
+ M.push(m);refresh();snd('up');noteAct('added new memories to '+actName(m.l)+' 📸',m.l);
+ try{
+  if(isV){
+   if(file.size>8*1024*1024){toast('Videos are capped at 8 MB for now');M.splice(M.indexOf(m),1);refresh();return}
+   const b64=await blobB64(file);const chunks=Math.ceil(b64.length/CH);m.n=chunks;m.size=file.size;
+   for(let i=0;i<chunks;i++){
+    setSy('⏫ uploading '+Math.round(i/chunks*100)+'%');
+    const r=await api('/up',{tok:TOK,id,part:String(i),data:b64.slice(i*CH,(i+1)*CH),size:file.size,final:i==chunks-1,l:m.l,t:'v',mime:m.mime,n:chunks});
+    if(r.err)throw r.err}
+  }else{
+   const full=await compress(file,1600,.82),thumb=await compress(file,420,.7);
+   m.size=full.size;m.n=1;m.thumb=1;
+   const fb=await blobB64(full),tb=await blobB64(thumb);
+   let r=await api('/up',{tok:TOK,id,part:'t',data:tb,size:full.size});
+   if(r.err)throw r.err;
+   // split full into chunks if needed
+   const chunks=Math.ceil(fb.length/CH);m.n=chunks;
+   for(let i=0;i<chunks;i++){
+    setSy('⏫ uploading '+Math.round(i/chunks*100)+'%');
+    r=await api('/up',{tok:TOK,id,part:String(i),data:fb.slice(i*CH,(i+1)*CH),size:full.size,final:i==chunks-1,l:m.l,t:'i',mime:'image/jpeg',n:chunks,thumb:1});
+    if(r.err)throw r.err}
+  }
+  setSy('☁️ synced');sv();
+ }catch(e){M.splice(M.indexOf(m),1);refresh();toast('Upload failed: '+e)}
+}
+function upl(inp){[...inp.files].forEach(f=>uploadOne(f));inp.value=''}
+function murl(m,thumb){return APP.api+'/media?tok='+encodeURIComponent(TOK)+'&id='+m.id+(thumb?'&part=t':'')}
+function tile(m,lab){let h;
+ if(m._u)h=m.t=='v'?`<div class="vt">🎥</div>`:`<img src="${m._u}">`;
+ else if(m.t=='v')h=`<div class="vt">🎥</div>`;
+ else h=m.thumb?`<img src="${murl(m,1)}" loading="lazy">`:`<img src="${murl(m)}" loading="lazy">`;
+ return `<div onclick="lbo('${m.id}')">${h}<span class="tag">${lab||''}${m.t=='v'?' ▶':''}</span></div>`}
+function mediaHtml(l){const a=live().filter(m=>m.l==l);return a.length?a.map(m=>tile(m)).join(''):'<div class="empty" style="grid-column:1/-1;aspect-ratio:auto;background:none">No memories yet — add your first! 📸</div>'}
+function lbo(id){const m=M.find(x=>x.id==id&&!x.del);if(!m)return;lbId=id;snd('tap');
+ $('lbm').innerHTML=m.t=='v'?`<video src="${murl(m)}" controls autoplay playsinline></video>`:`<img src="${murl(m)}">`;
+ const d=dByL(m.l);$('lbc').textContent=(d?d.t:'')+' · '+new Date(m.ts).toLocaleDateString();$('lb').style.display='flex'}
+function delM(){const i=M.findIndex(m=>m.id==lbId);if(i<0)return;const m=M[i];
+ if(m._u)M.splice(i,1);else{m.del=1;api('/del',{tok:TOK,id:m.id})}
+ sv();snd('del');$('lb').style.display='none';$('lbm').innerHTML='';refresh()}
+
+/* ====== theme ====== */
+function applyTheme(){if(!C)return;const t=C.theme||THEMES[0];
+ document.documentElement.style.setProperty('--bg1',t.g1);document.documentElement.style.setProperty('--bg2',t.g2);
+ document.body.classList.toggle('light',!!t.light);
+ document.querySelector('meta[name=theme-color]').content=t.g1}
+function togMode(){if(!C)return;C.theme.light=!C.theme.light;if(C.theme.light){C.theme.g1='#ffe3ef';C.theme.g2='#dcd3ff'}C.cu=Date.now();cfgDirty=true;applyTheme();sv();snd('tap')}
+
+/* ====== render ====== */
+function rHead(){if(!C)return;$('hsub').textContent=(C.names&&C.names[0]?C.names[0]:'')+(C.names&&C.names[1]?' & '+(C.names[1]||'?')+"'s":'');
+ $('htit').textContent=C.title||APP.name;document.title=C.title||APP.name}
+function dlText(l){const s=S[l];if(!s||!s.dl||s.done)return'';
+ const days=Math.ceil((+new Date(s.dl)-Date.now())/86400000);
+ if(days<0)return'⚠️ '+(-days)+'d overdue';if(days==0)return'⏰ due today!';if(days==1)return'⏰ tomorrow';return'📅 '+days+'d left'}
+function rGrid(){let dn=0;const tot=D().length;
+ $('grid').innerHTML=D().map((d,i)=>{const s=st(d.l),on=!!s.done,n=cnt(d.l);dn+=on?1:0;
+  const dl=dlText(d.l),due=dl.indexOf('overdue')>=0||dl.indexOf('today')>=0;
+  return `<div class="c${on?' done':''}${due&&dl?' due':''}" style="--a:${d.a};--b:${d.b};animation-delay:${i*.03}s" onclick="openD(${i})"><span class="lt">${d.l.match(/^[A-Z]$/)?d.l:'✦'}</span><div class="em">${(d.e||'🎯').split(' ')[0]}</div><div class="tt">${d.t}</div><div class="ft"><span>${'❤️'.repeat(s.r||0)}</span><span>${n?'📷 '+n:''}</span></div>${dl?`<span class="dll">${dl}</span>`:''}<i class="ck">${on?'✓':''}</i></div>`}).join('');
+ $('pb').style.width=(tot?dn/tot*100:0)+'%';$('pt').textContent=dn+' / '+tot+' dates done'+(tot&&dn==tot?' 🎉 Perfect!':'');
+ rNext()}
+function rNext(){const el=$('next');let best=null;
+ D().forEach(d=>{const s=S[d.l];if(s&&s.dl&&!s.done){const t=+new Date(s.dl);if(!best||t<best.t)best={t:t,d:d}}});
+ if(!best){const u=D().find(d=>!st(d.l).done);if(u)best={t:0,d:u}}
+ if(!best){el.style.display='none';return}
+ el.style.display='flex';
+ const days=best.t?Math.ceil((best.t-Date.now())/86400000):null;
+ const cd=best.t?(days<0?'⚠️ '+(-days)+' days overdue':days==0?'⏰ Due today!':days==1?'⏰ Due tomorrow':'⏳ '+days+' days to go'):'✨ Up next';
+ el.innerHTML=`<div class="ne">${(best.d.e||'🎯').split(' ')[0]}</div><div><div class="nt">${best.d.l.match(/^[A-Z]$/)?best.d.l+' — ':''}${best.d.t}</div><div class="nd">${best.d.d||''}</div><div class="cd">${cd}</div></div>`;
+ el.onclick=()=>{const i=D().indexOf(best.d);if(i>=0)openD(i)}}
+function refresh(){rGrid();const v=$('fs').value||'*';$('fs').innerHTML='<option value="*">All memories ('+live().length+')</option>'+D().map(d=>`<option value="${d.l}">${d.t} (${cnt(d.l)})</option>`).join('');$('fs').value=v;rG();if(cur>=0)rDet()}
+function rG(){const v=$('fs').value,a=live().filter(m=>v=='*'||m.l==v).sort((a,b)=>b.ts-a.ts);$('gg').innerHTML=a.length?a.map(m=>tile(m,m.l)).join(''):'<div class="empty" style="grid-column:1/-1;aspect-ratio:auto;background:none">Nothing here yet 🌸<br>Open a date and upload memories!</div>'}
+function tab(n){snd('tap');$('n1').className=n==1?'on':'';$('n2').className=n==2?'on':'';$('grid').style.display=n==1?'grid':'none';$('gal').style.display=n==2?'block':'none';$('next').style.display=n==1?'flex':'none';if(n==1)rNext();if(n==2)rG()}
+
+/* ====== detail ====== */
+function openD(i){cur=i;snd('open');const d=D()[i],el=$('det');
+ el.style.setProperty('--a',d.a);el.style.setProperty('--b',d.b);
+ const em=(d.e||'🎯').split(' ');let f='';for(let k=0;k<16;k++)f+=`<span class="fl" style="left:${Math.random()*95}%;font-size:${20+Math.random()*30}px;animation-duration:${6+Math.random()*8}s;animation-delay:${-Math.random()*12}s">${em[k%em.length]}</span>`;
+ el.innerHTML=f+`<div class="in"><button class="back" onclick="closeD()">← Back</button><div class="big">${d.e||'🎯'}</div><h2 class="dl2">${d.l.match(/^[A-Z]$/)?d.l+' — ':''}${d.t}</h2><p class="tg">${d.d||''}</p>
+ <button id="dnb" class="dn" onclick="togD()"></button>
+ <div class="box"><b>📅 Date we did it</b><input id="dt" type="date" onchange="ed('${d.l}','date',this.value)"></div>
+ <div class="box"><b>⏰ Deadline (optional)</b><input id="dll" type="date" onchange="ed('${d.l}','dl',this.value);rDet()"><div id="dlt" style="margin-top:6px;font-size:13px;font-weight:700"></div></div>
+ <div class="box"><b>💗 How was it?</b><div class="hs" id="hs">${[1,2,3,4,5].map(n=>`<span onclick="rate(${n})">❤️</span>`).join('')}</div></div>
+ <div class="box"><b>📝 Notes & memories</b><textarea id="nt" placeholder="Write about your day…" oninput="ed('${d.l}','note',this.value)"></textarea></div>
+ <div class="box"><b>📸 Photos & videos</b><div class="up" onclick="$('fi').click()">⬆️ Add photo / video</div><input id="fi" type="file" accept="image/*,video/*" multiple hidden onchange="upl(this)"><div class="mg" id="mg"></div></div>
+ <div class="box" style="text-align:center"><button class="btn ghost" style="margin:0" onclick="ideaForm(${i})">✏️ Edit this idea</button></div></div>`;
+ rDet();el.scrollTop=0;el.classList.add('open')}
+function rDet(){if(cur<0)return;const d=D()[cur],s=st(d.l),b=$('dnb');$('mg').innerHTML=mediaHtml(d.l);
+ b.className='dn '+(s.done?'y':'');b.textContent=s.done?'✅ Done!':'⬜ Mark as done';
+ [...$('hs').children].forEach((e,i)=>e.className=i<s.r?'on':'');
+ if(document.activeElement!=$('dt'))$('dt').value=s.date||'';
+ if(document.activeElement!=$('nt'))$('nt').value=s.note||'';
+ if(document.activeElement!=$('dll'))$('dll').value=s.dl||'';
+ const dt=dlText(d.l);$('dlt').textContent=dt}
+function closeD(){snd('tap');$('det').classList.remove('open');cur=-1;rGrid()}
+function togD(){const d=D()[cur];ed(d.l,'done',st(d.l).done?0:1);const on=st(d.l).done;
+ noteAct((on?'completed ':'unmarked ')+actName(d.l)+(on?' ❤️':''),d.l);rDet();
+ if(on){boom();const all=D().every(x=>st(x.l).done);snd(all?'win':'done');if(all)setTimeout(()=>boom(90),500)}else snd('undo');rGrid()}
+function rate(n){const d=D()[cur];const off=st(d.l).r==n;ed(d.l,'r',off?0:n);if(!off)noteAct('rated '+actName(d.l)+' '+'❤️'.repeat(n),d.l);snd('tap');rDet()}
+
+/* ====== sounds & confetti ====== */
+let mute=false,AC;
+function snd(n){if(mute)return;try{AC=AC||new(window.AudioContext||webkitAudioContext)();const q={tap:[[520,.04]],open:[[392,.07],[523,.07],[659,.1]],done:[[523,.09],[659,.09],[784,.09],[1047,.25]],undo:[[330,.07],[262,.1]],up:[[600,.06],[900,.1]],del:[[200,.15]],win:[[523,.1],[659,.1],[784,.1],[1047,.1],[1319,.1],[1568,.4]]}[n];let t=AC.currentTime;q.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+d+.1);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.12);t+=d})}catch(e){}}
+function boom(n){const t=C&&C.theme?C.theme:{g1:'#ff6ec4'};const cs=['#ff6ec4','#ffd86e','#7873f5','#4ade80','#38bdf8','#fff'];for(let i=0;i<(n||40);i++){const e=document.createElement('i');e.className='cf';e.style.cssText=`left:50%;top:45%;background:${cs[i%6]};--x:${(Math.random()-.5)*600}px;--y:${(Math.random()-.3)*600}px`;document.body.appendChild(e);setTimeout(()=>e.remove(),1700)}}
+
+/* ====== wizard: create / join ====== */
+let W={step:0,me:'',partner:'',title:'',emoji:'💑',theme:0,custom:false,cg1:'#1a1030',cg2:'#4a1c5e',clight:false,useAZ:true,dates:JSON.parse(JSON.stringify(AZ)).map(a=>({l:a[0],e:a[1],t:a[2],d:a[3],a:a[4],b:a[5]}))};
+function show(id){['wz','main','set'].forEach(x=>$(x).style.display=x==id?'block':'none')}
+function wiz(step){W.step=step;show('wz');const w=$('wz');
+ if(step==0){w.innerHTML=`<div class="wlogo">💑</div><div class="wt">${APP.name}</div><div class="ws">A shared alphabet of adventures for the two of you.<br>Private, synced, with real notifications.</div>
+  <button class="btn" onclick="wiz(1)">✨ Create our adventure</button>
+  <button class="btn ghost" onclick="wiz(9)">🔗 Join my partner</button>`}
+ if(step==1){w.innerHTML=`<div class="wt" style="font-size:22px">✨ Create your adventure</div><div class="ws">Takes about a minute.</div>
+  <div class="card"><h3>Your names</h3><div class="row2"><input type="text" id="wme" placeholder="Your name" value="${W.me}"><input type="text" id="wpa" placeholder="Partner's name" value="${W.partner}"></div></div>
+  <div class="card"><h3>Adventure title</h3><div class="hint">Shown at the top of your app</div><input type="text" id="wti" placeholder="e.g. ${W.me||'Dana'} & ${W.partner||'Noam'}'s Adventures" value="${W.title}"></div>
+  <div class="card"><h3>Couple emoji</h3><div class="hint">Shows in notifications and the app icon</div>
+   <div class="swrow" id="emrow">${EMOJIS.map(e=>`<div class="sw ${e==W.emoji?'on':''}" style="display:grid;place-items:center;font-size:26px;background:var(--glass)" onclick="W.emoji='${e}';wiz(1)">${e}</div>`).join('')}</div>
+   <input type="text" id="wem" placeholder="…or type any emoji" value="" style="margin-top:10px"></div>
+  <div class="card"><h3>Color scheme</h3><div class="hint">Pick a look, or make your own</div>
+   <div class="swrow">${THEMES.map((t,i)=>`<div class="sw ${!W.custom&&W.theme==i?'on':''}" style="background:linear-gradient(135deg,${t.g1},${t.g2})" title="${t.n}" onclick="W.custom=false;W.theme=${i};wiz(1)"></div>`).join('')}
+   <div class="sw ${W.custom?'on':''}" style="background:linear-gradient(135deg,${W.cg1},${W.cg2});display:grid;place-items:center;font-size:11px;color:#fff;text-shadow:0 1px 3px #000" onclick="W.custom=true;wiz(1)">Custom</div></div>
+   <div id="custc" style="display:${W.custom?'flex':'none'};gap:14px;margin-top:12px;align-items:center">
+    <div><input type="color" id="cc1" value="${W.cg1}"><div class="clabel">Top</div></div>
+    <div><input type="color" id="cc2" value="${W.cg2}"><div class="clabel">Bottom</div></div>
+    <label style="font-size:13px"><input type="checkbox" id="cl" ${W.clight?'checked':''} style="width:auto;margin:0 6px 0 0"> Light text-on-pastel</label></div></div>
+  <div class="card"><h3>Date ideas</h3><div class="hint">A–Z suggested ideas - tap any to edit, or start blank</div>
+   <label style="font-size:14px"><input type="checkbox" id="az" ${W.useAZ?'checked':''} style="width:auto;margin:0 6px 0 0" onchange="W.useAZ=this.checked;wiz(1)"> Use the A–Z suggested ideas</label>
+   <div id="azl" style="display:${W.useAZ?'block':'none'};margin-top:8px;max-height:220px;overflow-y:auto">${W.dates.map((d,i)=>`<div class="erow"><span class="e">${d.e}</span><b style="width:18px">${d.l}</b><input value="${d.t}" placeholder="Idea for ${d.l}" onchange="W.dates[${i}].t=this.value"><input style="max-width:52px" value="${d.e}" onchange="W.dates[${i}].e=this.value"></div>`).join('')}</div></div>
+  <button class="btn" onclick="doCreate()">Create 🚀</button>
+  <button class="btn ghost" onclick="wiz(0)">Back</button>
+  setTimeout(()=>{const g=id=>$(id);if(W.custom){g('cc1').onchange=e=>{W.cg1=e.target.value;wiz(1)};g('cc2').onchange=e=>{W.cg2=e.target.value;wiz(1)};g('cl').onchange=e=>{W.clight=e.target.checked}}
+   g('wme').oninput=e=>W.me=e.target.value;g('wpa').oninput=e=>W.partner=e.target.value;g('wti').oninput=e=>W.title=e.target.value;
+   g('wem').oninput=e=>{const v=[...e.target.value.trim()];if(v.length){W.emoji=v.join('');e.target.value='';wiz(1)}}},50)}
+ if(step==9){const hc=(location.hash.match(/join=([A-Z2-9]{6})/i)||[])[1]||'';
+  w.innerHTML=`<div class="wlogo">🔗</div><div class="wt" style="font-size:22px">Join your partner</div><div class="ws">Enter the 6-character code from your partner's screen.<br>Codes are single-use and expire after 15 minutes.</div>
+  <div class="card"><h3>Your name</h3><input type="text" id="jme" placeholder="Your name" value="${W.me}"></div>
+  <div class="card"><h3>Pairing code</h3><input type="text" id="jcode" placeholder="ABC123" maxlength="6" value="${hc}" style="text-transform:uppercase;letter-spacing:6px;font-size:22px;font-weight:800;text-align:center"></div>
+  <button class="btn" onclick="doJoin()">Join 💞</button>
+  <button class="btn ghost" onclick="wiz(0)">Back</button>`}
+}
+async function doCreate(){
+ W.me=($('wme')||{}).value||W.me;W.partner=($('wpa')||{}).value||W.partner;W.title=($('wti')||{}).value||W.title;
+ if(!W.me.trim()){toast('Add your name first');return}
+ const title=W.title.trim()||((W.me.trim()||'Us')+(W.partner.trim()?' & '+W.partner.trim():'')+"'s Adventures");
+ const theme=W.custom?{g1:W.cg1,g2:W.cg2,light:W.clight}:THEMES[W.theme];
+ const btn=event.target;btn.textContent='Creating…';
+ const r=await api('/create',{title:title,name:W.me.trim()});
+ if(!r.ok){toast('Could not create: '+(r.err||'network'));btn.textContent='Create 🚀';return}
+ TOK=r.tok;localStorage.cbaTok=TOK;WHO=W.me.trim();localStorage.cbaWho=WHO;
+ C={cu:Date.now(),title:title,emoji:W.emoji,names:[W.me.trim(),W.partner.trim()],theme:theme,
+    dates:W.useAZ?W.dates.filter(d=>d.t.trim()):[]};
+ cfgDirty=true;applyTheme();
+ pairView(r.code,r.exp);
+ started=1;sync();
+}
+function pairView(code,exp){show('wz');const w=$('wz');
+ const link=APP.site+'#join='+code;
+ w.innerHTML=`<div class="wlogo">${C?C.emoji:'💑'}</div><div class="wt" style="font-size:22px">Now invite your partner</div>
+ <div class="ws">They open the link or enter this code. Single-use, expires in <b id="cdw">15:00</b>.</div>
+ <div class="card" style="text-align:center"><div class="hint">Pairing code</div><div class="bigcode">${code}</div>
+ <img id="qr" alt="QR code - scan with your partner's camera">
+ <div class="cdn">or scan with their phone camera</div>
+ <div class="row2" style="margin-top:12px"><button class="btn ghost" style="margin:0" onclick="navigator.clipboard&&navigator.clipboard.writeText('${link}');toast('Link copied!')">📋 Copy link</button>
+ <a class="btn ghost" style="margin:0;text-decoration:none;display:flex;align-items:center;justify-content:center" target="_blank" href="https://wa.me/?text=${encodeURIComponent('Join our adventure! 💑 '+link)}">💬 WhatsApp</a></div></div>
+ <button class="btn" onclick="enterMain()">Skip for now →</button>
+ <div class="ws" id="pw">Waiting for your partner to join…</div>`;
+ try{const q=qrcode(0,'M');q.addData(link);q.make();$('qr').src=q.createDataURL(6,6)}catch(e){$('qr').style.display='none'}
+ const t0=Date.now();
+ clearInterval(pollT);
+ pollT=setInterval(async()=>{
+  const left=Math.max(0,exp-Date.now());const el=$('cdw');
+  if(el)el.textContent=Math.floor(left/60000)+':'+String(Math.floor(left/1000)%60).padStart(2,'0');
+  const r=await api('/devices',{tok:TOK});
+  if(r.ok&&r.devices&&r.devices.length>=2){clearInterval(pollT);boom(60);toast('💞 '+((r.devices.find(d=>!d.self)||{}).name||'Your partner')+' joined!');enterMain()}
+  else if(r.ok){const pw=$('pw');if(pw)pw.textContent=r.joinCode?'Waiting for your partner to join…':'⏳ Code expired - tap Settings ⚙️ → Pairing for a new one'}
+ },3000)}
+async function doJoin(){
+ const name=($('jme')||{}).value.trim(),code=(($('jcode')||{}).value||'').toUpperCase().trim();
+ if(!name){toast('Add your name first');return}
+ if(code.length!=6){toast('The code has 6 characters');return}
+ const r=await api('/join',{code:code,name:name});
+ if(!r.ok){toast(r.err=='not found'?'Code not found or expired - ask your partner for a fresh one':(r.err||'Could not join'));return}
+ TOK=r.tok;localStorage.cbaTok=TOK;WHO=name;localStorage.cbaWho=WHO;location.hash='';
+ enterMain();boom(60);toast('💞 Welcome! You are linked.')
+}
+function enterMain(){clearInterval(pollT);show('main');rHead();buildGrid();refresh();startSync();
+ if(!('Notification' in window)||Notification.permission!='granted')setTimeout(()=>toast('Tap 🔔 top-right to turn on real notifications'),2500)}
+
+/* ====== custom ideas ====== */
+function ideaForm(editIdx){const edit=editIdx!==undefined&&editIdx>=0;const d=edit?D()[editIdx]:null;
+ const em=prompt('Emoji for this date idea:',d?d.e:'🎈');if(em===null)return;
+ const t=prompt('Name of the date:',d?d.t:'');if(!t)return;
+ const ds=prompt('Short description (optional):',d?d.d||'':'');
+ if(edit){d.e=em.trim()||d.e;d.t=t.trim();d.d=ds||''}
+ else{const pal=[['#ff4d8d','#6a11cb'],['#00c6ff','#0072ff'],['#11998e','#38ef7d'],['#f2994a','#eb5757'],['#c86dd7','#3023ae'],['#43cea2','#185a9d']];const p=pal[D().length%pal.length];
+  C.dates.push({l:'c'+uid(),e:em.trim()||'🎈',t:t.trim(),d:ds||'',a:p[0],b:p[1]})}
+ C.cu=Date.now();cfgDirty=true;sv();buildGrid();refresh();if(edit)closeD();snd('done');toast(edit?'Idea updated ✏️':'Idea added! 🎉')}
+
+/* ====== settings ====== */
+async function setView(){snd('tap');show('set');const s=$('set');if(!C){s.innerHTML='<div class="empty">Loading…</div>';return}
+ const r=await api('/devices',{tok:TOK});
+ s.innerHTML=`<h2 style="text-align:center">⚙️ Settings</h2>
+ <div class="card"><h3>Couple</h3>
+  <div class="hint">Adventure title</div><input type="text" id="sti" value="${C.title||''}">
+  <div class="hint" style="margin-top:8px">Names</div><div class="row2"><input type="text" id="sn1" value="${(C.names||[])[0]||''}"><input type="text" id="sn2" value="${(C.names||[])[1]||''}"></div>
+  <div class="hint" style="margin-top:8px">Couple emoji</div><input type="text" id="sem" value="${C.emoji||'💑'}" style="max-width:90px;text-align:center;font-size:22px">
+  <button class="btn" onclick="saveSet()">Save changes</button></div>
+ <div class="card"><h3>Color scheme</h3>
+  <div class="swrow">${THEMES.map((t,i)=>`<div class="sw ${C.theme&&C.theme.g1==t.g1?'on':''}" style="background:linear-gradient(135deg,${t.g1},${t.g2})" title="${t.n}" onclick="C.theme={g1:'${t.g1}',g2:'${t.g2}',light:${t.light}};C.cu=Date.now();cfgDirty=true;applyTheme();sv();setView()"></div>`).join('')}
+  <div class="sw" style="background:linear-gradient(135deg,${C.theme.g1},${C.theme.g2});display:grid;place-items:center;font-size:11px;color:#fff;text-shadow:0 1px 3px #000" onclick="customTheme()">Custom</div></div></div>
+ <div class="card"><h3>Date ideas (${D().length})</h3><div class="hint">Tap one to edit or delete</div>
+  ${D().map((d,i)=>`<div class="erow"><span class="e">${(d.e||'🎯').split(' ')[0]}</span><b style="width:18px">${d.l.match(/^[A-Z]$/)?d.l:'✦'}</b><span style="flex:1">${d.t}</span><span style="cursor:pointer" onclick="ideaForm(${i})">✏️</span><span style="cursor:pointer" onclick="delIdea(${i})">🗑</span></div>`).join('')}
+  <button class="btn ghost" onclick="ideaForm()">＋ Add an idea</button></div>
+ <div class="card" id="pair"><h3>🔗 Pairing</h3><div class="hint">Devices linked to this couple (max 2). Removing a device blocks it instantly and frees the slot.</div>
+  ${r.ok?r.devices.map(d=>`<div class="dvrow">📱 <b>${d.name||'Unnamed'}</b>${d.self?' <span class="chip">this phone</span>':''}<button onclick="removeDev('${d.did}','${(d.name||'').replace(/'/g,'')}')">Remove</button></div>`).join(''):'<div class="empty">Could not load devices</div>'}
+  ${r.ok&&r.devices.length<2?`<div id="pcode" style="text-align:center;margin-top:10px"></div><button class="btn" onclick="genCode()">Generate pairing code</button>`:'<div class="hint" style="margin-top:8px">Couple is full (2 devices). Remove one to pair a new phone.</div>'}
+ </div>
+ <div class="card"><h3>🔔 Notifications</h3><div class="hint">Real alerts on both phones, even with the app closed. Deadline reminders included.</div>
+  <button class="btn" onclick="enableAlerts()">Turn on notifications</button></div>
+ <button class="btn ghost" onclick="show('main');refresh()">← Back to our dates</button>
+ <div style="text-align:center;opacity:.5;font-size:11px;margin-top:24px">${APP.name} · private by design · your data syncs only between your two phones</div>`}
+function customTheme(){const g1=prompt('Top color (hex, e.g. #1a1030):',C.theme.g1);if(!g1)return;const g2=prompt('Bottom color (hex):',C.theme.g2);if(!g2)return;
+ C.theme={g1:g1,g2:g2,light:confirm('Light theme (dark text)? OK = light, Cancel = dark')};C.cu=Date.now();cfgDirty=true;applyTheme();sv();setView()}
+function saveSet(){C.title=$('sti').value.trim()||C.title;C.names=[$('sn1').value.trim(),$('sn2').value.trim()];
+ const em=[...$('sem').value.trim()];if(em.length)C.emoji=em.join('');
+ C.cu=Date.now();cfgDirty=true;sv();rHead();toast('Saved ✔');setView()}
+function delIdea(i){const d=D()[i];if(!confirm('Delete "'+d.t+'"? Its photos stay in the gallery.'))return;
+ C.dates.splice(i,1);C.cu=Date.now();cfgDirty=true;sv();setView();toast('Idea deleted')}
+async function genCode(){const r=await api('/newcode',{tok:TOK});
+ if(!r.ok){toast(r.err||'Could not create a code');return}
+ const link=APP.site+'#join='+r.code;
+ $('pcode').innerHTML=`<div class="bigcode">${r.code}</div><img id="qr2" style="background:#fff;border-radius:18px;padding:12px;width:190px" alt="QR">
+ <div class="cdn">Single-use · expires in 15:00<br><a href="${link}" style="color:var(--acc2)">${link}</a></div>`;
+ try{const q=qrcode(0,'M');q.addData(link);q.make();$('qr2').src=q.createDataURL(6,6)}catch(e){$('qr2').style.display='none'}}
+async function removeDev(did,name){if(!confirm('Remove '+(name||'this device')+'? It loses access instantly.'))return;
+ const r=await api('/remove',{tok:TOK,did:did});
+ if(r.ok){toast('Removed');if(r.self){localStorage.removeItem('cbaTok');localStorage.removeItem('cbaD');location.reload()}else setView()}else toast(r.err||'Failed')}
+
+/* ====== boot ====== */
+function buildGrid(){}
+function openByL(l){const i=D().findIndex(d=>d.l==l);if(i>=0)openD(i)}
+if(TOK){enterMain();
+ // wait for first sync to have config, then honor deep link
+ const dl=(location.hash.match(/d=([A-Za-z0-9_-]+)/)||[])[1];
+ if(dl){const iv=setInterval(()=>{if(D().length){clearInterval(iv);openByL(dl)}},500);setTimeout(()=>clearInterval(iv),8000)}
+}else{const hc=(location.hash.match(/join=([A-Z2-9]{6})/i)||[])[1];wiz(hc?9:0)}
+if("serviceWorker" in navigator)window.addEventListener("load",()=>{navigator.serviceWorker.register("./service-worker.js").catch(()=>{})});
+</script></body></html>
