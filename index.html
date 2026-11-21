@@ -51,9 +51,9 @@ nav button:hover{filter:brightness(1.15)}
 #bnav{display:none}
 #fab{display:none}
 /* ---------- detail overlay ---------- */
-#det{position:fixed;inset:0;z-index:20;overflow-y:auto;color:#fff;background:linear-gradient(160deg,var(--a),var(--b));transform:translateY(100%);transition:transform .45s cubic-bezier(.2,1,.3,1);text-shadow:0 1px 5px #0005}
+#det{position:fixed;inset:0;z-index:40;overflow-y:auto;color:#fff;background:linear-gradient(160deg,var(--a),var(--b));transform:translateY(100%);transition:transform .45s cubic-bezier(.2,1,.3,1);text-shadow:0 1px 5px #0005}
 #det.open{transform:none}
-.fl{position:fixed;bottom:-60px;pointer-events:none;animation:rise linear infinite;opacity:.7}
+.fl{position:fixed;bottom:-60px;pointer-events:none;animation:rise linear infinite;opacity:.22}
 @keyframes rise{to{transform:translateY(-115vh) rotate(360deg);opacity:0}}
 .in{position:relative;z-index:2;padding:16px 16px 70px;max-width:560px;margin:auto}
 .back{border:0;background:#0004;color:#fff;border-radius:20px;padding:9px 16px;font-size:15px;font-weight:600}
@@ -398,7 +398,7 @@ function tab(n){snd('tap');$('n1').className=n==1?'on':'';$('n2').className=n==2
 /* ====== detail ====== */
 function openD(i){cur=i;snd('open');const d=D()[i],el=$('det');
  $('detf').style.setProperty('--a',d.a);$('detf').style.setProperty('--b',d.b);el.style.setProperty('--a',d.a);el.style.setProperty('--b',d.b);
- const em=(d.e||'🎯').split(' ');let f='';for(let k=0;k<16;k++)f+=`<span class="fl" style="left:${Math.random()*95}%;font-size:${20+Math.random()*30}px;animation-duration:${6+Math.random()*8}s;animation-delay:${-Math.random()*12}s">${em[k%em.length]}</span>`;
+ const em=(d.e||'🎯').split(' ');let f='';for(let k=0;k<5;k++)f+=`<span class="fl" style="left:${Math.random()*92}%;font-size:${16+Math.random()*14}px;animation-duration:${9+Math.random()*8}s;animation-delay:${-Math.random()*14}s">${em[k%em.length]}</span>`;
  $('detf').innerHTML=f+`<div class="in"><button class="back" onclick="closeD()">← Back</button><div class="big">${d.e||'🎯'}</div><h2 class="dl2">${d.l.match(/^[A-Z]$/)?d.l:''}${d.t?(d.l.match(/^[A-Z]$/)?' — ':'')+d.t:''}</h2><p class="tg">${d.d||''}</p>
  <button id="dnb" class="dn" onclick="togD()"></button>
  <div class="box"><b>📅 Date we did it</b><input id="dt" type="date" onchange="ed('${d.l}','date',this.value)"></div>
