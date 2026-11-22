@@ -297,6 +297,8 @@ const LS='au_';
 const $=(s,r=document)=>r.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return s;
+  return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});};
 /* ---------- state ---------- */
 const store={
   get(k,d){try{const v=localStorage.getItem(LS+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
@@ -779,7 +781,7 @@ function openLetter(L){
     <div class="grab"></div>
     <div class="sheet-L"><span class="big">${L}</span>
       <div><div style="font-weight:600;font-size:17px">${esc(st.note||ideaFor(L))}</div>
-      <div style="font-size:13px;color:var(--ink-3)">${st.done?('Done'+(st.date?' · '+esc(st.date):'')):'Not yet'}</div></div></div>
+      <div style="font-size:13px;color:var(--ink-3)">${st.done?('Done'+(st.date?' · '+esc(fmtDate(st.date)):'')):'Not yet'}</div></div></div>
     <div class="field" style="margin-top:var(--sp-4)"><label>Our idea</label>
       <input class="input" id="sNote" maxlength="60" value="${esc(st.note||'')}" placeholder="${esc(ideaFor(L))}"></div>
     <div style="display:flex;gap:10px">
@@ -1021,7 +1023,7 @@ function renderSettings(s){
     if(!dates.length)box.innerHTML='<div class="set-row"><div class="d">Anniversaries, birthdays, whatever matters.</div></div>';
     dates.forEach((d,i)=>{
       const row=el('div','set-row');
-      row.innerHTML=`<div class="grow"><div class="t">${esc(d.t||'')}</div><div class="d">${esc(d.d||'')}</div></div>`;
+      row.innerHTML=`<div class="grow"><div class="t">${esc(d.t||'')}</div><div class="d">${esc(fmtDate(d.d)||'')}</div></div>`;
       const rm=el('button','iconbtn');rm.innerHTML=I.trash;
       rm.onclick=()=>{dates.splice(i,1);bump();drawDates();};
       row.appendChild(rm);box.appendChild(row);
