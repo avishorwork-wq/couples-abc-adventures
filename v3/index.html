@@ -1085,10 +1085,15 @@ function gridFromClean(clean,lw,lh,cols,rows){
   return {cols,rows,colors};
 }
 function scanSuccessFX(fx,cap,res,text,code6,onComplete){
-  const lw=res.layout.W,lh=res.layout.H;
-  let clean;
-  try{clean=Prism.render(Prism.encode(new TextEncoder().encode(text),{}),9);}
-  catch(e){clean=cap;}
+  /* the worker/fused decode reports a refined FRACTIONAL layout; re-encoding the
+     decoded text gives the code's true integer grid, which is what the clean
+     render, the cell sampling and the pose mapping must all use */
+  let clean,lw,lh;
+  try{
+    const code=Prism.encode(new TextEncoder().encode(text),{});
+    clean=Prism.render(code,9);
+    lw=code.layout.W;lh=code.layout.H;
+  }catch(e){clean=cap;lw=res.layout.W;lh=res.layout.H;}
   const grid=gridFromClean(clean,lw,lh,Math.round(lw),Math.round(lh));
   const m0=fx.M0FromQuad(res.quad.map(p=>[p[0],p[1]]),cap.width,cap.height,lw,lh);
   fx.lock(grid,cap,m0);
