@@ -544,6 +544,11 @@ function renderJoin(preset){
   $('#f').onsubmit=async e=>{
     e.preventDefault();
     const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+    if(state.tok){
+      const cur=state.C.title||'your current couple';
+      const ok=await modalAsk({title:'This phone is already paired'+(cur?' ('+cur+')':'')+'. Joining a new couple replaces the pairing on this phone. Your partner keeps everything.',ok:'Replace pairing',danger:true,placeholder:null});
+      if(ok!==true){b.disabled=false;b.textContent='Join';return;}
+    }
     try{
       const j=await api('/join',{code:$('#code').value.trim(),name:$('#name').value.trim()});
       state.tok=j.tok;state.who='b';store.set('tok',j.tok);store.set('who','b');
