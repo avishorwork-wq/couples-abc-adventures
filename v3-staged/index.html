@@ -718,7 +718,7 @@ async function startScan(box){
           if(clipFrac(lastQuad)>0.35){ /* the code region is heavily blown out; the score trend decides whether the step stays */
             const cur=typeof st.exposureCompensation==='number'?st.exposureCompensation:0;
             if(auto.baselineEv==null)auto.baselineEv=cur;
-            const v=Math.max(ec.min,cur-0.3);
+            const v=Math.max(ec.min,(auto.baselineEv!=null?auto.baselineEv:cur)-0.3*(auto.evTried+1)); /* escalate from the opening value so a failed step is never retried */
             if(v<cur-0.01&&await setEv(v)){auto.evState='eval';auto.evalT0=Date.now();auto.prevMed=autoMed(w);auto.evTried++;}
             else auto.evTried=2;
           }else auto.evTried=2; /* not a clipping scene: EV is not our hypothesis here */
