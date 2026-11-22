@@ -642,12 +642,14 @@ async function startScan(box){
     /* automatic capture assist: no UI, no reports, no user steps. The decisive
        signal is decode quality itself (hypothesis scores in the rolling window);
        clipping is only a supporting gate. Bounded: at most one rear-camera probe
-       per session with revert-on-no-improvement, and at most two 0.3 EV steps
-       down with rollback to the opening value. All changes are session-scoped
+       per session with revert-on-no-improvement, at most two manual focusDistance
+       probes when the scene is poor but not blown out, and at most two escalating
+       0.3 EV steps down when it is; every step rolls back toward the opening
+       values when scores do not improve. All changes are session-scoped
        applyConstraints; closing the scanner ends them. Never acts while a read
        is in flight, after Verified, or when no code-like scene is in view. */
     let lastFrame=null;
-    const auto={t0:Date.now(),win:[],camProbe:'no',evalT0:0,prevMed:0,firstCam:null,evState:'idle',evTried:0,baselineEv:null,lastAction:0,busy:false,nextAct:0};
+    const auto={t0:Date.now(),win:[],camProbe:'no',evalT0:0,prevMed:0,firstCam:null,evState:'idle',evTried:0,baselineEv:null,fState:'idle',fTried:0,baselineFocus:null,lastAction:0,busy:false,nextAct:0};
     const autoMed=w=>{if(!w.length)return 0;const bs=w.map(x=>x.best).sort((a,b)=>a-b);return bs[Math.floor(bs.length/2)];};
     const autoEngaged=w=>w.length>=12&&w.filter(x=>x.n>0).length/w.length>=0.3; /* contours on enough frames: something code-like is actually in view */
     const autoPoor=w=>autoMed(w)<0.2&&!w.some(x=>x.best>=0.45);
@@ -670,6 +672,10 @@ async function startScan(box){
     const setEv=async v=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
       if(!tr)return false;
       try{await tr.applyConstraints({advanced:[{exposureCompensation:v}]});return true;}catch(e){return false;}};
+    const setFocus=async(fm,fd)=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
+      if(!tr)return false;
+      try{const adv={};if(fm)adv.focusMode=fm;if(typeof fd==='number')adv.focusDistance=fd;
+        await tr.applyConstraints({advanced:[adv]});return true;}catch(e){return false;}};
     const autoAct=async()=>{
       if(auto.busy||closed||decoding||verifiedOk)return;
       const now=Date.now();
@@ -691,7 +697,22 @@ async function startScan(box){
         auto.lastAction=now;auto.busy=true;
         try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
           if(improved){auto.evState='idle';auto.evTried=2; /* accepted: stop stepping */}
-          else{if(auto.baselineEv!=null)await setEv(auto.baselineEv);auto.evState='idle';} /* rollback */
+          else{let ok=auto.baselineEv!=null&&await setEv(auto.baselineEv);
+            if(!ok&&auto.baselineEv!=null)ok=await setEv(auto.baselineEv); /* one retry */
+            auto.evState='idle';if(!ok)auto.evTried=2; /* restore failed: stop stepping; residue is session-scoped */}
+        }finally{auto.busy=false;}
+        return;
+      }
+      if(auto.fState==='eval'){
+        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<4000);
+        if(w2.length<8)return;
+        auto.lastAction=now;auto.busy=true;
+        try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
+          if(improved){auto.fState='idle';auto.fTried=2; /* accepted: keep the distance */}
+          else{const b=auto.baselineFocus;
+            let ok=!b||await setFocus(b.fm,b.fd);
+            if(!ok&&b)ok=await setFocus(b.fm,b.fd); /* one retry */
+            auto.fState='idle';if(!ok)auto.fTried=2;}
         }finally{auto.busy=false;}
         return;
       }
@@ -711,6 +732,18 @@ async function startScan(box){
             if(await switchTo(others[0].deviceId)){auto.camProbe='eval';auto.evalT0=Date.now();}
             else auto.camProbe='done';
           }else auto.camProbe='done';
+          return;
+        }
+        const fd=caps.focusDistance;
+        if(fd&&typeof fd.min==='number'&&fd.max>fd.min&&auto.fTried<2&&clipFrac(lastQuad)<=0.35){ /* poor but not blown out: defocus is the hypothesis */
+          if(!auto.baselineFocus)auto.baselineFocus={fm:st.focusMode||null,fd:typeof st.focusDistance==='number'?st.focusDistance:null};
+          const span=fd.max-fd.min;
+          const v=Math.min(fd.max,Math.max(fd.min,fd.min+span*(auto.fTried===0?0.5:0.78)));
+          const cur=typeof st.focusDistance==='number'?st.focusDistance:NaN;
+          if(isNaN(cur)||Math.abs(v-cur)>0.02){
+            if(await setFocus('manual',v)){auto.fState='eval';auto.evalT0=Date.now();auto.prevMed=autoMed(w);auto.fTried++;}
+            else auto.fTried=2;
+          }else auto.fTried++;
           return;
         }
         const ec=caps.exposureCompensation;
