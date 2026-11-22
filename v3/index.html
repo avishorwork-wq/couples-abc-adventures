@@ -544,13 +544,28 @@ async function startScan(box){
       try{id=cx.getImageData(0,0,cap.width,cap.height);}catch(e){}
       /* 1) cheap detection pass -> live tracking brackets on the real quad */
       let quad=null;
-      if(id){try{Prism.beginDecode(700);const qs=Prism.detectCurved(Prism.frame(id));if(qs&&qs.length){
-        /* continuity first: when tracking, prefer the candidate nearest the previous
-           quad; otherwise take the largest */
-        if(lastQuad){qs.sort((a,b)=>quadDist(a,lastQuad)-quadDist(b,lastQuad));
-          if(quadDist(qs[0],lastQuad)>cap.width*.25)qs.sort((a,b)=>quadArea(b)-quadArea(a));}
-        else qs.sort((a,b)=>quadArea(b)-quadArea(a));
-        quad=qs[0];}}catch(e){}}
+      if(id){try{Prism.beginDecode(700);const f=Prism.frame(id);const qs=Prism.detectCurved(f);
+        if(qs&&qs.length){
+          /* rank candidates by the decoder's own hypothesis score: a real code's cells
+             match the format; background shapes score near zero */
+          qs.sort((a,b)=>quadArea(b)-quadArea(a));
+          const cand=[];
+          for(const q0 of qs.slice(0,3)){
+            let best=0;
+            for(const size of [1,2]){const lay=Prism.layout(size);
+              for(let rot=0;rot<4;rot++){const q=q0.map((_,i)=>q0[(i+rot)%4]);
+                const h=Prism.homography(Prism.corners(lay),q);
+                const sc=Prism.hypothesisScore(f,h,lay,0,Prism.whiteBalance(f,h,lay),true);
+                if(sc.score>best)best=sc.score;}}
+            if(best>=0.45)cand.push({q:q0,sc:best});
+          }
+          if(cand.length){
+            cand.sort((a,b)=>b.sc-a.sc);
+            let pick=cand[0];
+            if(lastQuad){const near=cand.find(c=>quadDist(c.q,lastQuad)<cap.width*.08);if(near)pick=near;}
+            quad=pick.q;
+          }
+        }}catch(e){}}
       if(quad){
         const d=lastQuad?quadDist(quad,lastQuad):1e9;
         stab=(lastQuad&&d<cap.width*.08)?Math.min(4,stab+1):1;
@@ -569,6 +584,7 @@ async function startScan(box){
           const text=new TextDecoder().decode(res.bytes||[]);
           const m=/#\/join=([A-Z2-9]{6})/.exec(text);
           if(!m)return;
+          window.__lastDecode={quad:res.quad.map(p=>[p[0],p[1]]),lw:res.layout.W,lh:res.layout.H,capW:cap.width,capH:cap.height,fused:res.fusedFrames||0};
           for(const t of scanStream.getTracks())t.stop();scanStream=null;
           vid.remove();
           fx.track(null,0);
