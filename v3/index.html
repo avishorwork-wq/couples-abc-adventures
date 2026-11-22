@@ -1002,17 +1002,24 @@ function renderSettings(s){
 /* iOS PWA-safe modals (window.prompt/confirm are broken in home-screen apps) */
 function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
   return new Promise(res=>{
-    const ov=el('div','scrim on');ov.style.zIndex=95;
+    const ov=el('div','scrim');ov.style.zIndex=95;
     const box=el('div','card');
-    box.style.cssText='position:fixed;left:50%;top:28%;transform:translateX(-50%);z-index:96;padding:18px;width:min(330px,86vw)';
+    box.style.cssText='position:fixed;left:50%;top:28%;transform:translateX(-50%) translateY(10px) scale(.96);opacity:0;z-index:96;padding:18px;width:min(330px,86vw);transition:opacity .22s var(--ease),transform .22s var(--ease)';
     box.innerHTML=`<div style="font-weight:600;margin-bottom:12px">${esc(title)}</div>
       ${placeholder!==null?`<input class="input" id="pv" value="${esc(value)}" placeholder="${esc(placeholder)}">`:''}
       <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-soft" id="pc" style="flex:1">Cancel</button>
       <button class="btn ${danger?'btn-danger':'btn-primary'}" id="pk" style="flex:1">${esc(ok)}</button></div>`;
     document.body.append(ov,box);
+    requestAnimationFrame(()=>{ov.classList.add('on');box.style.opacity='1';box.style.transform='translateX(-50%) translateY(0) scale(1)';});
     const inp=box.querySelector('#pv');if(inp)inp.focus();
-    const done=v=>{ov.remove();box.remove();res(v);};
+    let closing=false;
+    const done=v=>{
+      if(closing)return;closing=true;
+      ov.classList.remove('on');box.style.opacity='0';box.style.transform='translateX(-50%) translateY(6px) scale(.97)';
+      setTimeout(()=>{ov.remove();box.remove();res(v);},180);
+    };
+    ov.onclick=()=>done(null);
     box.querySelector('#pc').onclick=()=>done(null);
     box.querySelector('#pk').onclick=()=>done(inp?inp.value.trim():true);
     if(inp)inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim());};
