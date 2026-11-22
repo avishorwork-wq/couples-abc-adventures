@@ -110,7 +110,10 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .screen{flex:1;display:flex;flex-direction:column;width:100%;max-width:460px;margin:0 auto;
   padding:calc(var(--sp-5) + env(safe-area-inset-top)) var(--sp-5) calc(92px + env(safe-area-inset-bottom))}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.screen>*{opacity:0;animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
+/* entrances stay hidden until the first real paint (.booted) so the stagger plays
+   visibly instead of running during page load */
+.screen>*{opacity:0}
+html.booted .screen>*{animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
 .screen>*:nth-child(1){animation-delay:.02s}
 .screen>*:nth-child(2){animation-delay:.10s}
 .screen>*:nth-child(3){animation-delay:.18s}
@@ -119,12 +122,14 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .screen>*:nth-child(6){animation-delay:.40s}
 .screen>*:nth-child(7){animation-delay:.46s}
 .screen>*:nth-child(n+8){animation-delay:.52s}
-.screen .stag>*{opacity:0;animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
+.screen .stag>*{opacity:0}
+html.booted .screen .stag>*{animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
 .screen .stag>*:nth-child(1){animation-delay:.30s}
 .screen .stag>*:nth-child(2){animation-delay:.40s}
 .screen .stag>*:nth-child(n+3){animation-delay:.48s}
 @keyframes tilein{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:none}}
-.az-tile{animation:tilein .55s cubic-bezier(.22,1,.36,1) backwards}
+.az-tile{opacity:0}
+html.booted .az-tile{animation:tilein .55s cubic-bezier(.22,1,.36,1) forwards}
 
 @keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(min-width:960px){
@@ -225,9 +230,10 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .starpick button.pop{animation:starpop .38s var(--ease)}
 /* ---------- gallery ---------- */
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:var(--r-m);overflow:hidden}
-.gal figure{opacity:0;animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
+.gal figure{opacity:0}
+html.booted .gal figure{animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes donepop{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
-.az-tile.just-done{animation:rise .45s cubic-bezier(.22,1,.36,1) forwards,donepop .55s var(--ease) .45s}
+html.booted .az-tile.just-done{animation:rise .45s cubic-bezier(.22,1,.36,1) forwards,donepop .55s var(--ease) .45s}
 @media(min-width:960px){.gal{grid-template-columns:repeat(5,1fr);gap:6px}}
 .gal figure{aspect-ratio:1;background:var(--bg-sunk);position:relative;overflow:hidden}
 .gal img,.gal video{width:100%;height:100%;object-fit:cover}
@@ -777,7 +783,7 @@ function renderGrid(s){
     const cols=Math.max(1,getComputedStyle(g).gridTemplateColumns.split(' ').length);
     [...g.children].forEach((t,i)=>{
       if(t.classList.contains('just-done'))return;
-      t.style.animationDelay=((Math.floor(i/cols)+(i%cols))*45)+'ms';
+      t.style.animationDelay=Math.min((Math.floor(i/cols)+(i%cols))*80,640)+'ms';
     });
   });
 }
@@ -964,7 +970,7 @@ function renderGallery(s){
   let gi=0;
   for(const m of items){
     const f=el('figure');
-    f.style.animationDelay=Math.min(gi++*45,450)+'ms';
+    f.style.animationDelay=Math.min(gi++*65,520)+'ms';
     const img=el(m.t==='v'?'video':'img');
     if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
     else img.loading='lazy';
@@ -1586,6 +1592,9 @@ window.__recPurge=async function(id){
 /* ---------- boot ---------- */
 applyTheme();
 route();
+/* start entrance animations only after the first real paint, so the stagger
+   is visible on the page rather than spent during load */
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('booted')));
 if('serviceWorker' in navigator){
   addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
 }
