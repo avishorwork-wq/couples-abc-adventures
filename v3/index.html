@@ -1299,7 +1299,9 @@ window.__liveDemoRecord=function(){
   const cam=document.createElement('canvas');cam.width=1280;cam.height=720;
   const cc=cam.getContext('2d',{willReadFrequently:true});
   const url=location.origin+location.pathname+'#/join=K7QX2M';
-  const rc=Prism.render(Prism.encode(new TextEncoder().encode(url),{}),9);
+  const pCode=Prism.encode(new TextEncoder().encode(url),{});
+  const rc=Prism.render(pCode,9);
+  const LW=pCode.layout.W,LH=pCode.layout.H,MX=(rc.width-LW*9)/2,MY=(rc.height-LH*9)/2;
   const T0=performance.now();
   let truth=null;
   const ease=x=>x<0?0:x>1?1:x*x*(3-2*x);
@@ -1324,7 +1326,8 @@ window.__liveDemoRecord=function(){
       cc.save();cc.translate(p.x,p.y);cc.rotate(p.rot);cc.scale(p.s,p.s);
       cc.drawImage(rc,-rc.width/2,-rc.height/2);cc.restore();
       const c=Math.cos(p.rot),s2=Math.sin(p.rot),hw=rc.width/2,hh=rc.height/2;
-      truth=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(q=>[p.x+(q[0]*c-q[1]*s2)*p.s,p.y+(q[0]*s2+q[1]*c)*p.s]);
+      truth=[[MX,MY],[MX+LW*9,MY],[MX+LW*9,MY+LH*9],[MX,MY+LH*9]]
+        .map(q=>{const x=q[0]-hw,y=q[1]-hh;return [p.x+(x*c-y*s2)*p.s,p.y+(x*s2+y*c)*p.s];});
     }else truth=null;
   }
   drawCam();setInterval(drawCam,33);
