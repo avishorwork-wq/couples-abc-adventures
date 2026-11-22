@@ -796,22 +796,24 @@ async function uploadMedia(L,file){
   if(isVideo&&file.size>8*1024*1024)throw new Error('Videos up to 8 MB');
   if(!isVideo&&!file.type.startsWith('image/'))throw new Error('Photos or videos only');
   const id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-  let parts;
-  if(isVideo){
-    const data=await b64(file);
-    parts=[{name:'data',data}];
-  }else{
-    const {full,thumb}=await compressImage(file);
-    parts=[{name:'data',data:await b64(full)},{name:'thumb',data:await b64(thumb)}];
-  }
+  const ts=Date.now();
+  const mime=isVideo?file.type:'image/jpeg';
   const CH=950000;
-  for(const p of parts){
-    const n=Math.ceil(p.data.length/CH);
-    for(let i=0;i<n;i++){
-      await api('/up',{tok:state.tok,id,part:p.name,chunk:i,chunks:n,data:p.data.slice(i*CH,(i+1)*CH)});
-    }
+  let data,size,thumb=null;
+  if(isVideo){
+    data=await b64(file);size=file.size;
+  }else{
+    const c=await compressImage(file);
+    data=await b64(c.full);size=c.full.size;thumb=await b64(c.thumb);
   }
-  state.M.push({id,l:L,t:isVideo?'v':'i',ts:Date.now(),mime:isVideo?file.type:'image/jpeg',size:file.size,n:file.name});
+  if(thumb)await api('/up',{tok:state.tok,id,part:'t',data:thumb,size});
+  const n=Math.max(1,Math.ceil(data.length/CH));
+  for(let i=0;i<n;i++){
+    const last=i===n-1;
+    await api('/up',{tok:state.tok,id,part:String(i),data:data.slice(i*CH,(i+1)*CH),
+      ...(last?{final:true,size,l:L,t:isVideo?'v':'i',ts,mime,n,thumb:!!thumb}:{size})});
+  }
+  state.M.push({id,l:L,t:isVideo?'v':'i',ts,mime,size,n,thumb:!!thumb});
   bump();
 }
 function openMedia(m){
