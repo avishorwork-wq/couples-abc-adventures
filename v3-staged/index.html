@@ -604,7 +604,12 @@ async function startScan(box){
     L.push('Alphabet Us scanner check ('+(D0.v||'?')+')');
     L.push('Device: '+String(D0.ua||'').slice(0,140));
     L.push('Screen: '+(D0.screen||[]).join('x'));
-    L.push('Camera applied: '+JSON.stringify(s));
+    const sNoId=Object.assign({},s);delete sNoId.deviceId;delete sNoId.groupId;
+    L.push('Camera applied: '+JSON.stringify(sNoId));
+    const sm=D0.samples||[];
+    if(sm.length){const mm=k=>{const v=sm.map(x=>x[k]).filter(x=>typeof x==='number');return v.length?{min:Math.min(...v),max:Math.max(...v)}:null;};
+      L.push('Over '+sm.length+' samples: exposureTime='+JSON.stringify(mm('exposureTime'))+' iso='+JSON.stringify(mm('iso'))+' focusDistance='+JSON.stringify(mm('focusDistance'))+' focusMode='+JSON.stringify([...new Set(sm.map(x=>x.focusMode))])+' exposureMode='+JSON.stringify([...new Set(sm.map(x=>x.exposureMode))]));}
+    if(D0.cams)L.push('Cameras listed: '+JSON.stringify(D0.cams));
     L.push('Camera modes: focus='+JSON.stringify(c.focusMode||null)+' exposure='+JSON.stringify(c.exposureMode||null)+' whiteBalance='+JSON.stringify(c.whiteBalanceMode||null)+' size='+JSON.stringify({w:c.width||null,h:c.height||null}));
     const rg=k=>c[k]&&typeof c[k]==='object'&&!Array.isArray(c[k])?{min:c[k].min,max:c[k].max,step:c[k].step}:(c[k]===undefined?null:c[k]);
     L.push('Camera ranges: '+JSON.stringify({exposureCompensation:rg('exposureCompensation'),iso:rg('iso'),exposureTime:rg('exposureTime'),focusDistance:rg('focusDistance'),zoom:rg('zoom'),frameRate:rg('frameRate'),torch:c.torch===undefined?null:c.torch,resizeMode:c.resizeMode||null}));
@@ -619,6 +624,9 @@ async function startScan(box){
   };
   const stillProbe=async()=>{
     const D0=window.__scanDiag;if(!D0||!D0.track)return;
+    try{D0.samples=[];const smp=()=>{try{const x=D0.track.getSettings();D0.samples.push({exposureTime:x.exposureTime,iso:x.iso,focusDistance:x.focusDistance,focusMode:x.focusMode,exposureMode:x.exposureMode});}catch(e){}};
+      smp();const smT=setInterval(smp,1500);setTimeout(()=>clearInterval(smT),15500);}catch(e){}
+    try{const dv=await navigator.mediaDevices.enumerateDevices();D0.cams=dv.filter(d=>d.kind==='videoinput').map(d=>String(d.label||'(no label)').replace(/[0-9a-f]{16,}/gi,'').slice(0,60));}catch(e){}
     const S={};D0.still=S;
     const to=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout '+ms+'ms')),ms))]);
     try{
@@ -649,7 +657,7 @@ async function startScan(box){
     const p=el('div','');
     p.style.cssText='position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:95;background:rgba(24,21,32,.96);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;color:#ecebf4;font-size:14px;line-height:1.5';
     p.innerHTML='<div style="font-weight:600;margin-bottom:6px">Scanner check</div>'
-      +'<div style="color:rgba(236,235,244,.75);margin-bottom:12px">Runs about 15 seconds of checks on this device only. Keep pointing the camera at the code as you normally would. It also takes one test photo that is read on this phone and thrown away. No photos, codes, or personal details leave your phone unless you copy and send the report yourself.</div>'
+      +'<div style="color:rgba(236,235,244,.75);margin-bottom:12px">Runs about 15 seconds of checks on this device only. Keep pointing the camera at the code as you normally would. It also takes one test photo: the preview may pause for a moment and your phone may make its shutter sound. That photo is read in memory on this phone and thrown away, never saved or uploaded. The report has no photos, code contents, or device IDs; nothing leaves your phone unless you copy and send the report yourself.</div>'
       +'<div style="display:flex;gap:10px"><button class="btn btn-primary" id="dgGo" style="flex:1;padding:10px">Start check</button><button class="btn" id="dgNo" style="padding:10px">Not now</button></div>';
     ov.appendChild(p);
     p.querySelector('#dgNo').onclick=()=>p.remove();
@@ -711,7 +719,7 @@ async function startScan(box){
     }catch(e){} /* continuous AF/AE/AWB only where the device reports support; defaults elsewhere */
     if(closed){for(const t of stream.getTracks())t.stop();return;} /* closed while permission/hardware was pending: never keep the camera */
     try{const trS=stream.getVideoTracks()[0];
-      window.__scanDiag={v:(location.pathname.indexOf('v3-staged')>=0?'staged':'v3')+'-diag2',t0:Date.now(),ua:navigator.userAgent,screen:[innerWidth,innerHeight],
+      window.__scanDiag={v:(location.pathname.indexOf('v3-staged')>=0?'staged':'v3')+'-diag3',t0:Date.now(),ua:navigator.userAgent,screen:[innerWidth,innerHeight],
         track:trS,settings:(trS&&trS.getSettings)?trS.getSettings():null,
         capabilities:(trS&&trS.getCapabilities)?trS.getCapabilities():null,
         ticks:[],reads:[],skipped:0,fail:null,armT0:null};
