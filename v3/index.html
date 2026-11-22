@@ -402,12 +402,52 @@ const I={
 /* ---------- default ideas ---------- */
 const AZ=[["A","Aquarium date"],["B","Board game night"],["C","Cook a new recipe"],["D","Day trip"],["E","Escape room"],["F","Farmers market"],["G","Go stargazing"],["H","Hike together"],["I","Ice cream crawl"],["J","Jazz bar"],["K","Karaoke night"],["L","Lake picnic"],["M","Museum morning"],["N","Night walk"],["O","Outdoor movie"],["P","Pottery class"],["Q","Quiz night"],["R","Road trip"],["S","Sunrise coffee"],["T","Thrift hunt"],["U","Under the stars camp"],["V","Volunteer together"],["W","Wine tasting"],["X","X marks the spot (treasure hunt)"],["Y","Yoga for two"],["Z","Zoo day"]];
 const ideaFor=l=>{const f=AZ.find(x=>x[0]===l);return f?f[1]:'';};
+/* ---------- back navigation: Android/Samsung back steps back inside the app ---------- */
+const Nav=(()=>{
+  let stack=[],skipPop=false;
+  const inApp=()=>current==='app';
+  function arm(){ /* keep a guard entry under the app so Back at the first screen stays in-app */
+    if(!inApp())return;
+    if(!history.state||!history.state.g){
+      try{history.replaceState({g:'base'},'');history.pushState({g:'guard'},'');}catch(e){}
+    }
+  }
+  function pushState(tag){try{history.pushState({g:'l',t:tag},'');}catch(e){}}
+  function pushTab(t){
+    if(!inApp()||state.tab===t){state.tab=t;renderApp();return;}
+    stack.push({type:'tab',prev:state.tab});
+    pushState('tab');
+    state.tab=t;renderApp();
+  }
+  function pushOverlay(close){const layer={type:'ov',close};stack.push(layer);pushState('ov');return layer;}
+  function removeLayer(l){ /* explicit close control used: consume its history entry */
+    const i=stack.lastIndexOf(l);if(i<0)return;
+    stack.splice(i,1);skipPop=true;history.back();
+  }
+  function closeTop(l){removeLayer(l);l.close();}
+  function reset(){stack=[];}
+  addEventListener('popstate',e=>{
+    if(skipPop){skipPop=false;return;}
+    const top=stack.pop();
+    if(top){
+      if(top.type==='tab'){state.tab=top.prev;renderApp();}
+      else top.close();
+      return;
+    }
+    if(inApp()&&e.state&&e.state.g==='base'){
+      try{history.pushState({g:'guard'},'');}catch(e){}
+    }
+  });
+  return {arm,pushTab,pushOverlay,removeLayer,closeTop,reset};
+})();
+
 /* ---------- router ---------- */
 let current='';
 function go(h){location.hash=h;}
 function route(){
   const h=location.hash||'#/welcome';
-  closeSheet();
+  closeSheetLocal();
+  Nav.reset();
   renderApp._key=null;
   if(h.startsWith('#/join=')){renderJoin(h.slice(7).toUpperCase());}
   else if(h==='#/create'){renderCreate();}
@@ -537,7 +577,9 @@ async function startScan(box){
   const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
   const onScanEsc=e=>{if(e.key==='Escape')cleanup();};
   document.addEventListener('keydown',onScanEsc);
-  const cleanup=()=>{document.removeEventListener('keydown',onScanEsc);stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
+  let scanLayer=null;
+  const cleanup=()=>{if(scanLayer){Nav.removeLayer(scanLayer);scanLayer=null;}document.removeEventListener('keydown',onScanEsc);stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
+  scanLayer=Nav.pushOverlay(cleanup);
   closeB.onclick=cleanup;
   const scanFail=(msg)=>{
     fx.stop();
@@ -734,11 +776,12 @@ function tabbar(){
     <button data-tab="grid">${I.grid}<span>A to Z</span></button>
     <button data-tab="gallery">${I.photos}<span>Photos</span></button>
     <button data-tab="settings">${I.gear}<span>Us</span></button>`;
-  t.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;renderApp();});
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>Nav.pushTab(b.dataset.tab));
   return t;
 }
 function renderApp(){
   current='app';document.body.classList.add('has-app');
+  Nav.arm();
   stopScan();
   const key=state.tab+'|'+state.C.cu+'|'+Object.values(state.S).map(x=>x.u||0).join(',')+'|'+state.M.length+'|'+state.M.map(m=>m.del?1:0).join('');
   if(key===renderApp._key&&$('#view .screen'))return;
@@ -757,7 +800,9 @@ function appHeader(s,title,sub){
   h.innerHTML=`<div><div style="font-family:var(--font-display);font-size:24px;font-weight:560">${title}</div>
     ${sub?`<div style="font-size:13px;color:var(--ink-3)">${sub}</div>`:''}</div><div class="spacer"></div>`;
   const inv=el('button','iconbtn');inv.innerHTML=I.share;inv.title='Invite';inv.onclick=()=>go('#/pair');
-  h.appendChild(inv);s.appendChild(h);
+  h.appendChild(inv);
+  if(state.tab!=='settings'){const gear=el('button','iconbtn');gear.innerHTML=I.gear;gear.title='Settings';gear.onclick=()=>Nav.pushTab('settings');h.appendChild(gear);}
+  s.appendChild(h);
 }
 function renderGrid(s){
   const doneCount=Object.values(state.S).filter(x=>x&&x.done).length;
@@ -808,7 +853,13 @@ function renderGrid(s){
   });
 }
 /* ---------- letter sheet ---------- */
-function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
+let sheetLayerRef=null;
+function closeSheetLocal(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');sheetLayerRef=null;}
+function closeSheet(fromPop){
+  const l=sheetLayerRef;
+  closeSheetLocal();
+  if(l&&!fromPop)Nav.removeLayer(l);
+}
 $('#scrim').onclick=closeSheet;
 /* Escape closes the topmost layer: modal (handled in modalAsk), scanner, then sheet */
 document.addEventListener('keydown',e=>{
@@ -864,6 +915,7 @@ function openLetter(L){
       <button class="btn btn-soft" id="sClose" style="flex:0 0 auto">Close</button>
     </div>`;
   sh.classList.add('on');$('#scrim').classList.add('on');
+  sheetLayerRef=Nav.pushOverlay(()=>closeSheet(true));
   let r=st.r;
   sh.querySelectorAll('#sStars button').forEach(b=>b.onclick=()=>{
     const n=+b.dataset.n,prev=r;
@@ -973,6 +1025,7 @@ function openMedia(m){
       <button class="btn btn-danger" id="mDel">${I.trash}<span>Delete</span></button>
     </div>`;
   sh.classList.add('on');$('#scrim').classList.add('on');
+  sheetLayerRef=Nav.pushOverlay(()=>closeSheet(true));
   $('#mClose').onclick=closeSheet;
   $('#mDel').onclick=async()=>{
     try{await api('/del',{tok:state.tok,id:m.id});}catch(e){}
@@ -1156,8 +1209,10 @@ function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
     requestAnimationFrame(()=>{ov.classList.add('on');box.style.opacity='1';box.style.transform='translateX(-50%) translateY(0) scale(1)';});
     const inp=box.querySelector('#pv');if(inp)inp.focus();
     let closing=false;
+    const maLayer=Nav.pushOverlay(()=>done(null));
     const done=v=>{
       if(closing)return;closing=true;
+      Nav.removeLayer(maLayer);
       document.removeEventListener('keydown',onAskEsc);
       ov.classList.remove('on');box.style.opacity='0';box.style.transform='translateX(-50%) translateY(6px) scale(.97)';
       setTimeout(()=>{ov.remove();box.remove();res(v);},180);
