@@ -12,6 +12,16 @@ function renderFlat(code){const c=Prism.render(code,8);const f=document.createEl
 function rotate(src,quarter){const s=quarter%2?src.height:src.width,t=quarter%2?src.width:src.height;
   const c=document.createElement('canvas');c.width=s;c.height=t;const g=c.getContext('2d');
   g.fillStyle='#fff';g.fillRect(0,0,s,t);g.translate(s/2,t/2);g.rotate(quarter*Math.PI/2);g.drawImage(src,-src.width/2,-src.height/2);return c;}
+function degrade(src,kind,seed){
+  if(kind==='blur'){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;
+    const g=c.getContext('2d');g.filter='blur(1.5px)';g.drawImage(src,0,0);
+    return g.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height);}
+  if(kind==='small'){const c=document.createElement('canvas');c.width=Math.round(src.width*0.55);c.height=Math.round(src.height*0.55);
+    const g=c.getContext('2d');g.drawImage(src,0,0,c.width,c.height);
+    const c2=document.createElement('canvas');c2.width=src.width;c2.height=src.height;
+    c2.getContext('2d').drawImage(c,0,0,c2.width,c2.height);
+    return c2.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c2.width,c2.height);}
+  return null;}
 function noise(src,level,seed){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;
   const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(src,0,0);
   if(!level)return g.getImageData(0,0,c.width,c.height);
@@ -27,14 +37,16 @@ for(const variant of ['stock','nogap']){
     const flat=renderFlat(code);
     for(let rot=0;rot<4;rot++){
       const rc=rotate(flat,rot);
-      for(const level of [0,0.03,0.06]){
+      for(const cond of ['clean','n0.03','n0.06','blur','small']){
         total++;
-        const id=noise(rc,level,rot*100+level*1e6+payload.length);
+        let id;
+        if(cond==='blur'||cond==='small'){id=degrade(rc,cond);}
+        else{const level=cond==='clean'?0:parseFloat(cond.slice(1));id=noise(rc,level,rot*100+level*1e6+payload.length);}
         try{
           const res=Prism.readImage({width:rc.width,height:rc.height,data:id.data});
           const text=new TextDecoder().decode(res.bytes);
-          if(text===payload)pass++;else fails.push(rot*90+'deg/'+level+' wrong-text');
-        }catch(e){fails.push(rot*90+'deg/'+level+' '+e.message.slice(0,40));}
+          if(text===payload)pass++;else fails.push(rot*90+'deg/'+cond+' wrong-text');
+        }catch(e){fails.push(rot*90+'deg/'+cond+' '+e.message.slice(0,40));}
       }
     }
   }
