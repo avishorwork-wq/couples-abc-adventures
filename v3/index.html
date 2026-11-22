@@ -466,7 +466,7 @@ async function startScan(box){
         const res=Prism.readImage({width:cap.width,height:cap.height,data:id.data});
         const text=new TextDecoder().decode(res.bytes||[]);
         const m=/#\/join=([A-Z2-9]{6})/.exec(text);
-        if(m){stopScan();$('#code').value=m[1];toast('Code found');$('#name').focus();return;}
+        if(m){scanSuccess(cap,res,text,m[1]);return;}
       }catch(e){}
       scanBusy=false;
       setTimeout(tick,120);
@@ -880,6 +880,133 @@ function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
     if(inp)inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim());};
   });
 }
+/* ---------- scan success animation ---------- */
+function scanSuccess(cap,res,text,code6){
+  // freeze the frame; keep video visible behind
+  if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}
+  const W=res.layout.W,H=res.layout.H;
+  const inv=Prism.homography(res.quad,[[0,0],[W,0],[W,H],[0,H]]);
+  // straightened "denoised-ish" camera crop
+  const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
+  const sc=straight.getContext('2d');
+  const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
+  const dst=sc.createImageData(S,S);
+  const padU=3.2,scale=S/(W+2*padU);
+  for(let y=0;y<S;y++)for(let x=0;x<S;x++){
+    const p=Prism.map(inv,x/scale-padU,y/scale-padU);
+    const sx=Math.round(p[0]),sy=Math.round(p[1]),di=(y*S+x)*4;
+    if(sx<0||sy<0||sx>=cap.width||sy>=cap.height){dst.data[di+3]=0;continue;}
+    const si=(sy*cap.width+sx)*4;
+    dst.data[di]=src.data[si];dst.data[di+1]=src.data[si+1];dst.data[di+2]=src.data[si+2];dst.data[di+3]=255;
+  }
+  sc.putImageData(dst,0,0);
+  // canonical clean code, re-encoded from the decoded payload
+  let clean;
+  try{
+    const cc=Prism.encode(new TextEncoder().encode(text),{});
+    clean=Prism.render(cc,Math.max(8,Math.floor(S/(cc.layout.W+2*3.2))));
+  }catch(e){clean=straight;}
+  const box=$('#scanBox');
+  const wrap=box.firstElementChild;
+  const hud=wrap.querySelector('div');
+  // overlay canvas on top of the frozen camera
+  const ov=document.createElement('canvas');
+  const ow=Math.round(cap.width),oh=Math.round(cap.height);
+  ov.width=ow;ov.height=oh;
+  ov.style.cssText='position:absolute;inset:0;width:100%;height:100%';
+  wrap.appendChild(ov);
+  if(hud)hud.style.display='none';
+  const g=ov.getContext('2d');
+  const quad=res.quad;
+  const T0=performance.now(),D1=380,D2=720,D3=560,T=D1+D2+D3;
+  const easeO=t=>1-Math.pow(1-t,3), easeIO=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  const sq=Math.min(ow,oh)*0.82;
+  const cx0=ow/2,cy0=oh/2;
+  function draw(now){
+    const t=now-T0;
+    g.clearRect(0,0,ow,oh);
+    if(t<D1){ // lock-on: glowing quad snaps in
+      const k=easeO(t/D1);
+      g.save();
+      g.strokeStyle='rgba(46,184,217,'+(0.35+0.65*k)+')';
+      g.lineWidth=2+2*k;g.shadowColor='#2EB8D9';g.shadowBlur=18*k;
+      const q=quad.map((p,i)=>{
+        const nx=quad[(i+1)%4][0],ny=quad[(i+1)%4][1];
+        return [p[0]+(nx-p[0])*0,p[1]+(ny-p[1])*0];});
+      const sc2=1+0.12*(1-k);
+      g.beginPath();
+      q.forEach((p,i)=>{const x=cx0+(p[0]-cx0)*sc2,y=cy0+(p[1]-cy0)*sc2;i?g.lineTo(x,y):g.moveTo(x,y);});
+      g.closePath();g.stroke();
+      // corner ticks
+      g.fillStyle='#fff';
+      for(const p of q){const x=cx0+(p[0]-cx0)*sc2,y=cy0+(p[1]-cy0)*sc2;
+        g.beginPath();g.arc(x,y,3+2*k,0,7);g.fill();}
+      g.restore();
+    }else if(t<D1+D2){ // straighten + clean + first sweep
+      const k=easeIO((t-D1)/D2);
+      const size=sq*(0.9+0.1*k);
+      const x0=cx0-size/2,y0=cy0-size/2;
+      g.save();
+      g.beginPath();g.roundRect(x0,y0,size,size,18);g.clip();
+      g.globalAlpha=1-k;g.drawImage(straight,x0,y0,size,size);
+      g.globalAlpha=k;g.drawImage(clean,x0,y0,size,size);
+      g.globalAlpha=1;
+      // scan sweep
+      const sy=y0-40+(size+80)*easeIO(Math.min(1,(t-D1)/D2));
+      const grd=g.createLinearGradient(0,sy-36,0,sy+36);
+      grd.addColorStop(0,'rgba(46,184,217,0)');grd.addColorStop(.5,'rgba(120,235,255,.55)');grd.addColorStop(1,'rgba(46,184,217,0)');
+      g.fillStyle=grd;g.fillRect(x0,sy-36,size,72);
+      g.restore();
+      g.save();g.strokeStyle='rgba(120,235,255,.9)';g.lineWidth=1.5;g.shadowColor='#2EB8D9';g.shadowBlur=12;
+      g.beginPath();g.roundRect(x0,y0,size,size,18);g.stroke();g.restore();
+    }else if(t<T){ // resolve sweep + settle
+      const k=(t-D1-D2)/D3;
+      const size=sq,x0=cx0-size/2,y0=cy0-size/2;
+      g.save();g.beginPath();g.roundRect(x0,y0,size,size,18);g.clip();
+      g.drawImage(clean,x0,y0,size,size);
+      // dark veil wiping away right-to-left with the resolve sweep
+      const wx=x0+size*easeIO(Math.min(1,k*1.15));
+      g.fillStyle='rgba(10,14,30,.72)';
+      g.fillRect(wx,y0,x0+size-wx,size);
+      const grd=g.createLinearGradient(wx-30,0,wx+6,0);
+      grd.addColorStop(0,'rgba(120,235,255,0)');grd.addColorStop(1,'rgba(120,235,255,.8)');
+      g.fillStyle=grd;g.fillRect(wx-30,y0,36,size);
+      g.restore();
+      g.save();g.strokeStyle='rgba(120,235,255,'+(1-k*.6)+')';g.lineWidth=1.5;g.shadowColor='#2EB8D9';g.shadowBlur=14*(1-k*.5);
+      g.beginPath();g.roundRect(x0,y0,size,size,18);g.stroke();g.restore();
+    }else{
+      // hand off: flash out, fill the form
+      ov.style.transition='opacity .3s';ov.style.opacity='0';
+      setTimeout(()=>{ov.remove();},320);
+      $('#code').value=code6;toast('Code found');
+      box.style.display='none';
+      $('#name').focus();
+      return;
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+/* demo hook for verification: run the animation on a synthetic camera frame */
+window.__demoScan=function(){
+  const box=$('#scanBox');box.style.display='block';box.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
+  box.appendChild(wrap);
+  const url=location.origin+location.pathname+'#/join=K7QX2M';
+  const code=Prism.encode(new TextEncoder().encode(url),{});
+  const rc=Prism.render(code,9);
+  const cap=document.createElement('canvas');cap.width=640;cap.height=480;
+  cap.style.cssText='width:100%;height:100%;object-fit:cover';
+  wrap.appendChild(cap);
+  const cx=cap.getContext('2d');
+  cx.fillStyle='#3a3540';cx.fillRect(0,0,640,480);
+  cx.save();cx.translate(320,240);cx.rotate(.14);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
+  const quad=[[168,104],[472,70],[506,376],[202,410]];
+  const h=Prism.homography(Prism.corners(code.layout),quad);
+  const res={layout:code.layout,quad,h,bytes:new TextEncoder().encode(url)};
+  scanSuccess(cap,res,url,'K7QX2M');
+};
 /* ---------- boot ---------- */
 applyTheme();
 route();
