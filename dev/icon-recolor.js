@@ -76,7 +76,7 @@ async function init(url){
     const lc=Math.min(1,Math.max(0,Co[i]/0.05));
     Ff[i]=f*lc+0.5*(1-lc);
   }
-  Ff=gaussianBlur(Ff,W,H,5); // PIL GaussianBlur(10) ~ sigma 5
+  Ff=gaussianBlur(Ff,W,H,10); // PIL GaussianBlur(10) ~ sigma 5
   ready=true;
 }
 function refHexes(){
