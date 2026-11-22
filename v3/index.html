@@ -569,10 +569,11 @@ function renderApp(){
   stopScan();
   const v=$('#view');v.innerHTML='';
   const s=el('div','screen'+(state.tab==='grid'?'':' screen-wide'));
+  v.appendChild(s);
   if(state.tab==='grid')renderGrid(s);
   else if(state.tab==='gallery')renderGallery(s);
   else renderSettings(s);
-  v.appendChild(s);v.appendChild(tabbar());
+  v.appendChild(tabbar());
   v.querySelectorAll(`.tabbar button`).forEach(b=>b.classList.toggle('on',b.dataset.tab===state.tab));
 }
 function appHeader(s,title,sub){
