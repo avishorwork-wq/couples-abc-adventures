@@ -14,8 +14,8 @@ function rotate(src,quarter){const s=quarter%2?src.height:src.width,t=quarter%2?
   g.fillStyle='#fff';g.fillRect(0,0,s,t);g.translate(s/2,t/2);g.rotate(quarter*Math.PI/2);g.drawImage(src,-src.width/2,-src.height/2);return c;}
 function degrade(src,kind,seed){
   if(kind==='blur'){const c=document.createElement('canvas');c.width=src.width;c.height=src.height;
-    const g=c.getContext('2d');g.filter='blur(1.5px)';g.drawImage(src,0,0);
-    return g.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height);}
+    const g=c.getContext('2d',{willReadFrequently:true});g.filter='blur(1.5px)';g.drawImage(src,0,0);
+    return g.getImageData(0,0,c.width,c.height);}
   if(kind==='small'){const c=document.createElement('canvas');c.width=Math.round(src.width*0.55);c.height=Math.round(src.height*0.55);
     const g=c.getContext('2d');g.drawImage(src,0,0,c.width,c.height);
     const c2=document.createElement('canvas');c2.width=src.width;c2.height=src.height;
