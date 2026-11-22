@@ -517,7 +517,7 @@ async function renderPair(){
     $('#pcode').textContent=code;
     const url=location.origin+location.pathname+'#/join='+code;
     const c=Prism.encode(new TextEncoder().encode(url),{});
-    const styled=styledPrism(c,Math.max(9,Math.floor(Math.min(innerWidth-90,420)/ (c.layout.W+6) )));
+    const styled=styledPrism(c,Math.max(9,Math.floor(Math.min(innerWidth-90,420)/(c.layout.W+6))),{offset:1.6,ring:0});
     const w=$('#pwrap');w.innerHTML='';w.appendChild(styled);
     styled.style.cssText='width:100%;height:auto;display:block;border-radius:14px';
     clearInterval(expTimer);
