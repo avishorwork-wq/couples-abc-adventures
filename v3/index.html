@@ -671,7 +671,9 @@ async function renderPair(){
     try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
     catch(e){
       const paired=e&&e.status===409;
-      $('#pwrap').innerHTML='<div style="padding:36px 24px;text-align:center;color:var(--ink-2);font-size:15px;line-height:1.5">'+(paired?'You two are already paired.<br>Remove a device below to invite someone new.':'Could not load a code - check connection.')+'</div>';
+      $('#pwrap').innerHTML=paired
+        ?'<div style="padding:26px 24px 30px;text-align:center"><div style="width:56px;height:56px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,var(--p-wash),var(--a-wash));color:var(--a-ink);display:grid;place-items:center">'+I.heart.replace('class="icon"','class="icon-lg"')+'</div><div style="color:var(--ink-2);font-size:15px;line-height:1.5">You two are already paired.<br>Remove a device below to invite someone new.</div></div>'
+        :'<div style="padding:36px 24px;text-align:center;color:var(--ink-2);font-size:15px;line-height:1.5">Could not load a code - check connection.</div>';
       if(paired){for(const x of[s.querySelector('.tag'),$('#pcode').parentElement,$('#pexp'),$('#copyLink'),$('#share'),$('#regen')])if(x)x.style.display='none';}
       else $('#pexp').textContent='';}
   }
