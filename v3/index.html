@@ -898,11 +898,13 @@ function scanSuccess(cap,res,text,code6){
   const cx0=ow/2,cy0=oh/2,sq=Math.min(ow,oh)*0.74;
   const sqX=cx0-sq/2,sqY=cy0-sq/2;
   // canonical clean code, re-encoded from the decoded payload
-  let clean,cn=[[0,0],[1,0],[1,1],[0,1]];
-  try{const cc=Prism.encode(new TextEncoder().encode(text),{});clean=Prism.render(cc,9);cn=Prism.corners(cc.layout);}
+  let clean;
+  try{clean=Prism.render(Prism.encode(new TextEncoder().encode(text),{}),9);}
   catch(e){clean=cap;}
-  const fx0=cn[0][0]/clean.width, fy0=cn[0][1]/clean.height,
-        fsx=(cn[1][0]-cn[0][0])/clean.width, fsy=(cn[2][1]-cn[1][1])/clean.height;
+  // hex data area inside the rendered canvas: cell space [0,W]x[0,H] at 9px/unit, centered
+  const hx0=(clean.width-W*9)/2, hy0=(clean.height-H*9)/2;
+  const fx0=hx0/clean.width, fy0=hy0/clean.height,
+        fsx=(W*9)/clean.width, fsy=(H*9)/clean.height;
   const inX=sqX+fx0*sq, inY=sqY+fy0*sq, inW=fsx*sq, inH=fsy*sq;
   // pre-straightened camera crop for the post-warp phase
   const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
@@ -972,12 +974,13 @@ function scanSuccess(cap,res,text,code6){
     g.restore();
   }
   // resolve-wave state
-  const stamped=new Uint8Array(W*H);
+  const stamped=new Uint8Array(Math.round(W)*Math.round(H));
   const rLayer=document.createElement('canvas');rLayer.width=ow;rLayer.height=oh;
   const rg=rLayer.getContext('2d');
-  const cw=inW/W,ch=inH/H;
-  const csw=(cn[1][0]-cn[0][0])/W, csh=(cn[2][1]-cn[1][1])/H;
-  const cellSrc=(i,j)=>[cn[0][0]+i*csw,cn[0][1]+j*csh,csw,csh];
+  const COLS=Math.round(W),ROWS=Math.round(H);
+  const cw=inW/COLS,ch=inH/ROWS;
+  const csw=(W*9)/COLS, csh=(H*9)/ROWS;
+  const cellSrc=(i,j)=>[hx0+i*csw,hy0+j*csh,csw,csh];
   const cellDst=(i,j)=>[inX+i*cw,inY+j*ch,cw,ch];
   const cellT=(i,j)=>{
     const rowY=inY+(j+.5)*ch;
@@ -987,7 +990,7 @@ function scanSuccess(cap,res,text,code6){
   function stamp(i,j){
     const s=cellSrc(i,j),d=cellDst(i,j);
     rg.drawImage(clean,s[0],s[1],s[2],s[3],d[0],d[1],d[2],d[3]);
-    stamped[j*W+i]=1;
+    stamped[j*Math.round(W)+i]=1;
   }
   const T0=performance.now();
   const CAP=(typeof window!=='undefined')?window.__scanCap:null;
@@ -1018,11 +1021,11 @@ function scanSuccess(cap,res,text,code6){
     if(t>tSweep){
       g.drawImage(rLayer,0,0);
       const yTop=inY-20,sy=yTop+(inH+40)*eIO(Math.min(1,(t-tSweep)/PSC));
-      for(let j=0;j<H;j++)for(let i=0;i<W;i++){
-        const idx=j*W+i;if(stamped[idx])continue;
+      for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){
+        const idx=j*COLS+i;if(stamped[idx])continue;
         const r=cellT(i,j),a=t-r;
         if(a<=0)continue;
-        if(a>=POP){stamp(i,j);g.drawImage(rLayer,0,0);continue;}
+        if(a>=POP){stamp(i,j);continue;}
         const p=eO(a/POP),sc2=1.28-0.28*p;
         const s=cellSrc(i,j),d=cellDst(i,j);
         const ccx=d[0]+d[2]/2,ccy=d[1]+d[3]/2;
@@ -1113,8 +1116,10 @@ window.__mkScene=function(kind){
   cx.fillStyle=bg;cx.fillRect(0,0,640,480);
   let truth;
   if(kind==='skew'){
-    const cc0=Prism.corners(code.layout);
-    truth=cc0.map(p=>Prism.map(Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]),p[0],p[1]));
+    const Wl=code.layout.W,Hl=code.layout.H,mxx=(rc.width-Wl*9)/2,myy=(rc.height-Hl*9)/2;
+    const hexPx=[[mxx,myy],[mxx+Wl*9,myy],[mxx+Wl*9,myy+Hl*9],[mxx,myy+Hl*9]];
+    const Hm=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]);
+    truth=hexPx.map(p=>Prism.map(Hm,p[0],p[1]));
     const H=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]);
     const src=rc.getContext('2d').getImageData(0,0,rc.width,rc.height);
     const out=cx.getImageData(0,0,640,480);
@@ -1129,7 +1134,9 @@ window.__mkScene=function(kind){
   }else{
     cx.save();cx.translate(320,240);cx.rotate(.17);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
     const c=Math.cos(.17),s2=Math.sin(.17);
-    truth=Prism.corners(code.layout).map(p=>{const x=p[0]-rc.width/2,y=p[1]-rc.height/2;return [320+x*c-y*s2,240+x*s2+y*c];});
+    const Wl=code.layout.W,Hl=code.layout.H,mxx=(rc.width-Wl*9)/2,myy=(rc.height-Hl*9)/2;
+    truth=[[mxx,myy],[mxx+Wl*9,myy],[mxx+Wl*9,myy+Hl*9],[mxx,myy+Hl*9]]
+      .map(p=>{const x=p[0]-rc.width/2,y=p[1]-rc.height/2;return [320+x*c-y*s2,240+x*s2+y*c];});
   }
   // camera noise + REAL decode for the real corners (retry with fresh noise if a frame fails)
   const clean_id=cx.getImageData(0,0,640,480);
