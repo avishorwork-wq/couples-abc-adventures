@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Alphabet Us - A to Z, together</title>
+<meta name="description" content="A private A-to-Z of dates for the two of you. Plan it, do it, keep the photo.">
+<meta name="theme-color" content="#1c0363">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+@font-face{font-family:'Inter';src:url('fonts/inter-var.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('fonts/fraunces-var.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('fonts/fraunces-it-var.woff2') format('woff2');font-weight:100 900;font-style:italic;font-display:swap}
+:root{
+  --p:#1c0363; --a:#f8519b;
+  --font-ui:'Inter',-apple-system,system-ui,sans-serif;
+  --font-display:'Fraunces',Georgia,serif;
+  --r-s:10px; --r-m:16px; --r-l:24px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  --shadow-1:0 1px 2px rgb(20 10 40/.06),0 2px 8px rgb(20 10 40/.05);
+  --shadow-2:0 4px 16px rgb(20 10 40/.10),0 12px 40px rgb(20 10 40/.08);
+  --ease:cubic-bezier(.32,.72,.24,1);
+}
+:root,[data-mode=light]{
+  color-scheme:light;
+  --bg:color-mix(in oklab,#ffffff 96%,var(--p));
+  --bg-raise:#ffffff;
+  --bg-sunk:color-mix(in oklab,#ffffff 92%,var(--p));
+  --ink:color-mix(in oklab,#17111f 88%,var(--p));
+  --ink-2:color-mix(in oklab,var(--ink) 62%,var(--bg));
+  --ink-3:color-mix(in oklab,var(--ink) 40%,var(--bg));
+  --line:color-mix(in oklab,var(--ink) 10%,var(--bg));
+  --line-2:color-mix(in oklab,var(--ink) 16%,var(--bg));
+  --p-wash:color-mix(in oklab,var(--p) 8%,var(--bg));
+  --a-wash:color-mix(in oklab,var(--a) 12%,var(--bg));
+  --a-ink:color-mix(in oklab,var(--a) 78%,#000 6%);
+  --good:#2e9e5b; --warn:#c47d1a; --bad:#d2445a;
+  --scrim:rgb(20 10 40/.44);
+}
+[data-mode=dark]{
+  color-scheme:dark;
+  --bg:color-mix(in oklab,#0d0a14 92%,var(--p));
+  --bg-raise:color-mix(in oklab,#17131f 90%,var(--p));
+  --bg-sunk:color-mix(in oklab,#080610 94%,var(--p));
+  --ink:color-mix(in oklab,#f4f1fa 92%,var(--a));
+  --ink-2:color-mix(in oklab,var(--ink) 64%,var(--bg));
+  --ink-3:color-mix(in oklab,var(--ink) 42%,var(--bg));
+  --line:color-mix(in oklab,var(--ink) 12%,var(--bg));
+  --line-2:color-mix(in oklab,var(--ink) 20%,var(--bg));
+  --p-wash:color-mix(in oklab,var(--p) 26%,var(--bg));
+  --a-wash:color-mix(in oklab,var(--a) 18%,var(--bg));
+  --a-ink:color-mix(in oklab,var(--a) 88%,#fff 8%);
+  --scrim:rgb(4 2 10/.6);
+  --shadow-1:0 1px 2px rgb(0 0 0/.3);
+  --shadow-2:0 4px 16px rgb(0 0 0/.4),0 12px 40px rgb(0 0 0/.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font-ui);font-size:16px;line-height:1.5;color:var(--ink);
+  background:var(--bg);min-height:100dvh;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:
+    radial-gradient(120vw 90vh at 85% -20%,color-mix(in oklab,var(--a) 14%,transparent),transparent 60%),
+    radial-gradient(100vw 80vh at -20% 110%,color-mix(in oklab,var(--p) 16%,transparent),transparent 60%);
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+img,canvas,video{max-width:100%;display:block}
+a{color:var(--a-ink)}
+::selection{background:color-mix(in oklab,var(--a) 30%,transparent)}
+:focus-visible{outline:2px solid var(--a-ink);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter-spacing:-.01em}
+.serif-i{font-style:italic;font-weight:480}
+
+/* ---------- primitives ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  padding:14px 20px;border-radius:14px;font-weight:600;font-size:15.5px;line-height:1;
+  transition:transform .14s var(--ease),box-shadow .14s var(--ease),background .14s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{color:#fff;background:linear-gradient(135deg,var(--p),color-mix(in oklab,var(--p) 52%,var(--a)));
+  box-shadow:0 2px 10px color-mix(in oklab,var(--p) 40%,transparent)}
+.btn-soft{background:var(--p-wash);color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}
+.btn-danger{background:color-mix(in oklab,var(--bad) 12%,var(--bg-raise));color:var(--bad)}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--sp-4)}
+.field label{font-size:13px;font-weight:600;color:var(--ink-2);letter-spacing:.01em}
+.input,textarea.input,select.input{
+  padding:13px 15px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--bg-raise);font-size:16px;width:100%;
+  transition:border-color .15s,box-shadow .15s}
+.input:focus{outline:0;border-color:var(--a-ink);box-shadow:0 0 0 3px color-mix(in oklab,var(--a) 22%,transparent)}
+.input::placeholder{color:var(--ink-3)}
+.card{background:var(--bg-raise);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow-1)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+  font-size:12px;font-weight:600;background:var(--a-wash);color:var(--a-ink)}
+.icon{width:20px;height:20px;flex:none}
+.icon-lg{width:24px;height:24px}
+/* ---------- layout shell ---------- */
+#view{min-height:100dvh;display:flex;flex-direction:column}
+.screen{flex:1;display:flex;flex-direction:column;width:100%;max-width:460px;margin:0 auto;
+  padding:calc(var(--sp-5) + env(safe-area-inset-top)) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom));
+  animation:screen-in .32s var(--ease)}
+@keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(min-width:960px){
+  .screen{max-width:600px}
+  .screen-wide{max-width:1060px;padding-left:var(--sp-7);padding-right:var(--sp-7)}
+}
+.topbar{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-5)}
+.topbar .spacer{flex:1}
+.wordmark{font-family:var(--font-display);font-weight:560;font-size:20px;letter-spacing:-.01em}
+.wordmark em{font-style:italic;font-weight:480;color:var(--a-ink)}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  color:var(--ink-2);background:transparent;transition:background .15s}
+.iconbtn:hover{background:var(--p-wash)}
+.h1{font-size:30px;margin-bottom:var(--sp-2)}
+.sub{color:var(--ink-2);font-size:15px;margin-bottom:var(--sp-5)}
+/* ---------- A-Z grid ---------- */
+.az{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:var(--sp-3)}
+@media(min-width:960px){.az{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--sp-4)}}
+.az-tile{position:relative;aspect-ratio:1;border-radius:var(--r-m);background:var(--bg-raise);
+  border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform .15s var(--ease),box-shadow .15s;box-shadow:var(--shadow-1)}
+.az-tile:active{transform:scale(.96)}
+.az-tile .L{font-family:var(--font-display);font-size:34px;font-weight:560;color:var(--ink-3)}
+.az-tile .idea{font-size:11px;color:var(--ink-3);text-align:center;padding:0 6px;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.az-tile.done{background:linear-gradient(150deg,color-mix(in oklab,var(--p) 14%,var(--bg-raise)),color-mix(in oklab,var(--a) 16%,var(--bg-raise)));
+  border-color:color-mix(in oklab,var(--a) 30%,var(--line))}
+.az-tile.done .L{color:var(--a-ink)}
+.az-tile .tick{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:50%;
+  background:var(--a-ink);color:#fff;display:grid;place-items:center}
+.az-tile .stars{position:absolute;bottom:6px;font-size:9px;letter-spacing:1px;color:var(--a-ink)}
+/* ---------- bottom nav ---------- */
+.tabbar{position:sticky;bottom:0;margin:auto calc(-1*var(--sp-5)) calc(-1*(var(--sp-6) + env(safe-area-inset-bottom)));
+  display:flex;background:color-mix(in oklab,var(--bg-raise) 86%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);padding:6px 12px calc(6px + env(safe-area-inset-bottom))}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;
+  font-size:11px;font-weight:600;color:var(--ink-3);border-radius:12px}
+.tabbar button.on{color:var(--a-ink)}
+@media(min-width:960px){
+  .tabbar{position:fixed;left:0;top:0;bottom:0;width:216px;flex-direction:column;justify-content:flex-start;
+    gap:4px;border-top:0;border-right:1px solid var(--line);padding:var(--sp-5) var(--sp-3);backdrop-filter:none}
+  .tabbar button{flex:none;flex-direction:row;justify-content:flex-start;gap:var(--sp-3);
+    padding:11px 14px;font-size:14px}
+  .tabbar button.on{background:var(--a-wash)}
+  body.has-app #view{padding-left:216px}
+}
+
+/* ---------- sheet (letter detail) ---------- */
+.scrim{position:fixed;inset:0;background:var(--scrim);opacity:0;pointer-events:none;
+  transition:opacity .25s var(--ease);z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--bg-raise);
+  border-radius:var(--r-l) var(--r-l) 0 0;box-shadow:var(--shadow-2);
+  max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;
+  transform:translateY(102%);transition:transform .34s var(--ease);
+  padding:var(--sp-4) var(--sp-5) calc(var(--sp-5) + env(safe-area-inset-bottom));
+  max-width:640px;margin:0 auto}
+.sheet.on{transform:none}
+.sheet .grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:2px auto var(--sp-4)}
+.sheet-L{display:flex;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-2)}
+.sheet-L .big{font-family:var(--font-display);font-size:52px;font-weight:560;line-height:1;
+  background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent}
+.chiprow{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-3) 0}
+.chip{padding:7px 12px;border-radius:999px;background:var(--p-wash);font-size:13px;font-weight:500;color:var(--ink-2)}
+.starpick{display:flex;gap:6px;font-size:26px;color:var(--line-2)}
+.starpick button{color:inherit;transition:transform .12s}
+.starpick button.on{color:var(--a-ink)}
+.starpick button:active{transform:scale(1.2)}
+/* ---------- gallery ---------- */
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:var(--r-m);overflow:hidden}
+@media(min-width:960px){.gal{grid-template-columns:repeat(5,1fr);gap:6px}}
+.gal figure{aspect-ratio:1;background:var(--bg-sunk);position:relative;overflow:hidden}
+.gal img,.gal video{width:100%;height:100%;object-fit:cover}
+.gal .badge{position:absolute;right:5px;bottom:5px;width:22px;height:22px;border-radius:8px;
+  background:rgb(0 0 0/.55);color:#fff;display:grid;place-items:center}
+.gal .lettertag{position:absolute;left:5px;top:5px;padding:2px 8px;border-radius:99px;
+  background:rgb(0 0 0/.55);color:#fff;font-size:11px;font-weight:600}
+/* ---------- settings ---------- */
+.set-group{margin-bottom:var(--sp-6)}
+.set-group>h3{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:var(--sp-3);font-family:var(--font-ui)}
+.set-row{display:flex;align-items:center;gap:var(--sp-3);padding:14px 16px;
+  background:var(--bg-raise);border:1px solid var(--line)}
+.set-row:first-child{border-radius:var(--r-m) var(--r-m) 0 0}
+.set-row:last-child{border-radius:0 0 var(--r-m) var(--r-m)}
+.set-row:only-child{border-radius:var(--r-m)}
+.set-row+.set-row{border-top:0}
+.set-row .grow{flex:1;min-width:0}
+.set-row .t{font-weight:600;font-size:15px}
+.set-row .d{font-size:13px;color:var(--ink-3)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;padding:6px 2px}
+.swatch{width:44px;height:44px;border-radius:14px;border:2px solid transparent;cursor:pointer;
+  transition:transform .12s}
+.swatch.on{border-color:var(--ink);transform:scale(1.06)}
+input[type=color].colpick{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);
+  padding:2px;background:var(--bg-raise);cursor:pointer}
+/* ---------- prism invite card ---------- */
+.pcard{position:relative;background:var(--bg-raise);border-radius:28px;padding:22px 22px 18px;
+  box-shadow:var(--shadow-2);border:1px solid color-mix(in oklab,var(--p) 14%,transparent)}
+.pcard::before{content:'';position:absolute;inset:6px;border-radius:22px;pointer-events:none;
+  border:1.5px solid transparent;
+  background:linear-gradient(135deg,color-mix(in oklab,var(--p) 55%,transparent),color-mix(in oklab,var(--a) 55%,transparent)) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude}
+.pcard .names{text-align:center;font-family:var(--font-display);font-size:19px;font-weight:560;margin-bottom:14px}
+.pcard .names em{font-style:italic;font-weight:480;color:var(--a-ink)}
+.pcard canvas{width:100%;height:auto;display:block;border-radius:14px}
+.pcard .tag{display:block;width:max-content;margin:8px auto 0;font-size:10.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);background:var(--p-wash);
+  padding:3px 10px;border-radius:999px}
+.bigcode{font-family:var(--font-display);font-size:30px;font-weight:560;letter-spacing:.22em;padding-left:.22em}
+/* ---------- empty states / misc ---------- */
+.empty{text-align:center;padding:var(--sp-7) var(--sp-5);color:var(--ink-3)}
+.empty .art{width:88px;height:88px;margin:0 auto var(--sp-4);border-radius:28px;
+  background:linear-gradient(135deg,var(--p-wash),var(--a-wash));display:grid;place-items:center;color:var(--a-ink)}
+.empty .t{font-family:var(--font-display);font-size:20px;font-weight:560;color:var(--ink);margin-bottom:4px}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+  background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:500;
+  opacity:0;pointer-events:none;transition:all .25s var(--ease);z-index:90;box-shadow:var(--shadow-2)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid color-mix(in oklab,currentColor 25%,transparent);
+  border-top-color:currentColor;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+.center-wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
+.fadein{animation:screen-in .3s var(--ease)}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+<div id="view"></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
+<script src="prism.js"></script>
+<script src="styled.js"></script>
+<script src="icon-recolor.js"></script>
+<script>
+'use strict';
+/* Alphabet Us - a private A-Z of dates for two. */
+const API='https://couples-api.avishorwork.workers.dev';
+const LS='au_';
+const $=(s,r=document)=>r.querySelector(s);
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---------- state ---------- */
+const store={
+  get(k,d){try{const v=localStorage.getItem(LS+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){localStorage.setItem(LS+k,JSON.stringify(v));},
+  del(k){localStorage.removeItem(LS+k);}
+};
+const state={
+  tok:store.get('tok',null), who:store.get('who',null),
+  S:store.get('S',{}), M:store.get('M',[]),
+  C:store.get('C',{cu:0,title:'',emoji:'',names:['',''],theme:null,dates:[]}),
+  tab:'grid', dirty:false,
+};
+const theme=()=>Object.assign({p:'#1c0363',a:'#f8519b',mode:'auto'},state.C.theme||{});
+function applyTheme(){
+  const t=theme(),r=document.documentElement;
+  r.style.setProperty('--p',t.p);r.style.setProperty('--a',t.a);
+  const dark=t.mode==='dark'||(t.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
+  r.dataset.mode=dark?'dark':'light';
+  $('meta[name=theme-color]').content=t.p;
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);
+/* ---------- api ---------- */
+async function api(path,body){
+  const r=await fetch(API+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{status:r.status,data:j});
+  return j;
+}
+async function sync(){
+  if(!state.tok)return;
+  const j=await api('/sync',{tok:state.tok,S:state.S,M:state.M,C:state.C,cu:state.C.cu});
+  state.S=j.S;state.M=j.M;
+  if(j.C&&j.C.cu>state.C.cu){state.C=j.C;}
+  store.set('S',state.S);store.set('M',state.M);store.set('C',state.C);
+  state.dirty=false;
+  return j;
+}
+let syncTimer=null;
+function bump(){
+  state.C.cu=Date.now();state.dirty=true;
+  store.set('S',state.S);store.set('M',state.M);store.set('C',state.C);
+  clearTimeout(syncTimer);syncTimer=setTimeout(()=>sync().catch(()=>{state.dirty=true;}),700);
+}
+setInterval(()=>{if(!state.dirty&&state.tok)sync().then(()=>{if(current==='app')renderApp();}).catch(()=>{});},30000);
+/* ---------- icons (inline SVG) ---------- */
+const I={
+  grid:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
+  photos:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.4-4.4a1.5 1.5 0 0 0-2.1 0L6 19"/></svg>',
+  gear:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  check:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  copy:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  share:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+  scan:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>',
+  back:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  plus:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  play:'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14Z"/></svg>',
+  heart:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2.4 4.5 6.2 4.1c2.2-.2 4.2 1 5.8 3 1.6-2 3.6-3.2 5.8-3 3.8.4 5.8 4.5 4.2 7.6C19.5 16.1 12 21 12 21Z"/></svg>',
+  calendar:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg>',
+  trash:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>'
+};
+/* ---------- default ideas ---------- */
+const AZ=[["A","Aquarium date"],["B","Board game night"],["C","Cook a new recipe"],["D","Day trip"],["E","Escape room"],["F","Farmers market"],["G","Go stargazing"],["H","Hike together"],["I","Ice cream crawl"],["J","Jazz bar"],["K","Karaoke night"],["L","Lake picnic"],["M","Museum morning"],["N","Night walk"],["O","Outdoor movie"],["P","Pottery class"],["Q","Quiz night"],["R","Road trip"],["S","Sunrise coffee"],["T","Thrift hunt"],["U","Under the stars camp"],["V","Volunteer together"],["W","Wine tasting"],["X","X marks the spot (treasure hunt)"],["Y","Yoga for two"],["Z","Zoo day"]];
+const ideaFor=l=>{const f=AZ.find(x=>x[0]===l);return f?f[1]:'';};
+/* ---------- router ---------- */
+let current='';
+function go(h){location.hash=h;}
+function route(){
+  const h=location.hash||'#/welcome';
+  closeSheet();
+  if(h.startsWith('#/join=')){renderJoin(h.slice(7).toUpperCase());}
+  else if(h==='#/create'){renderCreate();}
+  else if(h==='#/join'){renderJoin('');}
+  else if(h==='#/pair'){state.tok?renderPair():go('#/welcome');}
+  else if(h.startsWith('#/app')){state.tok?renderApp():go('#/welcome');}
+  else{renderWelcome();}
+}
+addEventListener('hashchange',route);
+/* ---------- toast ---------- */
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2400);}
+/* ---------- welcome ---------- */
+function renderWelcome(){
+  current='welcome';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  s.innerHTML=`
+    <div style="text-align:center;margin-bottom:var(--sp-7)">
+      <div id="wIcon" style="width:96px;height:96px;margin:0 auto var(--sp-4)"></div>
+      <h1 style="font-size:38px;margin-bottom:10px">Alphabet <span class="serif-i" style="color:var(--a-ink)">Us</span></h1>
+      <p style="color:var(--ink-2);font-size:16px;max-width:300px;margin:0 auto">A private A to Z of dates for the two of you. Plan it, do it, keep the photo.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto;width:100%">
+      <button class="btn btn-primary btn-block" id="wCreate">Start our alphabet</button>
+      <button class="btn btn-soft btn-block" id="wJoin">Join my person</button>
+    </div>`;
+  v.appendChild(s);
+  $('#wCreate').onclick=()=>go('#/create');
+  $('#wJoin').onclick=()=>go('#/join');
+  IconRecolor.recolor(theme().p,theme().a,'icons/master-1024.png').then(cv=>{
+    cv.style.cssText='width:96px;height:96px;border-radius:24px';const w=$('#wIcon');if(w){w.innerHTML='';w.appendChild(cv);}
+  }).catch(()=>{});
+}
+/* ---------- create ---------- */
+function renderCreate(){
+  current='create';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  s.innerHTML=`
+    <div class="topbar"><button class="iconbtn" id="back">${I.back}</button></div>
+    <h1 class="h1">Start your alphabet</h1>
+    <p class="sub">Name your couple. You can change everything later.</p>
+    <form id="f">
+      <div class="field"><label for="title">Couple name</label>
+        <input class="input" id="title" maxlength="40" placeholder="Dana & Noam" required></div>
+      <div class="field"><label for="name">Your name</label>
+        <input class="input" id="name" maxlength="24" placeholder="Dana" required></div>
+      <div class="field"><label for="emoji">Your emoji <span style="font-weight:400;color:var(--ink-3)">(optional)</span></label>
+        <input class="input" id="emoji" maxlength="8" placeholder="🧡" style="max-width:120px"></div>
+      <button class="btn btn-primary btn-block" id="go" type="submit">Create</button>
+      <p style="font-size:13px;color:var(--ink-3);text-align:center;margin-top:14px">Free. Private to the two of you. No account, no email.</p>
+    </form>`;
+  v.appendChild(s);
+  $('#back').onclick=()=>go('#/welcome');
+  $('#f').onsubmit=async e=>{
+    e.preventDefault();
+    const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+    try{
+      const j=await api('/create',{title:$('#title').value.trim(),name:$('#name').value.trim()});
+      state.tok=j.tok;state.who='a';store.set('tok',j.tok);store.set('who','a');
+      state.C={cu:Date.now(),title:$('#title').value.trim(),emoji:$('#emoji').value.trim(),names:[$('#name').value.trim(),''],theme:theme(),dates:[]};
+      state.S={};state.M=[];
+      store.set('C',state.C);store.set('S',state.S);store.set('M',state.M);
+      sessionStorage.setItem(LS+'freshCode',JSON.stringify(j));
+      sync().catch(()=>{});
+      go('#/pair');
+    }catch(err){toast(err.message||'Could not create. Try again.');b.disabled=false;b.textContent='Create';}
+  };
+}
+/* ---------- join ---------- */
+function renderJoin(preset){
+  current='join';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  s.innerHTML=`
+    <div class="topbar"><button class="iconbtn" id="back">${I.back}</button></div>
+    <h1 class="h1">Join your person</h1>
+    <p class="sub">Scan their Prism code, or enter the 6-letter code they shared.</p>
+    <button class="btn btn-soft btn-block" id="scanBtn" style="margin-bottom:var(--sp-5)">${I.scan}<span>Scan a Prism code</span></button>
+    <div id="scanBox" style="display:none;margin-bottom:var(--sp-5)"></div>
+    <form id="f">
+      <div class="field"><label for="code">Invite code</label>
+        <input class="input" id="code" maxlength="6" placeholder="K7QX2M" value="${esc(preset)}"
+          style="text-transform:uppercase;letter-spacing:.3em;font-family:var(--font-display);font-size:22px;text-align:center" required></div>
+      <div class="field"><label for="name">Your name</label>
+        <input class="input" id="name" maxlength="24" placeholder="Noam" required></div>
+      <button class="btn btn-primary btn-block" id="go" type="submit">Join</button>
+    </form>`;
+  v.appendChild(s);
+  $('#back').onclick=()=>go('#/welcome');
+  $('#code').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z2-9]/g,'');};
+  $('#f').onsubmit=async e=>{
+    e.preventDefault();
+    const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+    try{
+      const j=await api('/join',{code:$('#code').value.trim(),name:$('#name').value.trim()});
+      state.tok=j.tok;state.who='b';store.set('tok',j.tok);store.set('who','b');
+      state.C=Object.assign(state.C,{title:j.title});state.C.names[1]=$('#name').value.trim();
+      store.set('C',state.C);
+      await sync().catch(()=>{});
+      go('#/app');
+      toast('You are in. Say hi with letter A.');
+    }catch(err){
+      toast(err.message==='bad code'?'That code did not work. Check it and try again.':(err.message||'Could not join.'));
+      b.disabled=false;b.textContent='Join';
+    }
+  };
+  $('#scanBtn').onclick=()=>startScan($('#scanBox'));
+}
+/* ---------- prism scan ---------- */
+let scanStream=null,scanBusy=false;
+async function startScan(box){
+  box.style.display='block';
+  box.innerHTML='';
+  if(!navigator.mediaDevices?.getUserMedia){
+    box.innerHTML='<p style="color:var(--ink-3);font-size:14px">Camera needs HTTPS. Type the code instead.</p>';return;
+  }
+  const wrap=el('div','');wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
+  const vid=document.createElement('video');
+  vid.setAttribute('playsinline','');vid.muted=true;vid.style.cssText='width:100%;height:100%;object-fit:cover';
+  const hud=el('div','');hud.style.cssText='position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:14px;text-shadow:0 1px 4px rgb(0 0 0/.6)';
+  hud.textContent='Starting camera...';
+  wrap.appendChild(vid);wrap.appendChild(hud);box.appendChild(wrap);
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    vid.srcObject=scanStream;await vid.play();
+    hud.textContent='Point at the Prism code';
+    const cap=document.createElement('canvas');const cx=cap.getContext('2d',{willReadFrequently:true});
+    const tick=async()=>{
+      if(!scanStream)return;
+      if(scanBusy||vid.readyState<2||!vid.videoWidth){requestAnimationFrame(tick);return;}
+      scanBusy=true;
+      const sc=Math.min(1,640/vid.videoWidth);
+      cap.width=Math.round(vid.videoWidth*sc);cap.height=Math.round(vid.videoHeight*sc);
+      cx.drawImage(vid,0,0,cap.width,cap.height);
+      try{
+        const id=cx.getImageData(0,0,cap.width,cap.height);
+        Prism.beginDecode(900);
+        const res=Prism.readImage({width:cap.width,height:cap.height,data:id.data});
+        const text=new TextDecoder().decode(res.bytes||[]);
+        const m=/#\/join=([A-Z2-9]{6})/.exec(text);
+        if(m){stopScan();$('#code').value=m[1];toast('Code found');$('#name').focus();return;}
+      }catch(e){}
+      scanBusy=false;
+      setTimeout(tick,120);
+    };
+    tick();
+  }catch(e){
+    hud.textContent='Camera unavailable. Type the code instead.';
+  }
+}
+function stopScan(){if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}}
+/* ---------- pair (invite) ---------- */
+let pairInfo=null;
+async function renderPair(){
+  current='pair';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  const names=()=>`${esc(state.C.names[0]||'You')} <em>&</em> ${esc(state.C.names[1]||'your person')}`;
+  s.innerHTML=`
+    <div class="topbar"><div class="wordmark">Alphabet <em>Us</em></div></div>
+    <h1 class="h1">Invite your person</h1>
+    <p class="sub">They scan this with the app, or tap the link. The code works once, for 15 minutes.</p>
+    <div class="pcard">
+      <div class="names">${names()}</div>
+      <div id="pwrap"><div style="aspect-ratio:1;display:grid;place-items:center"><span class="spin"></span></div></div>
+      <div class="tag">Prism Code</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 4px">
+        <span class="bigcode" id="pcode">······</span>
+        <button class="iconbtn" id="copyCode" aria-label="Copy code">${I.copy}</button></div>
+      <div style="text-align:center;font-size:13px;color:var(--ink-3);margin-bottom:14px" id="pexp"></div>
+      <button class="btn btn-primary btn-block" id="copyLink">${I.copy}<span>Copy invite link</span></button>
+      <button class="btn btn-soft btn-block" id="share" style="margin-top:8px">${I.share}<span>Share...</span></button>
+      <button class="btn btn-ghost btn-block" id="regen" style="margin-top:4px;font-size:14px">Get a new code</button>
+    </div>
+    <div id="devices" style="margin-top:var(--sp-6)"></div>
+    <button class="btn btn-primary btn-block" id="enter" style="margin-top:var(--sp-5)">Enter our alphabet</button>`;
+  v.appendChild(s);
+  $('#enter').onclick=()=>go('#/app');
+  $('#copyCode').onclick=()=>{navigator.clipboard?.writeText($('#pcode').textContent.trim());toast('Code copied');};
+  const link=()=>location.origin+location.pathname+'#/join='+($('#pcode').textContent.trim());
+  $('#copyLink').onclick=()=>{navigator.clipboard?.writeText(link());toast('Invite link copied');};
+  $('#share').onclick=async()=>{
+    if(navigator.share){try{await navigator.share({title:'Join our alphabet',url:link()});}catch(e){}}
+    else{navigator.clipboard?.writeText(link());toast('Invite link copied');}};
+  $('#regen').onclick=async()=>{
+    try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
+    catch(e){toast('Could not get a new code');}};
+  let expTimer=null;
+  function showCode(code,exp){
+    $('#pcode').textContent=code;
+    const url=location.origin+location.pathname+'#/join='+code;
+    const c=Prism.encode(new TextEncoder().encode(url),{});
+    const styled=styledPrism(c,Math.max(9,Math.floor(Math.min(innerWidth-90,420)/ (c.layout.W+6) )));
+    const w=$('#pwrap');w.innerHTML='';w.appendChild(styled);
+    styled.style.cssText='width:100%;height:auto;display:block;border-radius:14px';
+    clearInterval(expTimer);
+    const tickExp=()=>{const left=Math.max(0,Math.floor((exp-Date.now())/1000));
+      const mm=String(Math.floor(left/60)).padStart(2,'0'),ss=String(left%60).padStart(2,'0');
+      $('#pexp').innerHTML=left?('Expires in <b style="color:var(--a-ink)">'+mm+':'+ss+'</b>'):'Expired - get a new code';
+      if(!left)clearInterval(expTimer);};
+    tickExp();expTimer=setInterval(tickExp,1000);
+  }
+  // load existing code or the one from create
+  const fresh=JSON.parse(sessionStorage.getItem(LS+'freshCode')||'null');
+  sessionStorage.removeItem(LS+'freshCode');
+  if(fresh&&fresh.exp>Date.now()){showCode(fresh.code,fresh.exp);}
+  else{
+    try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
+    catch(e){$('#pexp').textContent='Could not load a code - check connection.';}
+  }
+  // devices
+  try{
+    const d=await api('/devices',{tok:state.tok});
+    const box=$('#devices');
+    if(d.devices.length){
+      box.innerHTML='<h3 style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px">Devices</h3>';
+      for(const dev of d.devices){
+        const row=el('div','set-row');
+        row.innerHTML=`<div class="grow"><div class="t">${esc(dev.name||'Device')}${dev.self?' <span class="pill">this one</span>':''}</div>
+          <div class="d">Joined ${new Date(dev.ts).toLocaleDateString()}</div></div>`;
+        if(!dev.self){const rm=el('button','iconbtn');rm.innerHTML=I.trash;rm.title='Remove device';
+          rm.onclick=async()=>{try{await api('/remove',{tok:state.tok,did:dev.did});row.remove();toast('Device removed');}catch(e){toast('Could not remove');}};
+          row.appendChild(rm);}
+        box.appendChild(row);
+      }
+    }
+  }catch(e){}
+}
+/* ---------- main app ---------- */
+function tabbar(){
+  const t=el('nav','tabbar');
+  t.innerHTML=`
+    <button data-tab="grid">${I.grid}<span>A to Z</span></button>
+    <button data-tab="gallery">${I.photos}<span>Photos</span></button>
+    <button data-tab="settings">${I.gear}<span>Us</span></button>`;
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;renderApp();});
+  return t;
+}
+function renderApp(){
+  current='app';document.body.classList.add('has-app');
+  stopScan();
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen'+(state.tab==='grid'?'':' screen-wide'));
+  if(state.tab==='grid')renderGrid(s);
+  else if(state.tab==='gallery')renderGallery(s);
+  else renderSettings(s);
+  v.appendChild(s);v.appendChild(tabbar());
+  v.querySelectorAll(`.tabbar button`).forEach(b=>b.classList.toggle('on',b.dataset.tab===state.tab));
+}
+function appHeader(s,title,sub){
+  const h=el('div','topbar');
+  h.innerHTML=`<div><div style="font-family:var(--font-display);font-size:24px;font-weight:560">${title}</div>
+    ${sub?`<div style="font-size:13px;color:var(--ink-3)">${sub}</div>`:''}</div><div class="spacer"></div>`;
+  const inv=el('button','iconbtn');inv.innerHTML=I.share;inv.title='Invite';inv.onclick=()=>go('#/pair');
+  h.appendChild(inv);s.appendChild(h);
+}
+function renderGrid(s){
+  const done=Object.values(state.S).filter(x=>x&&x.done).length;
+  appHeader(s,esc(state.C.title||'Our alphabet'),`${done} of 26`);
+  const g=el('div','az');
+  for(const [L,idea] of AZ){
+    const st=state.S[L]||{};
+    const t=el('button','az-tile'+(st.done?' done':''));
+    t.innerHTML=`<span class="L">${L}</span><span class="idea">${esc(st.note||idea)}</span>
+      ${st.done?`<span class="tick">${I.check}</span>`:''}
+      ${st.r?`<span class="stars">${'★'.repeat(st.r)}</span>`:''}`;
+    t.onclick=()=>openLetter(L);
+    g.appendChild(t);
+  }
+  s.appendChild(g);
+}
+/* ---------- letter sheet ---------- */
+function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
+$('#scrim').onclick=closeSheet;
+function openLetter(L){
+  const st=Object.assign({done:false,date:'',dl:'',note:'',r:0},state.S[L]);
+  const sh=$('#sheet');
+  const partner=state.C.names[state.who==='a'?1:0]||'your person';
+  sh.innerHTML=`
+    <div class="grab"></div>
+    <div class="sheet-L"><span class="big">${L}</span>
+      <div><div style="font-weight:600;font-size:17px">${esc(st.note||ideaFor(L))}</div>
+      <div style="font-size:13px;color:var(--ink-3)">${st.done?('Done'+(st.date?' · '+esc(st.date):'')):'Not yet'}</div></div></div>
+    <div class="field" style="margin-top:var(--sp-4)"><label>Our idea</label>
+      <input class="input" id="sNote" maxlength="60" value="${esc(st.note||'')}" placeholder="${esc(ideaFor(L))}"></div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1"><label>Date</label><input class="input" id="sDate" type="date" value="${esc(st.date||'')}"></div>
+      <div class="field" style="flex:1"><label>Plan by</label><input class="input" id="sDl" type="date" value="${esc(st.dl||'')}"></div>
+    </div>
+    <div class="field"><label>How was it?</label>
+      <div class="starpick" id="sStars">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${st.r>=n?'on':''}">★</button>`).join('')}</div></div>
+    <div class="field"><label>Photos & video</label><div id="sMedia"></div>
+      <label class="btn btn-soft btn-block" style="margin-top:6px">${I.plus}<span>Add from camera roll</span>
+        <input type="file" id="sFile" accept="image/*,video/*" multiple hidden></label></div>
+    <div style="display:flex;gap:10px;margin-top:var(--sp-4)">
+      <button class="btn ${st.done?'btn-soft':'btn-primary'}" id="sDone" style="flex:1">${st.done?'Mark as not done':'We did it'}</button>
+      <button class="btn btn-soft" id="sClose" style="flex:0 0 auto">Close</button>
+    </div>`;
+  sh.classList.add('on');$('#scrim').classList.add('on');
+  let r=st.r;
+  sh.querySelectorAll('#sStars button').forEach(b=>b.onclick=()=>{
+    r=(r===+b.dataset.n)?0:+b.dataset.n;
+    sh.querySelectorAll('#sStars button').forEach(x=>x.classList.toggle('on',+x.dataset.n<=r));});
+  const save=(patch)=>{
+    state.S[L]=Object.assign({},state.S[L],st,patch,{u:Date.now()});
+    bump();renderMediaList();
+    if(current==='app'&&state.tab==='grid'){const tiles=$('#view .az');}
+  };
+  $('#sNote').onchange=e=>save({note:e.target.value.trim()});
+  $('#sDate').onchange=e=>save({date:e.target.value});
+  $('#sDl').onchange=e=>save({dl:e.target.value});
+  $('#sDone').onclick=()=>{save({done:!st.done,date:!st.done?(st.date||new Date().toISOString().slice(0,10)):st.date});
+    closeSheet();renderApp();};
+  $('#sClose').onclick=()=>{closeSheet();renderApp();};
+  setInterval(()=>{},0);
+  // media
+  function renderMediaList(){
+    const box=$('#sMedia');if(!box)return;
+    const mine=state.M.filter(m=>m.l===L&&!m.del);
+    box.innerHTML='';
+    if(!mine.length){box.innerHTML='<div style="font-size:13px;color:var(--ink-3)">Nothing yet.</div>';return;}
+    const row=el('div','');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+    for(const m of mine){
+      const fig=el('div','');fig.style.cssText='width:64px;height:64px;border-radius:12px;overflow:hidden;background:var(--bg-sunk);position:relative';
+      const img=el('img');img.style.cssText='width:100%;height:100%;object-fit:cover';
+      img.src=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+'&part=t';
+      fig.appendChild(img);
+      if(m.t==='v'){const b=el('div','badge');b.innerHTML=I.play;b.style.cssText='position:absolute;inset:0;margin:auto;width:20px;height:20px;display:grid;place-items:center;background:rgb(0 0 0/.5);border-radius:50%;color:#fff';fig.appendChild(b);}
+      fig.onclick=()=>openMedia(m);
+      row.appendChild(fig);
+    }
+    box.appendChild(row);
+  }
+  renderMediaList();
+  $('#sFile').onchange=async e=>{
+    const files=[...e.target.files];e.target.value='';
+    for(const f of files){
+      try{toast('Uploading...');await uploadMedia(L,f);toast('Added');}
+      catch(err){toast(err.message||'Upload failed');}
+    }
+    renderMediaList();
+  };
+  const starSave=()=>save({r});
+  sh.querySelectorAll('#sStars button').forEach(b=>b.addEventListener('click',()=>setTimeout(starSave,0)));
+}
+/* ---------- media upload (chunked, matches worker /up) ---------- */
+async function compressImage(file){
+  const bmp=await createImageBitmap(file);
+  const scale=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+  const w=Math.round(bmp.width*scale),h=Math.round(bmp.height*scale);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  cv.getContext('2d').drawImage(bmp,0,0,w,h);
+  const th=document.createElement('canvas');
+  const ts=Math.min(1,420/Math.max(w,h));
+  th.width=Math.round(w*ts);th.height=Math.round(h*ts);
+  th.getContext('2d').drawImage(cv,0,0,th.width,th.height);
+  const full=await new Promise(r=>cv.toBlob(r,'image/jpeg',.82));
+  const thumb=await new Promise(r=>th.toBlob(r,'image/jpeg',.7));
+  return {full,thumb,mime:'image/jpeg'};
+}
+function b64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);});}
+async function uploadMedia(L,file){
+  const isVideo=file.type.startsWith('video/');
+  if(isVideo&&file.size>8*1024*1024)throw new Error('Videos up to 8 MB');
+  if(!isVideo&&!file.type.startsWith('image/'))throw new Error('Photos or videos only');
+  const id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  let parts;
+  if(isVideo){
+    const data=await b64(file);
+    parts=[{name:'data',data}];
+  }else{
+    const {full,thumb}=await compressImage(file);
+    parts=[{name:'data',data:await b64(full)},{name:'thumb',data:await b64(thumb)}];
+  }
+  const CH=950000;
+  for(const p of parts){
+    const n=Math.ceil(p.data.length/CH);
+    for(let i=0;i<n;i++){
+      await api('/up',{tok:state.tok,id,part:p.name,chunk:i,chunks:n,data:p.data.slice(i*CH,(i+1)*CH)});
+    }
+  }
+  state.M.push({id,l:L,t:isVideo?'v':'i',ts:Date.now(),mime:isVideo?file.type:'image/jpeg',size:file.size,n:file.name});
+  bump();
+}
+function openMedia(m){
+  const url=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id;
+  const sh=$('#sheet');
+  sh.innerHTML=`<div class="grab"></div>
+    <div style="border-radius:var(--r-m);overflow:hidden;background:#000;margin-bottom:var(--sp-4)">
+    ${m.t==='v'?`<video src="${url}" controls playsinline style="width:100%;max-height:60dvh"></video>`
+      :`<img src="${url}" style="width:100%;max-height:60dvh;object-fit:contain">`}</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-soft" id="mClose" style="flex:1">Close</button>
+      <button class="btn btn-danger" id="mDel">${I.trash}<span>Delete</span></button>
+    </div>`;
+  sh.classList.add('on');$('#scrim').classList.add('on');
+  $('#mClose').onclick=closeSheet;
+  $('#mDel').onclick=async()=>{
+    try{await api('/del',{tok:state.tok,id:m.id});}catch(e){}
+    m.del=true;bump();closeSheet();renderApp();
+  };
+}
+/* ---------- gallery ---------- */
+function renderGallery(s){
+  appHeader(s,'Photos','Everything you kept, A to Z');
+  const items=state.M.filter(m=>!m.del).sort((a,b)=>b.ts-a.ts);
+  if(!items.length){
+    s.appendChild(el('div','empty',`<div class="art">${I.photos.replace('class="icon"','class="icon-lg"')}</div>
+      <div class="t">No photos yet</div><div>Open a letter and add your first memory.</div>`));
+    return;
+  }
+  const g=el('div','gal');
+  for(const m of items){
+    const f=el('figure');
+    const img=el('img');img.loading='lazy';
+    img.src=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+'&part=t';
+    f.appendChild(img);
+    f.insertAdjacentHTML('beforeend',`<span class="lettertag">${m.l}</span>`);
+    if(m.t==='v'){const b=el('span','badge');b.innerHTML=I.play;f.appendChild(b);}
+    f.onclick=()=>openMedia(m);
+    g.appendChild(f);
+  }
+  s.appendChild(g);
+}
+/* ---------- settings ---------- */
+const PRESETS=[
+  ['Classic','#1c0363','#f8519b'],['Midnight Rose','#33204a','#ff6ec4'],
+  ['Peach Cream','#f2c9e8','#ff6ec4'],['Ocean Deep','#1d3a46','#38c6d9'],
+  ['Sunset','#ff8e6e','#ff3d8a'],['Forest','#2d5a4a','#9bd45f'],
+  ['Candy Sky','#5a4a9e','#ffb3d9'],['Royal','#5b2a86','#e8b64c'],
+  ['Teal+Lime','#0e6e6b','#b8e04a'],['Mono','#22242a','#8a8f9e']];
+function renderSettings(s){
+  const t=theme();
+  appHeader(s,'Us','Your couple, your colors');
+  const w=el('div');
+  const names=state.C.names.map(esc);
+  w.innerHTML=`
+    <div class="set-group">
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:var(--sp-4)">
+        <div id="setIcon" style="width:72px;height:72px;flex:none"></div>
+        <div><div style="font-family:var(--font-display);font-size:22px;font-weight:560">${esc(state.C.title||'Our alphabet')}</div>
+        <div style="color:var(--ink-3);font-size:14px">${names[0]||'You'} & ${names[1]||'...'}</div></div>
+      </div>
+    </div>
+    <div class="set-group"><h3>Couple</h3>
+      <div class="set-row"><div class="grow"><div class="t">Couple name</div></div>
+        <input class="input" id="cTitle" style="max-width:170px" maxlength="40" value="${esc(state.C.title||'')}"></div>
+      <div class="set-row"><div class="grow"><div class="t">Your names</div></div>
+        <div style="display:flex;gap:6px"><input class="input" id="cN0" style="max-width:100px" maxlength="24" value="${names[0]||''}">
+        <input class="input" id="cN1" style="max-width:100px" maxlength="24" value="${names[1]||''}"></div></div>
+      <div class="set-row"><div class="grow"><div class="t">Emoji</div></div>
+        <input class="input" id="cEmoji" style="max-width:80px" maxlength="8" value="${esc(state.C.emoji||'')}"></div>
+    </div>
+    <div class="set-group"><h3>Colors</h3>
+      <div class="set-row" style="display:block">
+        <div class="t" style="margin-bottom:8px">Theme</div>
+        <div class="swatches" id="sw"></div>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:10px">
+          <div><div class="d" style="margin-bottom:4px">Primary</div><input type="color" class="colpick" id="cP" value="${t.p}"></div>
+          <div><div class="d" style="margin-bottom:4px">Accent</div><input type="color" class="colpick" id="cA" value="${t.a}"></div>
+          <div style="flex:1"></div>
+          <div><div class="d" style="margin-bottom:4px">Mode</div>
+            <select class="input" id="cMode" style="padding:8px 12px">
+              <option value="auto"${t.mode==='auto'?' selected':''}>Auto</option>
+              <option value="light"${t.mode==='light'?' selected':''}>Light</option>
+              <option value="dark"${t.mode==='dark'?' selected':''}>Dark</option></select></div>
+        </div>
+        <div class="d" style="margin-top:10px">The app icon above repaints itself from your two colors.</div>
+      </div>
+    </div>
+    <div class="set-group"><h3>Special dates</h3><div id="dates"></div>
+      <button class="btn btn-soft btn-block" id="addDate" style="margin-top:8px">${I.plus}<span>Add a date</span></button></div>
+    <div class="set-group"><h3>Sharing</h3>
+      <div class="set-row"><div class="grow"><div class="t">Invite your person</div>
+        <div class="d">Prism code, link or 6-letter code</div></div>
+        <button class="btn btn-soft" id="goPair" style="padding:10px 16px">Open</button></div>
+    </div>
+    <div class="set-group"><h3>Danger zone</h3>
+      <div class="set-row"><div class="grow"><div class="t">Leave this couple</div>
+        <div class="d">Removes this device. Your partner keeps everything.</div></div>
+        <button class="btn btn-danger" id="leave" style="padding:10px 16px">Leave</button></div>
+    </div>
+    <p style="text-align:center;color:var(--ink-3);font-size:12px;margin:var(--sp-6) 0">Alphabet Us · free, private, no account</p>`;
+  s.appendChild(w);
+  const setIcon=()=>IconRecolor.recolor(theme().p,theme().a,'icons/master-1024.png').then(cv=>{
+    cv.style.cssText='width:72px;height:72px;border-radius:18px';
+    const box=$('#setIcon');if(box){box.innerHTML='';box.appendChild(cv);}}).catch(()=>{});
+  setIcon();
+  const commit=()=>{state.C.title=$('#cTitle').value.trim();
+    state.C.names=[$('#cN0').value.trim(),$('#cN1').value.trim()];
+    state.C.emoji=$('#cEmoji').value.trim();bump();};
+  ['cTitle','cN0','cN1','cEmoji'].forEach(id=>$('#'+id).onchange=commit);
+  const sw=$('#sw');
+  for(const [name,p,a] of PRESETS){
+    const b=el('button','swatch'+((t.p===p&&t.a===a)?' on':''));
+    b.style.background=`linear-gradient(135deg,${p} 50%,${a} 50%)`;b.title=name;
+    b.onclick=()=>{state.C.theme={p,a,mode:theme().mode};bump();applyTheme();renderApp();};
+    sw.appendChild(b);
+  }
+  $('#cP').oninput=e=>{state.C.theme=Object.assign(theme(),{p:e.target.value});applyTheme();};
+  $('#cP').onchange=()=>{bump();setIcon();};
+  $('#cA').oninput=e=>{state.C.theme=Object.assign(theme(),{a:e.target.value});applyTheme();};
+  $('#cA').onchange=()=>{bump();setIcon();};
+  $('#cMode').onchange=e=>{state.C.theme=Object.assign(theme(),{mode:e.target.value});bump();applyTheme();};
+  const dates=state.C.dates||(state.C.dates=[]);
+  const drawDates=()=>{
+    const box=$('#dates');box.innerHTML='';
+    if(!dates.length)box.innerHTML='<div class="set-row"><div class="d">Anniversaries, birthdays, whatever matters.</div></div>';
+    dates.forEach((d,i)=>{
+      const row=el('div','set-row');
+      row.innerHTML=`<div class="grow"><div class="t">${esc(d.t||'')}</div><div class="d">${esc(d.d||'')}</div></div>`;
+      const rm=el('button','iconbtn');rm.innerHTML=I.trash;
+      rm.onclick=()=>{dates.splice(i,1);bump();drawDates();};
+      row.appendChild(rm);box.appendChild(row);
+    });
+  };
+  drawDates();
+  $('#addDate').onclick=async()=>{
+    const t2=await modalAsk({title:'What is the date called?',placeholder:'Our anniversary'});
+    if(!t2)return;
+    const d=await modalAsk({title:'When? (YYYY-MM-DD)',placeholder:'2026-02-18'});
+    if(!d)return;
+    dates.push({t:t2,d});bump();drawDates();
+  };
+  $('#goPair').onclick=()=>go('#/pair');
+  $('#leave').onclick=async()=>{
+    if(!await modalAsk({title:'Leave this couple on this device?',ok:'Leave',danger:true,placeholder:null}))return;
+    try{const d=await api('/devices',{tok:state.tok});const me=d.devices.find(x=>x.self);
+      if(me)await api('/remove',{tok:state.tok,did:me.did});}catch(e){}
+    ['tok','who','S','M','C'].forEach(k=>store.del(k));
+    state.tok=null;state.who=null;state.S={};state.M=[];state.C={cu:0,title:'',emoji:'',names:['',''],theme:null,dates:[]};
+    applyTheme();go('#/welcome');
+  };
+}
+/* iOS PWA-safe modals (window.prompt/confirm are broken in home-screen apps) */
+function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
+  return new Promise(res=>{
+    const ov=el('div','scrim on');ov.style.zIndex=95;
+    const box=el('div','card');
+    box.style.cssText='position:fixed;left:50%;top:28%;transform:translateX(-50%);z-index:96;padding:18px;width:min(330px,86vw)';
+    box.innerHTML=`<div style="font-weight:600;margin-bottom:12px">${esc(title)}</div>
+      ${placeholder!==null?`<input class="input" id="pv" value="${esc(value)}" placeholder="${esc(placeholder)}">`:''}
+      <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-soft" id="pc" style="flex:1">Cancel</button>
+      <button class="btn ${danger?'btn-danger':'btn-primary'}" id="pk" style="flex:1">${esc(ok)}</button></div>`;
+    document.body.append(ov,box);
+    const inp=box.querySelector('#pv');if(inp)inp.focus();
+    const done=v=>{ov.remove();box.remove();res(v);};
+    box.querySelector('#pc').onclick=()=>done(null);
+    box.querySelector('#pk').onclick=()=>done(inp?inp.value.trim():true);
+    if(inp)inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim());};
+  });
+}
+/* ---------- boot ---------- */
+applyTheme();
+route();
+if('serviceWorker' in navigator){
+  addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
