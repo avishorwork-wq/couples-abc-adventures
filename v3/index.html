@@ -193,15 +193,15 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .h1{font-size:30px;margin-bottom:var(--sp-2)}
 .sub{color:var(--ink-2);font-size:15px;margin-bottom:var(--sp-5)}
 /* ---------- A-Z grid ---------- */
-.az{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 8px}
-@media(min-width:960px){.az{grid-template-columns:repeat(6,1fr);gap:4px 16px}
+.az{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 8px}
+@media(min-width:960px){.az{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 16px}
   .awl .Lx{font-size:84px!important}}
-.awl{position:relative;border:0;background:none;cursor:pointer;padding:14px 4px 12px;text-align:center;
+.awl{position:relative;border:0;background:none;cursor:pointer;padding:14px 4px 12px;text-align:center;min-width:0;
   display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:var(--r-s);transition:transform .18s var(--ease)}
 .awl:active{transform:scale(.94)}
 .awl .Lx{font-family:var(--font-display);font-weight:480;font-size:64px;line-height:1.05;letter-spacing:-.02em;
   color:color-mix(in oklab,var(--ink) 20%,transparent);transition:color .3s}
-.awl .ilbl{font-size:11px;color:var(--ink-3);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.awl .ilbl{font-size:11px;color:var(--ink-3);width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
 .awl .stars{font-size:9px;letter-spacing:2px;color:var(--a-ink);line-height:1.4}
 .awl.plan .Lx{color:var(--a-ink);font-style:italic}
 .awl.plan .ilbl{color:var(--a-ink)}
