@@ -611,11 +611,21 @@ async function startScan(box){
   stageMount.querySelector('#stage').insertBefore(vid,stageMount.querySelector('#fx'));
   window.__scanFx=fx;
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    let stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});}
+    catch(e){stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});} /* devices that reject hinted constraints still get a camera */
+    try{const tr0=stream.getVideoTracks()[0];const caps=tr0&&tr0.getCapabilities?tr0.getCapabilities():null;
+      const adv={};
+      if(caps&&Array.isArray(caps.focusMode)&&caps.focusMode.includes('continuous'))adv.focusMode='continuous';
+      if(caps&&Array.isArray(caps.exposureMode)&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
+      if(caps&&Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes('continuous'))adv.whiteBalanceMode='continuous';
+      if(Object.keys(adv).length)await tr0.applyConstraints({advanced:[adv]});
+    }catch(e){} /* continuous AF/AE/AWB only where the device reports support; defaults elsewhere */
     if(closed){for(const t of stream.getTracks())t.stop();return;} /* closed while permission/hardware was pending: never keep the camera */
     scanStream=stream;
     vid.srcObject=scanStream;await vid.play();
     const cap=document.createElement('canvas');const cx=cap.getContext('2d',{willReadFrequently:true});
+    const dec=document.createElement('canvas');const dxc=dec.getContext('2d',{willReadFrequently:true}); /* full-resolution frame for worker reads; detection stays on the cheap 640px downscale */
     const quadArea=q=>{let a=0;for(let i=0;i<4;i++){const p=q[i],r=q[(i+1)%4];a+=p[0]*r[1]-r[0]*p[1];}return Math.abs(a)/2;};
     const quadDist=(a,b)=>{let best=1e18;for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(a[i][0]-b[(i+r)%4][0],a[i][1]-b[(i+r)%4][1]);best=Math.min(best,d/4);}return best;};
     const capToStage=(p,W,H)=>{const s2=Math.max(innerWidth/W,innerHeight/H);return [p[0]*s2+(innerWidth-W*s2)/2,p[1]*s2+(innerHeight-H*s2)/2];};
@@ -667,9 +677,19 @@ async function startScan(box){
          reflect the CURRENT frame, never a stale read kept alive by the timer */
       if(id&&!decoding&&((verifiedOk&&Date.now()<verifyDeadline)||(!verifiedOk&&(quad||tickN%6===0)))){
         decoding=true;
-        const reqStream=scanStream, capW=cap.width, capH=cap.height; /* bind this request's capture session + dims */
+        /* candidate reads decode a FULL-resolution frame: the 640px detection
+           downscale blurs a dense code's cells together before the reader sees
+           them. Blind probes keep the cheap downscaled frame they already use. */
+        let rid=id, capW=cap.width, capH=cap.height;
+        if(quad||verifiedOk){
+          dec.width=vid.videoWidth;dec.height=vid.videoHeight;
+          dxc.drawImage(vid,0,0,dec.width,dec.height);
+          let fid=null;try{fid=dxc.getImageData(0,0,dec.width,dec.height);}catch(e){}
+          if(fid){rid=fid;capW=dec.width;capH=dec.height;}
+        }
+        const reqStream=scanStream; /* bind this request's capture session + dims */
         const revoke=()=>{verifiedOk=false;verifiedText=null;clearTimeout(verifyTimer);fx.revoke();};
-        AsyncPrismReader.read(id,{fusion:true}).then(res=>{
+        AsyncPrismReader.read(rid,{fusion:true}).then(res=>{
           decoding=false;
           if(closed||scanStream!==reqStream)return; /* discard results from a closed/reopened session */
           const text=new TextDecoder().decode(res.bytes||[]);
