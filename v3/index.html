@@ -172,6 +172,9 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
   border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   transition:transform .15s var(--ease),box-shadow .15s;box-shadow:var(--shadow-1)}
 .az-tile:active{transform:scale(.96)}
+@media(hover:hover){.az-tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.next-card:hover{transform:translateY(-1px)}
+.gal figure:hover{filter:brightness(1.04)}}
 .az-tile .L{font-family:var(--font-display);font-size:36px;font-weight:560;color:var(--ink)}
 .az-tile .idea{font-size:11px;color:var(--ink-3);text-align:center;padding:0 6px;line-height:1.25;
   max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -382,6 +385,7 @@ function go(h){location.hash=h;}
 function route(){
   const h=location.hash||'#/welcome';
   closeSheet();
+  renderApp._key=null;
   if(h.startsWith('#/join=')){renderJoin(h.slice(7).toUpperCase());}
   else if(h==='#/create'){renderCreate();}
   else if(h==='#/join'){renderJoin('');}
@@ -652,6 +656,9 @@ function tabbar(){
 function renderApp(){
   current='app';document.body.classList.add('has-app');
   stopScan();
+  const key=state.tab+'|'+state.C.cu+'|'+Object.values(state.S).map(x=>x.u||0).join(',')+'|'+state.M.length+'|'+state.M.map(m=>m.del?1:0).join('');
+  if(key===renderApp._key&&$('#view .screen'))return;
+  renderApp._key=key;
   const v=$('#view');v.innerHTML='';
   const s=el('div','screen'+(state.tab==='grid'?'':' screen-wide'));
   v.appendChild(s);
