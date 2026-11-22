@@ -882,126 +882,198 @@ function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
 }
 /* ---------- scan success animation ---------- */
 function scanSuccess(cap,res,text,code6){
-  // freeze the frame; keep video visible behind
   if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}
-  const W=res.layout.W,H=res.layout.H;
-  const inv=Prism.homography(res.quad,[[0,0],[W,0],[W,H],[0,H]]);
-  // straightened "denoised-ish" camera crop
-  const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
-  const sc=straight.getContext('2d');
-  const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
-  const dst=sc.createImageData(S,S);
-  const padU=3.2,scale=S/(W+2*padU);
-  for(let y=0;y<S;y++)for(let x=0;x<S;x++){
-    const p=Prism.map(inv,x/scale-padU,y/scale-padU);
-    const sx=Math.round(p[0]),sy=Math.round(p[1]),di=(y*S+x)*4;
-    if(sx<0||sy<0||sx>=cap.width||sy>=cap.height){dst.data[di+3]=0;continue;}
-    const si=(sy*cap.width+sx)*4;
-    dst.data[di]=src.data[si];dst.data[di+1]=src.data[si+1];dst.data[di+2]=src.data[si+2];dst.data[di+3]=255;
-  }
-  sc.putImageData(dst,0,0);
-  // canonical clean code, re-encoded from the decoded payload
-  let clean;
-  try{
-    const cc=Prism.encode(new TextEncoder().encode(text),{});
-    clean=Prism.render(cc,Math.max(8,Math.floor(S/(cc.layout.W+2*3.2))));
-  }catch(e){clean=straight;}
   const box=$('#scanBox');
   const wrap=box.firstElementChild;
   const hud=wrap.querySelector('div');
-  // overlay canvas on top of the frozen camera
-  const ov=document.createElement('canvas');
-  const ow=Math.round(cap.width),oh=Math.round(cap.height);
-  ov.width=ow;ov.height=oh;
+  if(hud)hud.style.display='none';
+  cap.style.visibility='hidden';
+  const ow=cap.width,oh=cap.height;
+  const ov=document.createElement('canvas');ov.width=ow;ov.height=oh;
   ov.style.cssText='position:absolute;inset:0;width:100%;height:100%';
   wrap.appendChild(ov);
-  if(hud)hud.style.display='none';
   const g=ov.getContext('2d');
-  const quad=res.quad;
-  const T0=performance.now(),D1=380,D2=720,D3=560,D4=520,T=D1+D2+D3+D4;
-  const easeO=t=>1-Math.pow(1-t,3), easeIO=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-  const easeBack=t=>{const c=1.70158;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
-  const sq=Math.min(ow,oh)*0.82;
-  const cx0=ow/2,cy0=oh/2;
+  const quad=res.quad.map(p=>[p[0],p[1]]);
+  const W=res.layout.W,H=res.layout.H;
+  const cx0=ow/2,cy0=oh/2,sq=Math.min(ow,oh)*0.74;
+  const sqX=cx0-sq/2,sqY=cy0-sq/2;
+  // canonical clean code, re-encoded from the decoded payload
+  let clean;
+  try{const cc=Prism.encode(new TextEncoder().encode(text),{});clean=Prism.render(cc,9);}
+  catch(e){clean=cap;}
+  // pre-straightened camera crop for the post-warp phase
+  const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
+  try{
+    const inv=Prism.homography(quad,[[0,0],[W,0],[W,H],[0,H]]);
+    const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
+    const dst=straight.getContext('2d').createImageData(S,S);
+    const padU=3.2,scale=S/(W+2*padU);
+    for(let y=0;y<S;y++)for(let x=0;x<S;x++){
+      const p=Prism.map(inv,x/scale-padU,y/scale-padU);
+      const sx=Math.round(p[0]),sy=Math.round(p[1]),di=(y*S+x)*4;
+      if(sx<0||sy<0||sx>=cap.width||sy>=cap.height){dst.data[di+3]=0;continue;}
+      const si=(sy*cap.width+sx)*4;
+      dst.data[di]=src.data[si];dst.data[di+1]=src.data[si+1];dst.data[di+2]=src.data[si+2];dst.data[di+3]=255;
+    }
+    straight.getContext('2d').putImageData(dst,0,0);
+  }catch(e){}
+  const qC=[(quad[0][0]+quad[1][0]+quad[2][0]+quad[3][0])/4,(quad[0][1]+quad[1][1]+quad[2][1]+quad[3][1])/4];
+  const bil=(u,v)=>{
+    const ax=quad[0][0]+(quad[1][0]-quad[0][0])*u, ay=quad[0][1]+(quad[1][1]-quad[0][1])*u;
+    const bx=quad[3][0]+(quad[2][0]-quad[3][0])*u, by=quad[3][1]+(quad[2][1]-quad[3][1])*u;
+    return [ax+(bx-ax)*v, ay+(by-ay)*v];
+  };
+  const sqPt=(u,v)=>[sqX+u*sq,sqY+v*sq];
+  // reticle start pose: wider, slightly rotated/translated -> converges onto real corners
+  const startQ=quad.map(p=>{
+    const dx=p[0]-qC[0],dy=p[1]-qC[1],a=-0.12;
+    const rx=dx*Math.cos(a)-dy*Math.sin(a),ry=dx*Math.sin(a)+dy*Math.cos(a);
+    return [qC[0]+rx*1.3, qC[1]+ry*1.3-24];
+  });
+  const eO=t=>1-Math.pow(1-t,3), eIO=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,
+        eX=t=>t>=1?1:1-Math.pow(2,-10*t),
+        eB=t=>{const c=1.35;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
+  const PA=560,PW=620,PSC=540,POP=220;
+  const tSweep=PA+PW, tSucc=tSweep+PSC+POP+180, T=tSucc+620;
+  // mesh warp: triangles from cap
+  const N=12;
+  function drawTri(img,s0,s1,s2,d0,d1,d2){
+    // expand dest slightly to hide seams
+    const mx=(d0[0]+d1[0]+d2[0])/3,my=(d0[1]+d1[1]+d2[1])/3;
+    const ex=p=>[mx+(p[0]-mx)*1.03,my+(p[1]-my)*1.03];
+    const e0=ex(d0),e1=ex(d1),e2=ex(d2);
+    g.save();g.beginPath();g.moveTo(e0[0],e0[1]);g.lineTo(e1[0],e1[1]);g.lineTo(e2[0],e2[1]);g.closePath();g.clip();
+    const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
+    if(Math.abs(den)<1e-6){g.restore();return;}
+    const a=(e0[0]*(s1[1]-s2[1])+e1[0]*(s2[1]-s0[1])+e2[0]*(s0[1]-s1[1]))/den;
+    const b=(e0[1]*(s1[1]-s2[1])+e1[1]*(s2[1]-s0[1])+e2[1]*(s0[1]-s1[1]))/den;
+    const c=(e0[0]*(s2[0]-s1[0])+e1[0]*(s0[0]-s2[0])+e2[0]*(s1[0]-s0[0]))/den;
+    const d=(e0[1]*(s2[0]-s1[0])+e1[1]*(s0[0]-s2[0])+e2[1]*(s1[0]-s0[0]))/den;
+    const e=e0[0]-a*s0[0]-c*s0[1], f=e0[1]-b*s0[0]-d*s0[1];
+    g.transform(a,b,c,d,e,f);g.drawImage(img,0,0);g.restore();
+  }
+  function drawWarped(k){
+    if(k<=0.001){g.drawImage(cap,0,0);return;}
+    if(k>=0.999){g.drawImage(straight,sqX,sqY,sq,sq);return;}
+    g.save();
+    g.filter='contrast('+(1+0.35*k)+') saturate('+(1+0.25*k)+') brightness('+(1+0.06*k)+')';
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+      const u0=i/N,u1=(i+1)/N,v0=j/N,v1=(j+1)/N;
+      const s00=bil(u0,v0),s10=bil(u1,v0),s11=bil(u1,v1),s01=bil(u0,v1);
+      const L=(s,d)=>[s[0]+(d[0]-s[0])*k,s[1]+(d[1]-s[1])*k];
+      const d00=L(s00,sqPt(u0,v0)),d10=L(s10,sqPt(u1,v0)),d11=L(s11,sqPt(u1,v1)),d01=L(s01,sqPt(u0,v1));
+      drawTri(cap,s00,s10,s11,d00,d10,d11);
+      drawTri(cap,s00,s11,s01,d00,d11,d01);
+    }
+    g.restore();
+  }
+  // resolve-wave state
+  const stamped=new Uint8Array(W*H);
+  const rLayer=document.createElement('canvas');rLayer.width=ow;rLayer.height=oh;
+  const rg=rLayer.getContext('2d');
+  const cw=sq/W,ch=sq/H;
+  const cellSrc=(i,j)=>[(i/W)*clean.width,(j/H)*clean.height,clean.width/W,clean.height/H];
+  const cellDst=(i,j)=>[sqX+i*cw,sqY+j*ch,cw,ch];
+  const cellT=(i,j)=>{
+    const rowY=sqY+(j+.5)*ch;
+    const f=Math.min(1,Math.max(0,(rowY-(sqY-20))/(sq+40)));
+    return tSweep+PSC*f+((i*7+j*13)%3)*28;
+  };
+  function stamp(i,j){
+    const s=cellSrc(i,j),d=cellDst(i,j);
+    rg.drawImage(clean,s[0],s[1],s[2],s[3],d[0],d[1],d[2],d[3]);
+    stamped[j*W+i]=1;
+  }
+  const T0=performance.now();
   const CAP=(typeof window!=='undefined')?window.__scanCap:null;
   function draw(now){
     const t=now-T0;
     g.clearRect(0,0,ow,oh);
-    if(t<D1){ // lock-on: glowing quad snaps in
-      const k=easeO(t/D1);
+    // success bounce transform
+    let inSucc=false;
+    if(t>tSucc){
+      inSucc=true;
+      const x=(t-tSucc)/620,bump=Math.exp(-3.2*x)*Math.sin(9*x);
+      const s=1+0.035*Math.max(0,bump);
+      g.save();g.translate(cx0,cy0);g.scale(s,s);g.translate(-cx0,-cy0);
+    }
+    const k=t<PA?0:eIO(Math.min(1,(t-PA)/PW));
+    // surroundings clean up into a light backdrop, card grows under the code
+    if(k>0.001){
+      g.fillStyle='rgba(246,244,251,'+(0.66*eO(k))+')';g.fillRect(0,0,ow,oh);
+      const cX=qC[0]+(cx0-qC[0])*k,cY=qC[1]+(cy0-qC[1])*k;
+      const qw=Math.max(Math.abs(quad[1][0]-quad[0][0]),Math.abs(quad[2][0]-quad[3][0]));
+      const cs=qw+(sq*1.12-qw)*eO(k);
+      g.save();g.shadowColor='rgba(30,10,60,.18)';g.shadowBlur=24*k;g.shadowOffsetY=8*k;
+      g.fillStyle='rgba(255,255,255,'+(0.96*k)+')';
+      g.beginPath();g.roundRect(cX-cs/2,cY-cs/2,cs,cs,20);g.fill();g.restore();
+    }
+    drawWarped(k);
+    // resolved layer + resolving cells
+    if(t>tSweep){
+      g.drawImage(rLayer,0,0);
+      const yTop=sqY-20,sy=yTop+(sq+40)*eIO(Math.min(1,(t-tSweep)/PSC));
+      for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+        const idx=j*W+i;if(stamped[idx])continue;
+        const r=cellT(i,j),a=t-r;
+        if(a<=0)continue;
+        if(a>=POP){stamp(i,j);g.drawImage(rLayer,0,0);continue;}
+        const p=eO(a/POP),sc2=1.28-0.28*p;
+        const s=cellSrc(i,j),d=cellDst(i,j);
+        const ccx=d[0]+d[2]/2,ccy=d[1]+d[3]/2;
+        g.save();g.translate(ccx,ccy);g.scale(sc2,sc2);
+        g.drawImage(clean,s[0],s[1],s[2],s[3],-d[2]/2,-d[3]/2,d[2],d[3]);
+        g.restore();
+        g.fillStyle='rgba(255,255,255,'+(0.4*(1-p))+')';
+        g.fillRect(d[0],d[1],d[2],d[3]);
+      }
+      if(t<tSweep+PSC+60){
+        const grd=g.createLinearGradient(0,sy-46,0,sy+46);
+        grd.addColorStop(0,'rgba(46,184,217,0)');grd.addColorStop(.5,'rgba(140,240,255,.5)');grd.addColorStop(1,'rgba(46,184,217,0)');
+        g.fillStyle=grd;g.fillRect(sqX-14,sy-46,sq+28,92);
+        g.fillStyle='rgba(190,250,255,.95)';g.fillRect(sqX-14,sy-1.2,sq+28,2.4);
+      }
+    }
+    // reticle: converges from wide pose onto the REAL detected corners, snap at PA
+    if(t<PA+240){
+      const rt=Math.min(1,t/PA),kk=eX(Math.min(1,rt*1.06));
+      const cur=quad.map((p,i)=>[startQ[i][0]+(p[0]-startQ[i][0])*kk,startQ[i][1]+(p[1]-startQ[i][1])*kk]);
+      const snap=Math.max(0,(t-PA)/220);
       g.save();
-      g.strokeStyle='rgba(46,184,217,'+(0.35+0.65*k)+')';
-      g.lineWidth=2+2*k;g.shadowColor='#2EB8D9';g.shadowBlur=18*k;
-      const q=quad.map((p,i)=>{
-        const nx=quad[(i+1)%4][0],ny=quad[(i+1)%4][1];
-        return [p[0]+(nx-p[0])*0,p[1]+(ny-p[1])*0];});
-      const sc2=1+0.12*(1-k);
-      g.beginPath();
-      q.forEach((p,i)=>{const x=cx0+(p[0]-cx0)*sc2,y=cy0+(p[1]-cy0)*sc2;i?g.lineTo(x,y):g.moveTo(x,y);});
-      g.closePath();g.stroke();
-      // corner ticks
-      g.fillStyle='#fff';
-      for(const p of q){const x=cx0+(p[0]-cx0)*sc2,y=cy0+(p[1]-cy0)*sc2;
-        g.beginPath();g.arc(x,y,3+2*k,0,7);g.fill();}
+      g.strokeStyle='rgba(46,184,217,'+(snap>0?0.9*(1-snap):0.95)+')';
+      g.lineWidth=2.5;g.shadowColor='#2EB8D9';g.shadowBlur=snap>0?22*(1-snap):14;
+      const bl=16+10*(1-kk);
+      for(let i=0;i<4;i++){
+        const p=cur[i],q1=cur[(i+1)%4],q2=cur[(i+3)%4];
+        const L=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
+        const d1=Math.hypot(q1[0]-p[0],q1[1]-p[1]),d2=Math.hypot(q2[0]-p[0],q2[1]-p[1]);
+        const t1=L(p,q1,Math.min(1,bl/d1)),t2=L(p,q2,Math.min(1,bl/d2));
+        g.beginPath();g.moveTo(t1[0],t1[1]);g.lineTo(p[0],p[1]);g.lineTo(t2[0],t2[1]);g.stroke();
+      }
+      if(snap>0){ // snap ring + flash
+        g.strokeStyle='rgba(120,235,255,'+(0.8*(1-snap))+')';g.lineWidth=2;
+        const rr=sq*0.42*(1+0.5*snap);
+        g.beginPath();g.arc(cx0,cy0,rr,0,7);g.stroke();
+        g.fillStyle='rgba(255,255,255,'+(0.22*(1-snap))+')';
+        g.beginPath();g.roundRect(sqX,sqY,sq,sq,20);g.fill();
+      }
       g.restore();
-    }else if(t<D1+D2){ // straighten + clean + first sweep
-      const k=easeIO((t-D1)/D2);
-      const size=sq*(0.9+0.1*k);
-      const x0=cx0-size/2,y0=cy0-size/2;
+    }
+    // success: glow ring + pulse
+    if(t>tSucc){
+      const x=Math.min(1,(t-tSucc)/620);
       g.save();
-      g.beginPath();g.roundRect(x0,y0,size,size,18);g.clip();
-      g.globalAlpha=1-k;g.drawImage(straight,x0,y0,size,size);
-      g.globalAlpha=k;g.drawImage(clean,x0,y0,size,size);
-      g.globalAlpha=1;
-      // scan sweep
-      const sy=y0-40+(size+80)*easeIO(Math.min(1,(t-D1)/D2));
-      const grd=g.createLinearGradient(0,sy-36,0,sy+36);
-      grd.addColorStop(0,'rgba(46,184,217,0)');grd.addColorStop(.5,'rgba(120,235,255,.55)');grd.addColorStop(1,'rgba(46,184,217,0)');
-      g.fillStyle=grd;g.fillRect(x0,sy-36,size,72);
+      g.strokeStyle='rgba(52,229,160,'+(0.85*(1-x))+')';g.lineWidth=3;g.shadowColor='#34E5A0';g.shadowBlur=26*(1-x);
+      g.beginPath();g.roundRect(sqX-6,sqY-6,sq+12,sq+12,24);g.stroke();
+      const rr=sq*0.5*(1+0.35*eO(x));
+      g.strokeStyle='rgba(52,229,160,'+(0.5*(1-x))+')';g.lineWidth=2;
+      g.beginPath();g.arc(cx0,cy0,rr,0,7);g.stroke();
       g.restore();
-      g.save();g.strokeStyle='rgba(120,235,255,.9)';g.lineWidth=1.5;g.shadowColor='#2EB8D9';g.shadowBlur=12;
-      g.beginPath();g.roundRect(x0,y0,size,size,18);g.stroke();g.restore();
-    }else if(t<D1+D2+D3){ // resolve sweep + settle
-      const k=(t-D1-D2)/D3;
-      const size=sq,x0=cx0-size/2,y0=cy0-size/2;
-      g.save();g.beginPath();g.roundRect(x0,y0,size,size,18);g.clip();
-      g.drawImage(clean,x0,y0,size,size);
-      // dark veil wiping away right-to-left with the resolve sweep
-      const wx=x0+size*easeIO(Math.min(1,k*1.15));
-      g.fillStyle='rgba(10,14,30,.72)';
-      g.fillRect(wx,y0,x0+size-wx,size);
-      const grd=g.createLinearGradient(wx-30,0,wx+6,0);
-      grd.addColorStop(0,'rgba(120,235,255,0)');grd.addColorStop(1,'rgba(120,235,255,.8)');
-      g.fillStyle=grd;g.fillRect(wx-30,y0,36,size);
-      g.restore();
-      g.save();g.strokeStyle='rgba(120,235,255,'+(1-k*.6)+')';g.lineWidth=1.5;g.shadowColor='#2EB8D9';g.shadowBlur=14*(1-k*.5);
-      g.beginPath();g.roundRect(x0,y0,size,size,18);g.stroke();g.restore();
-    }else if(t<T){ // success check pop
-      const k=easeO(Math.min(1,(t-D1-D2-D3)/(D4*0.55)));
-      const fade=Math.max(0,(t-D1-D2-D3-D4*0.55)/(D4*0.45));
-      const size=sq,x0=cx0-size/2,y0=cy0-size/2;
-      g.save();g.beginPath();g.roundRect(x0,y0,size,size,18);g.clip();
-      g.drawImage(clean,x0,y0,size,size);
-      g.fillStyle='rgba(10,14,30,'+(.18+.5*fade)+')';g.fillRect(x0,y0,size,size);
-      g.restore();
-      // ring + check with back-ease pop
-      const rr=size*0.30*(0.6+0.4*easeBack(k));
-      g.save();
-      g.strokeStyle='rgba(52,229,160,'+(1-fade*.6)+')';g.lineWidth=4;g.shadowColor='#34E5A0';g.shadowBlur=24;
-      g.beginPath();g.arc(cx0,cy0,Math.max(1,rr),0,7);g.stroke();
-      g.strokeStyle='#E9FFF5';g.lineWidth=6;g.lineCap='round';g.lineJoin='round';
-      const ck=Math.min(1,k*1.15);
-      g.beginPath();
-      g.moveTo(cx0-rr*.42,cy0+rr*.02);
-      g.lineTo(cx0-rr*.42+(rr*.36)*ck,cy0+rr*.02+(rr*.34)*ck);
-      if(ck>.5){const k2=(ck-.5)/.5;g.lineTo(cx0-rr*.06+(rr*.5)*k2,cy0+rr*.36-(rr*.68)*k2);}
-      g.stroke();g.restore();
-      g.save();g.strokeStyle='rgba(120,235,255,.8)';g.lineWidth=1.5;
-      g.beginPath();g.roundRect(x0,y0,size,size,18);g.stroke();g.restore();
-    }else{
-      // hand off: flash out, fill the form
+      g.restore(); // bounce transform
+    }
+    if(t>=T){
       if(CAP){CAP.done=true;return;}
-      ov.style.transition='opacity .3s';ov.style.opacity='0';
+      ov.style.transition='opacity .3s, transform .3s';ov.style.opacity='0';ov.style.transform='scale(.96)';
       setTimeout(()=>{ov.remove();},320);
       $('#code').value=code6;toast('Code found');
       box.style.display='none';
@@ -1012,63 +1084,80 @@ function scanSuccess(cap,res,text,code6){
     requestAnimationFrame(draw);
   }
   if(CAP){
-    // deterministic frame-by-frame capture: manual clock, composite cam+overlay
-    const fps=CAP.fps||30;
+    const fps=CAP.fps||60;
     for(let t=0;t<T-1;t+=1000/fps){
       draw(T0+t);
-      CAP.ctx.drawImage(cap,0,0,CAP.cw,CAP.ch);
       CAP.ctx.drawImage(ov,0,0,CAP.cw,CAP.ch);
-      CAP.frames.push(CAP.canvas.toDataURL('image/jpeg',0.85));
+      CAP.frames.push(CAP.canvas.toDataURL('image/jpeg',0.82));
     }
-    // tail: hold last frame ~0.7s so the success beat reads
     const last=CAP.frames[CAP.frames.length-1];
-    for(let i=0;i<Math.round(fps*0.7);i++)CAP.frames.push(last);
+    for(let i=0;i<Math.round(fps*0.5);i++)CAP.frames.push(last);
     return;
   }
   requestAnimationFrame(draw);
 }
-/* demo hook for verification: run the animation on a synthetic camera frame */
+/* demo hooks: synthetic camera scenes, decoded for REAL with Prism.readImage */
+window.__mkScene=function(kind){
+  const url=location.origin+location.pathname+'#/join=K7QX2M';
+  const code=Prism.encode(new TextEncoder().encode(url),{});
+  const rc=Prism.render(code,9);
+  const cap=document.createElement('canvas');cap.width=640;cap.height=480;
+  const cx=cap.getContext('2d',{willReadFrequently:true});
+  const bg=cx.createLinearGradient(0,0,640,480);
+  bg.addColorStop(0,'#46414e');bg.addColorStop(1,'#2e2a35');
+  cx.fillStyle=bg;cx.fillRect(0,0,640,480);
+  let truth;
+  if(kind==='skew'){
+    truth=[[150,118],[468,82],[516,384],[172,404]];
+    const H=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],truth);
+    const src=rc.getContext('2d').getImageData(0,0,rc.width,rc.height);
+    const out=cx.getImageData(0,0,640,480);
+    const inv=Prism.homography(truth,[[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]]);
+    for(let y=0;y<480;y++)for(let x=0;x<640;x++){
+      const p=Prism.map(inv,x,y);const sx=Math.round(p[0]),sy=Math.round(p[1]);
+      if(sx<0||sy<0||sx>=rc.width||sy>=rc.height)continue;
+      const di=(y*640+x)*4,si=(sy*rc.width+sx)*4;
+      out.data[di]=src.data[si];out.data[di+1]=src.data[si+1];out.data[di+2]=src.data[si+2];out.data[di+3]=255;
+    }
+    cx.putImageData(out,0,0);
+  }else{
+    cx.save();cx.translate(320,240);cx.rotate(.17);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
+    const c=Math.cos(.17),s2=Math.sin(.17),hw=rc.width/2,hh=rc.height/2;
+    truth=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(p=>[320+p[0]*c-p[1]*s2,240+p[0]*s2+p[1]*c]);
+  }
+  // camera noise
+  const id=cx.getImageData(0,0,640,480);
+  for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*14;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}
+  cx.putImageData(id,0,0);
+  // REAL decode for the real corners
+  Prism.beginDecode(2500);
+  const res=Prism.readImage({width:cap.width,height:cap.height,data:id.data});
+  let err=0;for(let i=0;i<4;i++){err=Math.max(err,Math.hypot(res.quad[i][0]-truth[i][0],res.quad[i][1]-truth[i][1]));}
+  return {cap,res,url,quadErr:Math.round(err*10)/10};
+};
 window.__demoScan=function(){
   const box=$('#scanBox');box.style.display='block';box.innerHTML='';
   const wrap=document.createElement('div');
   wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
   box.appendChild(wrap);
-  const url=location.origin+location.pathname+'#/join=K7QX2M';
-  const code=Prism.encode(new TextEncoder().encode(url),{});
-  const rc=Prism.render(code,9);
-  const cap=document.createElement('canvas');cap.width=640;cap.height=480;
-  cap.style.cssText='width:100%;height:100%;object-fit:cover';
-  wrap.appendChild(cap);
-  const cx=cap.getContext('2d');
-  cx.fillStyle='#3a3540';cx.fillRect(0,0,640,480);
-  cx.save();cx.translate(320,240);cx.rotate(.14);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
-  const quad=[[168,104],[472,70],[506,376],[202,410]];
-  const h=Prism.homography(Prism.corners(code.layout),quad);
-  const res={layout:code.layout,quad,h,bytes:new TextEncoder().encode(url)};
-  scanSuccess(cap,res,url,'K7QX2M');
-}
-window.__demoScanCapture=function(){
+  const sc=__mkScene('rot');
+  sc.cap.style.cssText='width:100%;height:100%;object-fit:cover';
+  wrap.appendChild(sc.cap);
+  scanSuccess(sc.cap,sc.res,sc.url,'K7QX2M');
+};
+window.__demoScanCapture=function(kind){
   const box=$('#scanBox');box.style.display='block';box.innerHTML='';
   const wrap=document.createElement('div');
   wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
   box.appendChild(wrap);
-  const url=location.origin+location.pathname+'#/join=K7QX2M';
-  const code=Prism.encode(new TextEncoder().encode(url),{});
-  const rc=Prism.render(code,9);
-  const cap=document.createElement('canvas');cap.width=640;cap.height=480;
-  wrap.appendChild(cap);
-  const cx=cap.getContext('2d');
-  cx.fillStyle='#3a3540';cx.fillRect(0,0,640,480);
-  cx.save();cx.translate(320,240);cx.rotate(.14);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
-  const quad=[[168,104],[472,70],[506,376],[202,410]];
-  const h=Prism.homography(Prism.corners(code.layout),quad);
-  const res={layout:code.layout,quad,h,bytes:new TextEncoder().encode(url)};
-  const canvas=document.createElement('canvas');canvas.width=780;canvas.height=585;
-  window.__scanCap={frames:[],canvas,ctx:canvas.getContext('2d'),cw:780,ch:585,fps:30,done:false};
-  scanSuccess(cap,res,url,'K7QX2M');
+  const sc=__mkScene(kind||'rot');
+  wrap.appendChild(sc.cap);
+  const canvas=document.createElement('canvas');canvas.width=640;canvas.height=480;
+  window.__scanCap={frames:[],canvas,ctx:canvas.getContext('2d'),cw:640,ch:480,fps:60,done:false};
+  scanSuccess(sc.cap,sc.res,sc.url,'K7QX2M');
   const out=window.__scanCap.frames;window.__scanCap=null;
   window.__capFrames=out;
-  return out.length;
+  return JSON.stringify({n:out.length,quadErr:sc.quadErr});
 };
 /* ---------- boot ---------- */
 applyTheme();
