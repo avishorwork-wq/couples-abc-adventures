@@ -241,6 +241,9 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .starpick button:active{transform:scale(1.2)}
 /* ---------- gallery ---------- */
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:var(--r-m);overflow:hidden}
+.gal figure{opacity:0;animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes donepop{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
+.az-tile.just-done{animation:rise .45s cubic-bezier(.22,1,.36,1) forwards,donepop .55s var(--ease) .45s}
 @media(min-width:960px){.gal{grid-template-columns:repeat(5,1fr);gap:6px}}
 .gal figure{aspect-ratio:1;background:var(--bg-sunk);position:relative;overflow:hidden}
 .gal img,.gal video{width:100%;height:100%;object-fit:cover}
@@ -513,9 +516,21 @@ async function startScan(box){
   const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
   const cleanup=()=>{stopScan();fx.stop();ov.remove();};
   closeB.onclick=cleanup;
-  if(!navigator.mediaDevices?.getUserMedia){
+  const scanFail=(msg)=>{
     fx.stop();
-    stageMount.innerHTML='<p style="color:#ecebf4;text-align:center;margin-top:42vh;font-size:15px">Camera needs HTTPS. Type the code instead.</p>';
+    stageMount.innerHTML='';
+    const c=el('div','');
+    c.style.cssText='position:absolute;inset:0;display:grid;place-items:center;padding:32px';
+    c.innerHTML=`<div style="text-align:center;max-width:280px">
+      <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:18px;background:rgba(255,255,255,.08);display:grid;place-items:center;color:#ecebf4">${I.scan}</div>
+      <div style="color:#ecebf4;font-size:16px;font-weight:600;margin-bottom:6px">${msg}</div>
+      <div style="color:rgba(236,235,244,.62);font-size:14px;line-height:1.5">Type the 6-letter code instead.</div>
+      <button class="btn btn-soft" style="margin-top:18px;padding:10px 24px" id="scanFailClose">Close</button></div>`;
+    c.querySelector('#scanFailClose').onclick=cleanup;
+    stageMount.appendChild(c);
+  };
+  if(!navigator.mediaDevices?.getUserMedia){
+    scanFail('Camera needs HTTPS');
     return;
   }
   const vid=document.createElement('video');
@@ -556,8 +571,7 @@ async function startScan(box){
     };
     tick();
   }catch(e){
-    fx.stop();
-    stageMount.innerHTML='<p style="color:#ecebf4;text-align:center;margin-top:42vh;font-size:15px">Camera unavailable. Type the code instead.</p>';
+    scanFail('Camera unavailable');
   }
 }
 function stopScan(){if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}}
@@ -704,13 +718,16 @@ function renderGrid(s){
   const g=el('div','az');
   for(const [L,idea] of AZ){
     const st=state.S[L]||{};
+    const firstGrid=renderGrid._done===undefined;
     const t=el('button','az-tile'+(st.done?' done':''));
+    if(st.done&&!firstGrid&&!renderGrid._done.has(L))t.classList.add('just-done');
     t.innerHTML=`<span class="L">${L}</span><span class="idea">${esc(st.note||idea)}</span>
       ${st.r?`<span class="stars">${'★'.repeat(st.r)}</span>`:''}
       ${st.done?`<span class="tick">${I.check}</span>`:''}`;
     t.onclick=()=>openLetter(L);
     g.appendChild(t);
   }
+  renderGrid._done=new Set(Object.keys(state.S).filter(k=>state.S[k]&&state.S[k].done));
   s.appendChild(g);
 }
 /* ---------- letter sheet ---------- */
@@ -857,8 +874,10 @@ function renderGallery(s){
     return;
   }
   const g=el('div','gal');
+  let gi=0;
   for(const m of items){
     const f=el('figure');
+    f.style.animationDelay=Math.min(gi++*45,450)+'ms';
     const img=el(m.t==='v'?'video':'img');
     if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
     else img.loading='lazy';
