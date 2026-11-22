@@ -124,59 +124,32 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .screen .stag>*:nth-child(2){animation-delay:.40s}
 .screen .stag>*:nth-child(n+3){animation-delay:.48s}
 .az-tile{opacity:0;animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
-.awl{opacity:0;animation:rise .5s cubic-bezier(.22,1,.36,1) forwards}
 .az-tile:nth-child(1){animation-delay:142ms}
-.awl:nth-child(1){animation-delay:78ms}
 .az-tile:nth-child(2){animation-delay:164ms}
-.awl:nth-child(2){animation-delay:96ms}
 .az-tile:nth-child(3){animation-delay:186ms}
-.awl:nth-child(3){animation-delay:114ms}
 .az-tile:nth-child(4){animation-delay:208ms}
-.awl:nth-child(4){animation-delay:132ms}
 .az-tile:nth-child(5){animation-delay:230ms}
-.awl:nth-child(5){animation-delay:150ms}
 .az-tile:nth-child(6){animation-delay:252ms}
-.awl:nth-child(6){animation-delay:168ms}
 .az-tile:nth-child(7){animation-delay:274ms}
-.awl:nth-child(7){animation-delay:186ms}
 .az-tile:nth-child(8){animation-delay:296ms}
-.awl:nth-child(8){animation-delay:204ms}
 .az-tile:nth-child(9){animation-delay:318ms}
-.awl:nth-child(9){animation-delay:222ms}
 .az-tile:nth-child(10){animation-delay:340ms}
-.awl:nth-child(10){animation-delay:240ms}
 .az-tile:nth-child(11){animation-delay:362ms}
-.awl:nth-child(11){animation-delay:258ms}
 .az-tile:nth-child(12){animation-delay:384ms}
-.awl:nth-child(12){animation-delay:276ms}
 .az-tile:nth-child(13){animation-delay:406ms}
-.awl:nth-child(13){animation-delay:294ms}
 .az-tile:nth-child(14){animation-delay:428ms}
-.awl:nth-child(14){animation-delay:312ms}
 .az-tile:nth-child(15){animation-delay:450ms}
-.awl:nth-child(15){animation-delay:330ms}
 .az-tile:nth-child(16){animation-delay:472ms}
-.awl:nth-child(16){animation-delay:348ms}
 .az-tile:nth-child(17){animation-delay:494ms}
-.awl:nth-child(17){animation-delay:366ms}
 .az-tile:nth-child(18){animation-delay:516ms}
-.awl:nth-child(18){animation-delay:384ms}
 .az-tile:nth-child(19){animation-delay:538ms}
-.awl:nth-child(19){animation-delay:402ms}
 .az-tile:nth-child(20){animation-delay:560ms}
-.awl:nth-child(20){animation-delay:420ms}
 .az-tile:nth-child(21){animation-delay:582ms}
-.awl:nth-child(21){animation-delay:438ms}
 .az-tile:nth-child(22){animation-delay:604ms}
-.awl:nth-child(22){animation-delay:456ms}
 .az-tile:nth-child(23){animation-delay:626ms}
-.awl:nth-child(23){animation-delay:474ms}
 .az-tile:nth-child(24){animation-delay:648ms}
-.awl:nth-child(24){animation-delay:492ms}
 .az-tile:nth-child(25){animation-delay:670ms}
-.awl:nth-child(25){animation-delay:510ms}
 .az-tile:nth-child(26){animation-delay:692ms}
-.awl:nth-child(26){animation-delay:528ms}
 
 @keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(min-width:960px){
@@ -193,35 +166,8 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .h1{font-size:30px;margin-bottom:var(--sp-2)}
 .sub{color:var(--ink-2);font-size:15px;margin-bottom:var(--sp-5)}
 /* ---------- A-Z grid ---------- */
-.az{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 8px}
-@media(min-width:960px){.az{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px 16px}
-  .awl .Lx{font-size:84px!important}}
-.awl{position:relative;border:0;background:none;cursor:pointer;padding:14px 4px 12px;text-align:center;min-width:0;
-  display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:var(--r-s);transition:transform .18s var(--ease)}
-.awl:active{transform:scale(.94)}
-.awl .Lx{font-family:var(--font-display);font-weight:480;font-size:64px;line-height:1.05;letter-spacing:-.02em;
-  color:color-mix(in oklab,var(--ink) 20%,transparent);transition:color .3s}
-.awl .ilbl{font-size:11px;color:var(--ink-3);width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
-.awl .stars{font-size:9px;letter-spacing:2px;color:var(--a-ink);line-height:1.4}
-.awl.plan .Lx{color:var(--a-ink);font-style:italic}
-.awl.plan .ilbl{color:var(--a-ink)}
-.awl.done .Lx{background:linear-gradient(150deg,var(--p),color-mix(in oklab,var(--p) 40%,var(--a)));
-  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
-.awl.done .ilbl{color:var(--ink-2)}
-.awl.photo .Lx{background-size:cover;background-position:center;
-  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
-  filter:saturate(1.12) drop-shadow(0 2px 6px rgb(0 0 0/.22))}
-.awl .tick{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;
-  background:var(--a-ink);color:#fff;display:grid;place-items:center}
-.wm{position:fixed;right:-4%;bottom:-6%;z-index:0;pointer-events:none;user-select:none;
-  font-family:var(--font-display);font-style:italic;font-weight:480;font-size:min(58vw,420px);line-height:1;
-  color:color-mix(in oklab,var(--p) 5%,transparent)}
-.nextrow{display:flex;align-items:baseline;gap:8px;background:none;border:0;cursor:pointer;padding:6px 0 2px;text-align:left}
-.nextrow .k{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
-.nextrow .v{font-family:var(--font-display);font-size:17px;color:var(--a-ink);font-style:italic;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hero-stat{display:flex;gap:14px;font-size:13px;color:var(--ink-2)}
-.hero-stat b{font-family:var(--font-display);font-size:20px;font-weight:560;color:var(--ink);margin-right:3px}
+.az{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:var(--sp-3)}
+@media(min-width:960px){.az{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--sp-4)}}
 .az-tile{position:relative;aspect-ratio:1;border-radius:var(--r-m);background:var(--bg-raise);
   border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   transition:transform .15s var(--ease),box-shadow .15s;box-shadow:var(--shadow-1)}
@@ -695,47 +641,42 @@ function appHeader(s,title,sub){
   h.appendChild(inv);s.appendChild(h);
 }
 function renderGrid(s){
-  const vals=Object.values(state.S);
-  const doneCount=vals.filter(x=>x&&x.done).length;
-  const planCount=vals.filter(x=>x&&x.date&&!x.done).length;
-  const next=AZ.find(([L])=>{const st=state.S[L];return !st||!st.done;});
+  const doneCount=Object.values(state.S).filter(x=>x&&x.done).length;
   const hero=el('div','hero');
+  const next=AZ.find(([L])=>{const st=state.S[L];return !st||!st.done;});
   hero.innerHTML=`
     <div class="hero-top">
       <div style="flex:1;min-width:0">
         <div class="hero-title">${esc(state.C.title||'Our alphabet')}</div>
+        <div class="hero-sub">${doneCount} of 26 dates</div>
       </div>
       <button class="iconbtn" id="hShare" title="Invite">${I.share}</button>
     </div>
-    <div class="hero-stat"><span><b>${doneCount}</b>done</span><span><b>${planCount}</b>planned</span><span><b>${26-doneCount-planCount}</b>to go</span></div>
     <div class="pbar"><i style="width:${Math.round(doneCount/26*100)}%"></i></div>
-    ${next?`<button class="nextrow" id="hNext"><span class="k">Up next</span><span class="v">${next[0]} · ${esc((state.S[next[0]]&&state.S[next[0]].note)||next[1])}</span></button>`
-          :`<div class="nextrow" style="cursor:default"><span class="k">Complete</span><span class="v">All 26 · legendary</span></div>`}`;
+    ${next?`<button class="next-card" id="hNext">
+      <span class="nL">${next[0]}</span>
+      <span class="nT"><span class="nK">Next up</span>
+      <span class="nI">${esc((state.S[next[0]]&&state.S[next[0]].note)||next[1])}</span></span>
+      <span class="nA">${I.back.replace('m15 18-6-6 6-6','m9 18 6-6-6-6')}</span>
+    </button>`:`<div class="next-card" style="cursor:default">
+      <span class="nL">♥</span>
+      <span class="nT"><span class="nK">Alphabet complete</span>
+      <span class="nI">All 26 dates done. Legendary.</span></span>
+    </div>`}`;
   s.appendChild(hero);
   hero.querySelector('#hShare').onclick=()=>go('#/pair');
   const nx=hero.querySelector('#hNext');if(nx)nx.onclick=()=>openLetter(next[0]);
   const g=el('div','az');
-  const photoOf=L=>{const m=state.M.find(m=>m.l===L&&!m.del&&m.t!=='v');return m?API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+'&part=t':null;};
-  let li=0;
   for(const [L,idea] of AZ){
     const st=state.S[L]||{};
-    const ph=st.done?photoOf(L):null;
-    const t=el('button','awl'+(ph?' photo':st.done?' done':st.date?' plan':''));
-    let lxStyle=ph?`background-image:linear-gradient(rgb(0 0 0/.38),rgb(0 0 0/.38)),url('${ph}')`:'';
-    if(st.done&&!ph){
-      const h=Math.round(262+li*(71/25)),h2=h+34;
-      lxStyle=`background:linear-gradient(150deg,hsl(${h} 74% 30%),hsl(${h2} 84% 60%));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent`;
-    }
-    li++;
-    t.innerHTML=`<span class="Lx"${lxStyle?` style="${lxStyle}"`:""}>${L}</span>
-      <span class="ilbl">${esc(st.note||idea)}</span>
+    const t=el('button','az-tile'+(st.done?' done':''));
+    t.innerHTML=`<span class="L">${L}</span><span class="idea">${esc(st.note||idea)}</span>
       ${st.r?`<span class="stars">${'★'.repeat(st.r)}</span>`:''}
       ${st.done?`<span class="tick">${I.check}</span>`:''}`;
     t.onclick=()=>openLetter(L);
     g.appendChild(t);
   }
   s.appendChild(g);
-  if(next){const wm=el('div','wm');wm.textContent=next[0];wm.setAttribute('aria-hidden','true');s.appendChild(wm);}
 }
 /* ---------- letter sheet ---------- */
 function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
