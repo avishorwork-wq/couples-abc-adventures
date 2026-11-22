@@ -123,33 +123,8 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .screen .stag>*:nth-child(1){animation-delay:.30s}
 .screen .stag>*:nth-child(2){animation-delay:.40s}
 .screen .stag>*:nth-child(n+3){animation-delay:.48s}
-.az-tile{opacity:0;animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
-.az-tile:nth-child(1){animation-delay:142ms}
-.az-tile:nth-child(2){animation-delay:164ms}
-.az-tile:nth-child(3){animation-delay:186ms}
-.az-tile:nth-child(4){animation-delay:208ms}
-.az-tile:nth-child(5){animation-delay:230ms}
-.az-tile:nth-child(6){animation-delay:252ms}
-.az-tile:nth-child(7){animation-delay:274ms}
-.az-tile:nth-child(8){animation-delay:296ms}
-.az-tile:nth-child(9){animation-delay:318ms}
-.az-tile:nth-child(10){animation-delay:340ms}
-.az-tile:nth-child(11){animation-delay:362ms}
-.az-tile:nth-child(12){animation-delay:384ms}
-.az-tile:nth-child(13){animation-delay:406ms}
-.az-tile:nth-child(14){animation-delay:428ms}
-.az-tile:nth-child(15){animation-delay:450ms}
-.az-tile:nth-child(16){animation-delay:472ms}
-.az-tile:nth-child(17){animation-delay:494ms}
-.az-tile:nth-child(18){animation-delay:516ms}
-.az-tile:nth-child(19){animation-delay:538ms}
-.az-tile:nth-child(20){animation-delay:560ms}
-.az-tile:nth-child(21){animation-delay:582ms}
-.az-tile:nth-child(22){animation-delay:604ms}
-.az-tile:nth-child(23){animation-delay:626ms}
-.az-tile:nth-child(24){animation-delay:648ms}
-.az-tile:nth-child(25){animation-delay:670ms}
-.az-tile:nth-child(26){animation-delay:692ms}
+@keyframes tilein{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:none}}
+.az-tile{animation:tilein .55s cubic-bezier(.22,1,.36,1) backwards}
 
 @keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(min-width:960px){
@@ -729,6 +704,13 @@ function renderGrid(s){
   }
   renderGrid._done=new Set(Object.keys(state.S).filter(k=>state.S[k]&&state.S[k].done));
   s.appendChild(g);
+  requestAnimationFrame(()=>{
+    const cols=Math.max(1,getComputedStyle(g).gridTemplateColumns.split(' ').length);
+    [...g.children].forEach((t,i)=>{
+      if(t.classList.contains('just-done'))return;
+      t.style.animationDelay=((Math.floor(i/cols)+(i%cols))*45)+'ms';
+    });
+  });
 }
 /* ---------- letter sheet ---------- */
 function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
