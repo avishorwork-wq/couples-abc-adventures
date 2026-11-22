@@ -637,7 +637,7 @@ async function startScan(box){
           const cand=[];
           for(const q0 of qs.slice(0,3)){
             let best=0;
-            for(const size of [1,2]){const lay=Prism.layout(size);
+            for(const size of [0,1,2]){const lay=Prism.layout(size); /* invite encoder picks size 0 for the 82-byte join URL */
               for(let rot=0;rot<4;rot++){const q=q0.map((_,i)=>q0[(i+rot)%4]);
                 const h=Prism.homography(Prism.corners(lay),q);
                 const sc=Prism.hypothesisScore(f,h,lay,0,Prism.whiteBalance(f,h,lay),true);

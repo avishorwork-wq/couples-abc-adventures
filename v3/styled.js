@@ -117,8 +117,8 @@ function styledPrism(code,r,{offset=2.0,ring=0.5,border='#e2549b',bg='#ffffff',S
   const g=hi.getContext('2d');
   if(ring>0)draw(g,offsetPath(offset+ring),border);
   draw(g,offsetPath(offset),bg);
-  for(const c of cells){const s=code.symbols[c.index];if(s===8)continue;
-    g.fillStyle=Prism.HEX[s];g.beginPath();
+  for(const c of cells){const s=code.symbols[c.index];
+    g.fillStyle=Prism.HEX[s]; /* paint white cells too: skipping them left them transparent, invisible on dark cards */g.beginPath();
     for(let k=0;k<6;k++){const a=(30+60*k)*Math.PI/180,
       x=X(c.x+1.03*Math.cos(a)),y=X(c.y+1.03*Math.sin(a));k?g.lineTo(x,y):g.moveTo(x,y);}
     g.closePath();g.fill();}
