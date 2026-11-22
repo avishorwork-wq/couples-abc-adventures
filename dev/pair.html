@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Alphabet Us - Invite your person</title>
+<style>
+@font-face{font-family:'Inter';src:url('fonts/inter-var.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('fonts/fraunces-var.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('fonts/fraunces-it-var.woff2') format('woff2');font-weight:100 900;font-style:italic;font-display:swap}
+:root{
+  --p:#1c0363; --a:#f8519b;
+  --font-ui:'Inter',-apple-system,system-ui,sans-serif;
+  --font-display:'Fraunces',Georgia,serif;
+  --r-m:16px; --r-l:24px;
+  --shadow-2:0 4px 16px rgb(20 10 40/.10),0 12px 40px rgb(20 10 40/.08);
+  --bg:color-mix(in oklab,#ffffff 96%,var(--p));
+  --bg-raise:#ffffff;
+  --ink:color-mix(in oklab,#17111f 88%,var(--p));
+  --ink-2:color-mix(in oklab,var(--ink) 62%,var(--bg));
+  --ink-3:color-mix(in oklab,var(--ink) 40%,var(--bg));
+  --line:color-mix(in oklab,var(--ink) 10%,var(--bg));
+  --p-wash:color-mix(in oklab,var(--p) 8%,var(--bg));
+  --a-wash:color-mix(in oklab,var(--a) 12%,var(--bg));
+  --a-ink:color-mix(in oklab,var(--a) 78%,#000 6%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-ui);color:var(--ink);background:var(--bg);min-height:100dvh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(120vw 90vh at 85% -20%,color-mix(in oklab,var(--a) 14%,transparent),transparent 60%),
+             radial-gradient(100vw 80vh at -20% 110%,color-mix(in oklab,var(--p) 16%,transparent),transparent 60%);}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+.shell{max-width:420px;margin:0 auto;padding:24px 20px 48px;min-height:100dvh;display:flex;flex-direction:column}
+@media(min-width:960px){.shell{max-width:520px;padding-top:48px}}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.wordmark{font-family:var(--font-display);font-weight:560;font-size:20px;letter-spacing:-.01em}
+.wordmark em{font-style:italic;font-weight:480;color:var(--a-ink)}
+h1{font-family:var(--font-display);font-weight:560;font-size:32px;line-height:1.12;letter-spacing:-.01em;margin-bottom:6px}
+.sub{color:var(--ink-2);font-size:15px;margin-bottom:24px}
+/* --- the Prism invite card --- */
+.card{position:relative;background:var(--bg-raise);border-radius:28px;padding:22px 22px 18px;
+  box-shadow:var(--shadow-2);
+  border:1px solid color-mix(in oklab,var(--p) 14%,transparent);}
+.card::before{content:'';position:absolute;inset:6px;border-radius:22px;pointer-events:none;
+  border:1.5px solid transparent;
+  background:linear-gradient(135deg,color-mix(in oklab,var(--p) 55%,transparent),color-mix(in oklab,var(--a) 55%,transparent)) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;}
+.card-names{text-align:center;font-family:var(--font-display);font-size:19px;font-weight:560;margin-bottom:14px}
+.card-names em{font-style:italic;font-weight:480;color:var(--a-ink)}
+.prism-wrap{position:relative;border-radius:18px;overflow:hidden;background:#fff;
+  box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--p) 8%,#eee);}
+.prism-wrap canvas{width:100%;height:auto;display:block}
+.prism-tag{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
+  font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#6b6470;
+  background:rgb(255 255 255/.88);backdrop-filter:blur(4px);padding:3px 10px;border-radius:999px;
+  box-shadow:0 1px 3px rgb(0 0 0/.08)}
+.code-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 4px}
+.code{font-family:var(--font-display);font-size:30px;font-weight:560;letter-spacing:.22em;padding-left:.22em}
+.copy-mini{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--p-wash);color:var(--ink-2)}
+.expiry{text-align:center;font-size:13px;color:var(--ink-3);margin-bottom:14px}
+.expiry b{color:var(--a-ink);font-weight:600}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;
+  font-weight:600;font-size:15.5px;transition:transform .12s ease}
+.btn:active{transform:scale(.98)}
+.btn-primary{color:#fff;background:linear-gradient(135deg,var(--p),color-mix(in oklab,var(--p) 55%,var(--a)))}
+.btn-ghost{background:var(--p-wash);color:var(--ink);margin-top:8px}
+.alt{text-align:center;font-size:13.5px;color:var(--ink-3);margin:18px 0 0}
+.alt a{color:var(--a-ink);font-weight:600;text-decoration:none}
+</style></head>
+<body>
+<div class="shell">
+  <div class="topbar"><div class="wordmark">Alphabet <em>Us</em></div></div>
+  <h1>Invite your person</h1>
+  <p class="sub">They scan this with the app, or tap the link. The code works once, for 15 minutes.</p>
+  <div class="card">
+    <div class="card-names">Avi <em>&amp;</em> Hannah</div>
+    <div class="prism-wrap"><canvas id="prism"></canvas><div class="prism-tag">Prism Code</div></div>
+    <div class="code-row"><span class="code" id="code">K7QX2M</span>
+      <button class="copy-mini" aria-label="Copy code"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
+    <div class="expiry">Expires in <b>14:32</b></div>
+    <button class="btn btn-primary">Copy invite link</button>
+    <button class="btn btn-ghost">Share...</button>
+  </div>
+  <p class="alt">They can also enter the code by hand on the <a href="#">join screen</a>.</p>
+</div>
+<script src="prism.js"></script>
+<script>
+const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
+const bytes=new TextEncoder().encode(link);
+const code=Prism.encode(bytes,{});
+const cv=document.getElementById('prism');
+Prism.render(code,12,cv);
+</script>
+</body></html>
