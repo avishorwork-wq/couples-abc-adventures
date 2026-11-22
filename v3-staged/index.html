@@ -850,8 +850,8 @@ async function startScan(box){
     const capToStage=(p,W,H)=>{const s2=Math.max(innerWidth/W,innerHeight/H);return [p[0]*s2+(innerWidth-W*s2)/2,p[1]*s2+(innerHeight-H*s2)/2];};
     let lastQuad=null,stab=0,decoding=false,tickN=0,blindN=0,verifiedRoi=null;
     const tick=async()=>{
-      if(closed||scanStream!==curStream)return; /* a closed session's loop dies here */
       if(scanStream!==stream){stream=scanStream;curStream=stream;lastQuad=null;stab=0;} /* camera switched: follow the new stream */
+      if(closed)return; /* a closed session's loop dies here */
       if(scanBusy||vid.readyState<2||!vid.videoWidth){D.skipped++;requestAnimationFrame(tick);return;}
       scanBusy=true;
       const sc=Math.min(1,640/vid.videoWidth);
