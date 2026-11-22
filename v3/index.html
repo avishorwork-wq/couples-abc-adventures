@@ -815,6 +815,7 @@ function renderGrid(s){
         <div class="hero-sub">${doneCount} of 26 dates</div>
       </div>
       <button class="iconbtn" id="hShare" title="Invite">${I.share}</button>
+      <button class="iconbtn" id="hGear" title="Settings">${I.gear}</button>
     </div>
     <div class="pbar"><i style="width:${Math.round(doneCount/26*100)}%"></i></div>
     ${next?`<button class="next-card" id="hNext">
@@ -829,6 +830,7 @@ function renderGrid(s){
     </div>`}`;
   s.appendChild(hero);
   hero.querySelector('#hShare').onclick=()=>go('#/pair');
+  hero.querySelector('#hGear').onclick=()=>Nav.pushTab('settings');
   const nx=hero.querySelector('#hNext');if(nx)nx.onclick=()=>openLetter(next[0]);
   const g=el('div','az');
   for(const [L,idea] of AZ){
