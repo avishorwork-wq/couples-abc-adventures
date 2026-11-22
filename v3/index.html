@@ -1068,6 +1068,7 @@ window.__demoScanCapture=function(){
   window.__scanCap={frames:[],canvas,ctx:canvas.getContext('2d'),cw:780,ch:585,fps:30,done:false};
   scanSuccess(cap,res,url,'K7QX2M');
   const out=window.__scanCap.frames;window.__scanCap=null;
+  window.__capFrames=out;
   return out.length;
 };
 /* ---------- boot ---------- */
