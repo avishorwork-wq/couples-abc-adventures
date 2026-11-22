@@ -302,6 +302,7 @@ input[type=color].colpick{width:44px;height:44px;border-radius:14px;border:1px s
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
 <div class="toast" id="toast"></div>
 <script src="prism.js"></script>
+<script src="scanfx.js"></script>
 <script src="styled.js"></script>
 <script src="icon-recolor.js"></script>
 <script>
@@ -494,21 +495,32 @@ function renderJoin(preset){
 /* ---------- prism scan ---------- */
 let scanStream=null,scanBusy=false;
 async function startScan(box){
-  box.style.display='block';
-  box.innerHTML='';
+  box.style.display='none';
+  const ov=el('div','');
+  ov.style.cssText='position:fixed;inset:0;z-index:80;background:#000';
+  const stageMount=el('div','');stageMount.style.cssText='position:absolute;inset:0';
+  ov.appendChild(stageMount);
+  const closeB=el('button','');closeB.textContent='\u2715';
+  closeB.setAttribute('aria-label','Close scanner');
+  closeB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:14px;z-index:90;width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,.18);background:rgba(24,21,32,.55);color:#fff;font-size:15px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:pointer';
+  ov.appendChild(closeB);
+  document.body.appendChild(ov);
+  let fxDone=null;
+  const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
+  const cleanup=()=>{stopScan();fx.stop();ov.remove();};
+  closeB.onclick=cleanup;
   if(!navigator.mediaDevices?.getUserMedia){
-    box.innerHTML='<p style="color:var(--ink-3);font-size:14px">Camera needs HTTPS. Type the code instead.</p>';return;
+    fx.stop();
+    stageMount.innerHTML='<p style="color:#ecebf4;text-align:center;margin-top:42vh;font-size:15px">Camera needs HTTPS. Type the code instead.</p>';
+    return;
   }
-  const wrap=el('div','');wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
   const vid=document.createElement('video');
-  vid.setAttribute('playsinline','');vid.muted=true;vid.style.cssText='width:100%;height:100%;object-fit:cover';
-  const hud=el('div','');hud.style.cssText='position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:14px;text-shadow:0 1px 4px rgb(0 0 0/.6)';
-  hud.textContent='Starting camera...';
-  wrap.appendChild(vid);wrap.appendChild(hud);box.appendChild(wrap);
+  vid.setAttribute('playsinline','');vid.muted=true;
+  vid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+  ov.insertBefore(vid,stageMount);
   try{
     scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
     vid.srcObject=scanStream;await vid.play();
-    hud.textContent='Point at the Prism code';
     const cap=document.createElement('canvas');const cx=cap.getContext('2d',{willReadFrequently:true});
     const tick=async()=>{
       if(!scanStream)return;
@@ -523,14 +535,25 @@ async function startScan(box){
         const res=Prism.readImage({width:cap.width,height:cap.height,data:id.data});
         const text=new TextDecoder().decode(res.bytes||[]);
         const m=/#\/join=([A-Z2-9]{6})/.exec(text);
-        if(m){scanSuccess(cap,res,text,m[1]);return;}
+        if(m){
+          for(const t of scanStream.getTracks())t.stop();scanStream=null;
+          vid.remove();
+          fxDone=scanSuccessFX(fx,cap,res,text,m[1],()=>{
+            cleanup();
+            $('#scanBox').style.display='none';
+            $('#code').value=m[1];toast('Code found');
+            const nm=$('#name');if(nm)nm.focus();
+          });
+          return;
+        }
       }catch(e){}
       scanBusy=false;
       setTimeout(tick,120);
     };
     tick();
   }catch(e){
-    hud.textContent='Camera unavailable. Type the code instead.';
+    fx.stop();
+    stageMount.innerHTML='<p style="color:#ecebf4;text-align:center;margin-top:42vh;font-size:15px">Camera unavailable. Type the code instead.</p>';
   }
 }
 function stopScan(){if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}}
@@ -960,233 +983,29 @@ function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
     if(inp)inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim());};
   });
 }
-/* ---------- scan success animation ---------- */
-function scanSuccess(cap,res,text,code6){
-  if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}
-  const box=$('#scanBox');
-  const wrap=box.firstElementChild;
-  const hud=wrap.querySelector('div');
-  if(hud)hud.style.display='none';
-  cap.style.visibility='hidden';
-  const ow=cap.width,oh=cap.height;
-  const ov=document.createElement('canvas');ov.width=ow;ov.height=oh;
-  ov.style.cssText='position:absolute;inset:0;width:100%;height:100%';
-  wrap.appendChild(ov);
-  const g=ov.getContext('2d');
-  const quad=res.quad.map(p=>[p[0],p[1]]);
-  const W=res.layout.W,H=res.layout.H;
-  const cx0=ow/2,cy0=oh/2,sq=Math.min(ow,oh)*0.74;
-  const sqX=cx0-sq/2,sqY=cy0-sq/2;
-  // canonical clean code, re-encoded from the decoded payload
+/* ---------- scan success animation (Avi's reference render, driven by real detection) ---------- */
+function gridFromClean(clean,lw,lh,cols,rows){
+  const cx=clean.getContext('2d',{willReadFrequently:true});
+  const hx0=(clean.width-lw*9)/2, hy0=(clean.height-lh*9)/2;
+  const colors=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const u=(x+.5+(y&1)*.5)/(cols+.5), v=(1+1.5*y)/(1.5*rows+.5);
+    const px=Math.max(0,Math.min(clean.width-1,Math.round(hx0+u*lw*9)));
+    const py=Math.max(0,Math.min(clean.height-1,Math.round(hy0+v*lh*9)));
+    const d=cx.getImageData(px,py,1,1).data;
+    colors.push('#'+((1<<24)+(d[0]<<16)+(d[1]<<8)+d[2]).toString(16).slice(1));
+  }
+  return {cols,rows,colors};
+}
+function scanSuccessFX(fx,cap,res,text,code6,onComplete){
+  const lw=res.layout.W,lh=res.layout.H;
   let clean;
   try{clean=Prism.render(Prism.encode(new TextEncoder().encode(text),{}),9);}
   catch(e){clean=cap;}
-  // hex data area inside the rendered canvas: cell space [0,W]x[0,H] at 9px/unit, centered
-  const hx0=(clean.width-W*9)/2, hy0=(clean.height-H*9)/2;
-  const fx0=hx0/clean.width, fy0=hy0/clean.height,
-        fsx=(W*9)/clean.width, fsy=(H*9)/clean.height;
-  const inX=sqX+fx0*sq, inY=sqY+fy0*sq, inW=fsx*sq, inH=fsy*sq;
-  // pre-straightened camera crop for the post-warp phase
-  const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
-  try{
-    const fwd=Prism.homography([[0,0],[W,0],[W,H],[0,H]],quad);
-    const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
-    const dst=straight.getContext('2d').createImageData(S,S);
-    const scale=S/W,cw2=cap.width,ch2=cap.height;
-    for(let y=0;y<S;y++)for(let x=0;x<S;x++){
-      const p=Prism.map(fwd,x/scale,y/(S/H));
-      const fx=p[0]-0.5,fy=p[1]-0.5,x0=Math.floor(fx),y0=Math.floor(fy),di=(y*S+x)*4;
-      if(x0<0||y0<0||x0>=cw2-1||y0>=ch2-1){dst.data[di+3]=0;continue;}
-      const ax=fx-x0,ay=fy-y0;
-      for(let c3=0;c3<3;c3++){
-        const v00=src.data[(y0*cw2+x0)*4+c3],v10=src.data[(y0*cw2+x0+1)*4+c3],
-              v01=src.data[((y0+1)*cw2+x0)*4+c3],v11=src.data[((y0+1)*cw2+x0+1)*4+c3];
-        dst.data[di+c3]=v00*(1-ax)*(1-ay)+v10*ax*(1-ay)+v01*(1-ax)*ay+v11*ax*ay;
-      }
-      dst.data[di+3]=255;
-    }
-    straight.getContext('2d').putImageData(dst,0,0);
-  }catch(e){}
-  const qC=[(quad[0][0]+quad[1][0]+quad[2][0]+quad[3][0])/4,(quad[0][1]+quad[1][1]+quad[2][1]+quad[3][1])/4];
-  const bil=(u,v)=>{
-    const ax=quad[0][0]+(quad[1][0]-quad[0][0])*u, ay=quad[0][1]+(quad[1][1]-quad[0][1])*u;
-    const bx=quad[3][0]+(quad[2][0]-quad[3][0])*u, by=quad[3][1]+(quad[2][1]-quad[3][1])*u;
-    return [ax+(bx-ax)*v, ay+(by-ay)*v];
-  };
-  const sqPt=(u,v)=>[inX+u*inW,inY+v*inH];
-  // reticle start pose: wider, slightly rotated/translated -> converges onto real corners
-  const startQ=quad.map(p=>{
-    const dx=p[0]-qC[0],dy=p[1]-qC[1],a=-0.12;
-    const rx=dx*Math.cos(a)-dy*Math.sin(a),ry=dx*Math.sin(a)+dy*Math.cos(a);
-    return [qC[0]+rx*1.3, qC[1]+ry*1.3-24];
-  });
-  const eO=t=>1-Math.pow(1-t,3), eIO=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,
-        eX=t=>t>=1?1:1-Math.pow(2,-10*t),
-        eB=t=>{const c=1.35;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
-  const PA=560,PW=620,PSC=540,POP=220;
-  const tSweep=PA+PW, tSucc=tSweep+PSC+POP+180, T=tSucc+620;
-  // mesh warp: triangles from cap
-  const N=12;
-  function drawTri(img,s0,s1,s2,d0,d1,d2){
-    // expand dest slightly to hide seams
-    const mx=(d0[0]+d1[0]+d2[0])/3,my=(d0[1]+d1[1]+d2[1])/3;
-    const ex=p=>[mx+(p[0]-mx)*1.03,my+(p[1]-my)*1.03];
-    const e0=ex(d0),e1=ex(d1),e2=ex(d2);
-    g.save();g.beginPath();g.moveTo(e0[0],e0[1]);g.lineTo(e1[0],e1[1]);g.lineTo(e2[0],e2[1]);g.closePath();g.clip();
-    const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
-    if(Math.abs(den)<1e-6){g.restore();return;}
-    const a=(e0[0]*(s1[1]-s2[1])+e1[0]*(s2[1]-s0[1])+e2[0]*(s0[1]-s1[1]))/den;
-    const b=(e0[1]*(s1[1]-s2[1])+e1[1]*(s2[1]-s0[1])+e2[1]*(s0[1]-s1[1]))/den;
-    const c=(e0[0]*(s2[0]-s1[0])+e1[0]*(s0[0]-s2[0])+e2[0]*(s1[0]-s0[0]))/den;
-    const d=(e0[1]*(s2[0]-s1[0])+e1[1]*(s0[0]-s2[0])+e2[1]*(s1[0]-s0[0]))/den;
-    const e=e0[0]-a*s0[0]-c*s0[1], f=e0[1]-b*s0[0]-d*s0[1];
-    g.transform(a,b,c,d,e,f);g.drawImage(img,0,0);g.restore();
-  }
-  function drawWarped(k){
-    if(k<=0.001){g.drawImage(cap,0,0);return;}
-    if(k>=0.999){g.drawImage(straight,inX,inY,inW,inH);return;}
-    g.save();
-    g.filter='contrast('+(1+0.35*k)+') saturate('+(1+0.25*k)+') brightness('+(1+0.06*k)+')';
-    for(let j=0;j<N;j++)for(let i=0;i<N;i++){
-      const u0=i/N,u1=(i+1)/N,v0=j/N,v1=(j+1)/N;
-      const s00=bil(u0,v0),s10=bil(u1,v0),s11=bil(u1,v1),s01=bil(u0,v1);
-      const L=(s,d)=>[s[0]+(d[0]-s[0])*k,s[1]+(d[1]-s[1])*k];
-      const d00=L(s00,sqPt(u0,v0)),d10=L(s10,sqPt(u1,v0)),d11=L(s11,sqPt(u1,v1)),d01=L(s01,sqPt(u0,v1));
-      drawTri(cap,s00,s10,s11,d00,d10,d11);
-      drawTri(cap,s00,s11,s01,d00,d11,d01);
-    }
-    g.restore();
-  }
-  // resolve-wave state
-  const stamped=new Uint8Array(Math.round(W)*Math.round(H));
-  const rLayer=document.createElement('canvas');rLayer.width=ow;rLayer.height=oh;
-  const rg=rLayer.getContext('2d');
-  const COLS=Math.round(W),ROWS=Math.round(H);
-  const cw=inW/COLS,ch=inH/ROWS;
-  const csw=(W*9)/COLS, csh=(H*9)/ROWS;
-  const cellSrc=(i,j)=>[hx0+i*csw,hy0+j*csh,csw,csh];
-  const cellDst=(i,j)=>[inX+i*cw,inY+j*ch,cw,ch];
-  const cellT=(i,j)=>{
-    const rowY=inY+(j+.5)*ch;
-    const f=Math.min(1,Math.max(0,(rowY-(inY-20))/(inH+40)));
-    return tSweep+PSC*f+((i*7+j*13)%3)*28;
-  };
-  function stamp(i,j){
-    const s=cellSrc(i,j),d=cellDst(i,j);
-    rg.drawImage(clean,s[0],s[1],s[2],s[3],d[0],d[1],d[2],d[3]);
-    stamped[j*Math.round(W)+i]=1;
-  }
-  const T0=performance.now();
-  const CAP=(typeof window!=='undefined')?window.__scanCap:null;
-  function draw(now){
-    const t=now-T0;
-    g.clearRect(0,0,ow,oh);
-    // success bounce transform
-    let inSucc=false;
-    if(t>tSucc){
-      inSucc=true;
-      const x=(t-tSucc)/620,bump=Math.exp(-3.2*x)*Math.sin(9*x);
-      const s=1+0.035*Math.max(0,bump);
-      g.save();g.translate(cx0,cy0);g.scale(s,s);g.translate(-cx0,-cy0);
-    }
-    const k=t<PA?0:eIO(Math.min(1,(t-PA)/PW));
-    // surroundings clean up into a light backdrop, card grows under the code
-    if(k>0.001){
-      g.fillStyle='rgba(246,244,251,'+(0.66*eO(k))+')';g.fillRect(0,0,ow,oh);
-      const cX=qC[0]+(cx0-qC[0])*k,cY=qC[1]+(cy0-qC[1])*k;
-      const qw=Math.max(Math.abs(quad[1][0]-quad[0][0]),Math.abs(quad[2][0]-quad[3][0]));
-      const cs=qw+(sq*1.12-qw)*eO(k);
-      g.save();g.shadowColor='rgba(30,10,60,.18)';g.shadowBlur=24*k;g.shadowOffsetY=8*k;
-      g.fillStyle='rgba(255,255,255,'+(0.96*k)+')';
-      g.beginPath();g.roundRect(cX-cs/2,cY-cs/2,cs,cs,20);g.fill();g.restore();
-    }
-    drawWarped(k);
-    // resolved layer + resolving cells
-    if(t>tSweep){
-      g.drawImage(rLayer,0,0);
-      const yTop=inY-20,sy=yTop+(inH+40)*eIO(Math.min(1,(t-tSweep)/PSC));
-      for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){
-        const idx=j*COLS+i;if(stamped[idx])continue;
-        const r=cellT(i,j),a=t-r;
-        if(a<=0)continue;
-        if(a>=POP){stamp(i,j);continue;}
-        const p=eO(a/POP),sc2=1.28-0.28*p;
-        const s=cellSrc(i,j),d=cellDst(i,j);
-        const ccx=d[0]+d[2]/2,ccy=d[1]+d[3]/2;
-        g.save();g.translate(ccx,ccy);g.scale(sc2,sc2);
-        g.drawImage(clean,s[0],s[1],s[2],s[3],-d[2]/2,-d[3]/2,d[2],d[3]);
-        g.restore();
-        g.fillStyle='rgba(255,255,255,'+(0.4*(1-p))+')';
-        g.fillRect(d[0],d[1],d[2],d[3]);
-      }
-      if(t<tSweep+PSC+60){
-        const grd=g.createLinearGradient(0,sy-46,0,sy+46);
-        grd.addColorStop(0,'rgba(46,184,217,0)');grd.addColorStop(.5,'rgba(140,240,255,.5)');grd.addColorStop(1,'rgba(46,184,217,0)');
-        g.fillStyle=grd;g.fillRect(inX-14,sy-46,inW+28,92);
-        g.fillStyle='rgba(190,250,255,.95)';g.fillRect(inX-14,sy-1.2,inW+28,2.4);
-      }
-    }
-    // reticle: converges from wide pose onto the REAL detected corners, snap at PA
-    if(t<PA+240){
-      const rt=Math.min(1,t/PA),kk=eB(rt);
-      const cur=quad.map((p,i)=>[startQ[i][0]+(p[0]-startQ[i][0])*kk,startQ[i][1]+(p[1]-startQ[i][1])*kk]);
-      const snap=Math.max(0,(t-PA)/220);
-      g.save();
-      g.strokeStyle='rgba(46,184,217,'+(snap>0?0.9*(1-snap):0.95)+')';
-      g.lineWidth=2.5;g.shadowColor='#2EB8D9';g.shadowBlur=snap>0?22*(1-snap):14;
-      const bl=16+10*(1-kk);
-      for(let i=0;i<4;i++){
-        const p=cur[i],q1=cur[(i+1)%4],q2=cur[(i+3)%4];
-        const L=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
-        const d1=Math.hypot(q1[0]-p[0],q1[1]-p[1]),d2=Math.hypot(q2[0]-p[0],q2[1]-p[1]);
-        const t1=L(p,q1,Math.min(1,bl/d1)),t2=L(p,q2,Math.min(1,bl/d2));
-        g.beginPath();g.moveTo(t1[0],t1[1]);g.lineTo(p[0],p[1]);g.lineTo(t2[0],t2[1]);g.stroke();
-      }
-      if(snap>0){ // snap ring + flash
-        g.strokeStyle='rgba(120,235,255,'+(0.8*(1-snap))+')';g.lineWidth=2;
-        const rr=sq*0.42*(1+0.5*snap);
-        g.beginPath();g.arc(cx0,cy0,rr,0,7);g.stroke();
-        g.fillStyle='rgba(255,255,255,'+(0.22*(1-snap))+')';
-        g.beginPath();g.roundRect(sqX,sqY,sq,sq,20);g.fill();
-      }
-      g.restore();
-    }
-    // success: glow ring + pulse
-    if(t>tSucc){
-      const x=Math.min(1,(t-tSucc)/620);
-      g.save();
-      g.strokeStyle='rgba(52,229,160,'+(0.85*(1-x))+')';g.lineWidth=3;g.shadowColor='#34E5A0';g.shadowBlur=26*(1-x);
-      g.beginPath();g.roundRect(sqX-6,sqY-6,sq+12,sq+12,24);g.stroke();
-      const grow=4+26*eO(x);
-      g.strokeStyle='rgba(52,229,160,'+(0.45*(1-x))+')';g.lineWidth=2;g.shadowBlur=0;
-      g.beginPath();g.roundRect(sqX-grow,sqY-grow,sq+grow*2,sq+grow*2,26+grow*0.4);g.stroke();
-      g.restore();
-      g.restore(); // bounce transform
-    }
-    if(t>=T){
-      if(CAP){CAP.done=true;return;}
-      ov.style.transition='opacity .3s, transform .3s';ov.style.opacity='0';ov.style.transform='scale(.96)';
-      setTimeout(()=>{ov.remove();},320);
-      $('#code').value=code6;toast('Code found');
-      box.style.display='none';
-      $('#name').focus();
-      return;
-    }
-    if(CAP)return;
-    requestAnimationFrame(draw);
-  }
-  if(CAP){
-    const fps=CAP.fps||60;
-    for(let t=0;t<T-1;t+=1000/fps){
-      draw(T0+t);
-      CAP.ctx.drawImage(ov,0,0,CAP.cw,CAP.ch);
-      CAP.frames.push(CAP.canvas.toDataURL('image/jpeg',0.82));
-    }
-    const last=CAP.frames[CAP.frames.length-1];
-    for(let i=0;i<Math.round(fps*0.5);i++)CAP.frames.push(last);
-    return;
-  }
-  requestAnimationFrame(draw);
+  const grid=gridFromClean(clean,lw,lh,Math.round(lw),Math.round(lh));
+  const m0=fx.M0FromQuad(res.quad.map(p=>[p[0],p[1]]),cap.width,cap.height,lw,lh);
+  fx.lock(grid,cap,m0);
+  return onComplete;
 }
 /* demo hooks: synthetic camera scenes, decoded for REAL with Prism.readImage */
 window.__mkScene=function(kind){
@@ -1254,29 +1073,20 @@ window.__mkScene=function(kind){
   cx.putImageData(id,0,0);
   return {cap,res,url,quadErr:Math.round(err*10)/10};
 };
-window.__demoScan=function(){
-  const box=$('#scanBox');box.style.display='block';box.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
-  box.appendChild(wrap);
-  const sc=__mkScene('rot');
-  sc.cap.style.cssText='width:100%;height:100%;object-fit:cover';
-  wrap.appendChild(sc.cap);
-  scanSuccess(sc.cap,sc.res,sc.url,'K7QX2M');
-};
-window.__demoScanCapture=function(kind){
-  const box=$('#scanBox');box.style.display='block';box.innerHTML='';
-  const wrap=document.createElement('div');
-  wrap.style.cssText='position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3';
-  box.appendChild(wrap);
+window.__demoScan=function(kind,delayMs){
+  const ov=el('div','');ov.style.cssText='position:fixed;inset:0;z-index:80;background:#000';
+  document.body.appendChild(ov);
+  const fx=ScanFX(ov,{searching:true,onDone:()=>{window.__demoDone=true;}});
   const sc=__mkScene(kind||'rot');
-  wrap.appendChild(sc.cap);
-  const canvas=document.createElement('canvas');canvas.width=640;canvas.height=480;
-  window.__scanCap={frames:[],canvas,ctx:canvas.getContext('2d'),cw:640,ch:480,fps:60,done:false};
-  scanSuccess(sc.cap,sc.res,sc.url,'K7QX2M');
-  const out=window.__scanCap.frames;window.__scanCap=null;
-  window.__capFrames=out;
-  return JSON.stringify({n:out.length,quadErr:sc.quadErr});
+  setTimeout(()=>{
+    const lw=sc.res.layout.W,lh=sc.res.layout.H;
+    const clean=Prism.render(Prism.encode(new TextEncoder().encode(sc.url),{}),9);
+    const grid=gridFromClean(clean,lw,lh,Math.round(lw),Math.round(lh));
+    const m0=fx.M0FromQuad(sc.res.quad.map(p=>[p[0],p[1]]),sc.cap.width,sc.cap.height,lw,lh);
+    fx.lock(grid,sc.cap,m0);
+  },delayMs==null?1200:delayMs);
+  window.__demoFx=fx;window.__demoOv=ov;
+  return JSON.stringify({quadErr:sc.quadErr});
 };
 /* ---------- boot ---------- */
 applyTheme();
