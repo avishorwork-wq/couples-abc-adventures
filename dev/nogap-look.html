@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>notch-free look</title>
+<style>body{font-family:system-ui;background:#faf9fb;margin:0;padding:24px;display:flex;gap:24px;flex-wrap:wrap}
+figure{margin:0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgb(0 0 0/.08)}
+figcaption{text-align:center;font-size:13px;color:#666;margin-top:8px}
+canvas{width:280px;height:auto;image-rendering:auto}</style>
+<figure><canvas id="a"></canvas><figcaption>current (with notch)</figcaption></figure>
+<figure><canvas id="b"></canvas><figcaption>variant (no notch)</figcaption></figure>
+<script src="prism.js"></script>
+<script src="prism-nogap.js"></script>
+<script>
+const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
+const bytes=new TextEncoder().encode(link);
+const a=Prism.encode(bytes,{}),b=PrismNG.encode(bytes,{});
+Prism.render(a,10,document.getElementById('a'));
+Prism.render(b,10,document.getElementById('b'));
+</script>
