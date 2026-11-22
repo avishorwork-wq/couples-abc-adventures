@@ -646,15 +646,29 @@ async function startScan(box){
           /* rank candidates by the decoder's own hypothesis score: a real code's cells
              match the format; background shapes score near zero */
           qs.sort((a,b)=>quadArea(b)-quadArea(a));
+          /* cluster near-duplicate contours (one code yields several outlines at
+             slightly different sizes) and score one per cluster: the true code's
+             quad is often NOT among the largest raw quads (its outer card/ring
+             contours are bigger), so a raw top-3 slice starves it */
+          const clusters=[];
+          for(const q0 of qs){
+            if(clusters.some(cl=>quadDist(cl.q,q0)<cap.width*.02&&quadArea(cl.q)/quadArea(q0)>0.55&&quadArea(cl.q)/quadArea(q0)<1.8))continue;
+            clusters.push({q:q0});
+            if(clusters.length>=6)break;
+          }
           const cand=[];
-          for(const q0 of qs.slice(0,3)){
+          for(const cl of clusters){
             let best=0;
-            for(const size of [0,1,2]){const lay=Prism.layout(size); /* invite encoder picks size 0 for the 82-byte join URL */
-              for(let rot=0;rot<4;rot++){const q=q0.map((_,i)=>q0[(i+rot)%4]);
+            /* cheapest layout first: the invite encoder picks size 0 for the
+               82-byte join URL, and a strong early hit needs no further work */
+            outer:
+            for(const size of [0,1,2]){const lay=Prism.layout(size);
+              for(let rot=0;rot<4;rot++){const q=cl.q.map((_,i)=>cl.q[(i+rot)%4]);
                 const h=Prism.homography(Prism.corners(lay),q);
                 const sc=Prism.hypothesisScore(f,h,lay,0,Prism.whiteBalance(f,h,lay),true);
-                if(sc.score>best)best=sc.score;}}
-            if(best>=0.45)cand.push({q:q0,sc:best});
+                if(sc.score>best)best=sc.score;
+                if(best>=0.9)break outer;}}
+            if(best>=0.45)cand.push({q:cl.q,sc:best});
           }
           if(cand.length){
             cand.sort((a,b)=>b.sc-a.sc);
