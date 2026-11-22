@@ -749,7 +749,6 @@ function openLetter(L){
   $('#sDone').onclick=()=>{const c=cur();save({done:!c.done,date:!c.done?(c.date||new Date().toISOString().slice(0,10)):c.date});
     closeSheet();renderApp();};
   $('#sClose').onclick=()=>{closeSheet();renderApp();};
-  setInterval(()=>{},0);
   // media
   function renderMediaList(){
     const box=$('#sMedia');if(!box)return;
