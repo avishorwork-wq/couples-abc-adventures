@@ -681,6 +681,113 @@ async function startScan(box){
     };
   };
   helpB.onclick=showDiag;
+  /* optional capture controls: only what the live track reports, applied per-track.
+     track-scoped settings revert to device defaults when the camera closes, so
+     nothing here persists on the phone. */
+  const capB=el('button','');capB.textContent='\u2699';
+  capB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:14px;z-index:90;background:rgba(24,21,32,.55);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:rgba(255,255,255,.8);font-size:16px;width:34px;height:34px;line-height:1;padding:0';
+  ov.appendChild(capB);
+  let camList=null,switching=false,evPending=false;
+  const sliderRow=(label,min,max,step,val)=>{
+    const r=el('div','');r.style.cssText='margin:12px 0 2px';
+    r.innerHTML='<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(236,235,244,.8);margin-bottom:4px"><span>'+label+'</span><span class="ccv"></span></div>'
+      +'<input type="range" style="width:100%">';
+    const inp=r.querySelector('input');inp.min=min;inp.max=max;inp.step=step;inp.value=val;
+    const out=r.querySelector('.ccv');out.textContent=(+val).toFixed(1);
+    inp.oninput=()=>{out.textContent=(+inp.value).toFixed(1);};
+    return {r,inp};
+  };
+  const switchCam=async(devId)=>{
+    const old=scanStream;
+    try{
+      const s=await openCam(devId);
+      if(closed){for(const t of s.getTracks())t.stop();return;}
+      scanStream=s;
+      vid.srcObject=s;await vid.play();
+      if(old)for(const t of old.getTracks())t.stop();
+      const trS=s.getVideoTracks()[0];
+      const D0=window.__scanDiag;
+      if(D0){D0.track=trS;
+        try{D0.settings=trS.getSettings();D0.capabilities=trS.getCapabilities();}catch(e){}
+        D0.ticks=[];D0.reads=[];D0.skipped=0;D0.samples=[];D0.still=null;D0.cams=null;D0.armT0=null;}
+    }catch(e){
+      if(old&&scanStream!==old){scanStream=old;vid.srcObject=old;try{await vid.play();}catch(e2){}}
+    }
+  };
+  const showCapture=async()=>{
+    if(closed)return;
+    const D0=window.__scanDiag;const tr=D0&&D0.track;
+    const p=el('div','');
+    p.style.cssText='position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:95;background:rgba(24,21,32,.96);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;max-height:82vh;overflow:auto';
+    p.innerHTML='<div style="font-weight:600;margin-bottom:2px">Capture</div>'
+      +'<div style="color:rgba(236,235,244,.6);font-size:12px;margin-bottom:6px">Only changes this camera view. Resets when you close the scanner.</div>'
+      +'<div id="ccBody"></div>'
+      +'<div style="display:flex;margin-top:14px"><button class="btn" id="ccX" style="flex:1;padding:10px">Done</button></div>';
+    ov.appendChild(p);
+    p.querySelector('#ccX').onclick=()=>p.remove();
+    const body=p.querySelector('#ccBody');
+    const caps=(tr&&tr.getCapabilities)?tr.getCapabilities():{};
+    const st=(tr&&tr.getSettings)?tr.getSettings():{};
+    let any=false;
+    const ec=caps.exposureCompensation;
+    if(ec&&typeof ec.min==='number'&&ec.max>ec.min){
+      any=true;
+      const cur=typeof st.exposureCompensation==='number'?st.exposureCompensation:0;
+      const row=sliderRow('Brightness',ec.min,ec.max,ec.step||0.1,cur);
+      body.appendChild(row.r);
+      row.inp.onchange=async()=>{
+        if(evPending||!tr)return;evPending=true;
+        try{await tr.applyConstraints({advanced:[{exposureCompensation:+row.inp.value}]});}catch(e){}
+        evPending=false;
+      };
+    }
+    const fm=caps.focusMode,fd=caps.focusDistance;
+    if(fm&&fm.includes('manual')&&fd&&typeof fd.min==='number'&&fd.max>fd.min){
+      any=true;
+      const cur=typeof st.focusDistance==='number'?st.focusDistance:fd.min;
+      const row=sliderRow('Focus',fd.min,fd.max,fd.step||0.01,cur);
+      body.appendChild(row.r);
+      row.inp.onchange=async()=>{
+        if(!tr)return;
+        try{await tr.applyConstraints({advanced:[{focusMode:'manual',focusDistance:+row.inp.value}]});}catch(e){}
+      };
+    }
+    try{
+      if(!camList&&navigator.mediaDevices&&navigator.mediaDevices.enumerateDevices){
+        const dv=await navigator.mediaDevices.enumerateDevices();
+        camList=dv.filter(d=>d.kind==='videoinput');
+      }
+    }catch(e){}
+    if(closed||!p.isConnected)return;
+    const backs=(camList||[]).filter(d=>/back/i.test(d.label||''));
+    const cands=backs.length>=2?backs:(camList&&camList.length>=2?camList:[]);
+    if(cands.length>=2){
+      any=true;
+      const head=el('div','');head.style.cssText='font-size:12px;color:rgba(236,235,244,.8);margin:14px 0 6px';head.textContent='Camera';
+      body.appendChild(head);
+      const rowB=el('div','');rowB.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+      body.appendChild(rowB);
+      const myId=st.deviceId;
+      cands.forEach((d,i)=>{
+        const b=el('button','btn');b.style.cssText='padding:8px 14px;font-size:13px';
+        b.textContent='Camera '+(i+1)+(d.deviceId===myId?' \u2713':'');
+        if(d.deviceId===myId)b.classList.add('btn-primary');
+        b.onclick=async()=>{
+          if(switching||d.deviceId===myId)return;
+          switching=true;b.textContent='Switching\u2026';
+          await switchCam(d.deviceId);
+          switching=false;p.remove();
+        };
+        rowB.appendChild(b);
+      });
+    }
+    if(!any){
+      const n=el('div','');n.style.cssText='color:rgba(236,235,244,.6);font-size:13px;margin-top:6px';
+      n.textContent='This camera reports no adjustable settings.';
+      body.appendChild(n);
+    }
+  };
+  capB.onclick=showCapture;
   const scanFail=(msg)=>{
     if(window.__scanDiag)window.__scanDiag.fail=msg;
     fx.stop();
@@ -706,17 +813,25 @@ async function startScan(box){
      below the tracking canvas */
   stageMount.querySelector('#stage').insertBefore(vid,stageMount.querySelector('#fx'));
   window.__scanFx=fx;
-  try{
-    let stream;
-    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});}
-    catch(e){stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});} /* devices that reject hinted constraints still get a camera */
-    try{const tr0=stream.getVideoTracks()[0];const caps=tr0&&tr0.getCapabilities?tr0.getCapabilities():null;
+  const openCam=async(devId)=>{
+    const v=devId?{deviceId:{exact:devId},width:{ideal:1920},height:{ideal:1080}}:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}};
+    let s;
+    try{s=await navigator.mediaDevices.getUserMedia({video:v});}
+    catch(e){
+      if(devId){s=await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:devId}}});}
+      else{s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});} /* devices that reject hinted constraints still get a camera */
+    }
+    try{const tr0=s.getVideoTracks()[0];const caps=tr0&&tr0.getCapabilities?tr0.getCapabilities():null;
       const adv={};
       if(caps&&Array.isArray(caps.focusMode)&&caps.focusMode.includes('continuous'))adv.focusMode='continuous';
       if(caps&&Array.isArray(caps.exposureMode)&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
       if(caps&&Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes('continuous'))adv.whiteBalanceMode='continuous';
       if(Object.keys(adv).length)await tr0.applyConstraints({advanced:[adv]});
     }catch(e){} /* continuous AF/AE/AWB only where the device reports support; defaults elsewhere */
+    return s;
+  };
+  try{
+    let stream=await openCam(null);
     if(closed){for(const t of stream.getTracks())t.stop();return;} /* closed while permission/hardware was pending: never keep the camera */
     try{const trS=stream.getVideoTracks()[0];
       window.__scanDiag={v:(location.pathname.indexOf('v3-staged')>=0?'staged':'v3')+'-diag3',t0:Date.now(),ua:navigator.userAgent,screen:[innerWidth,innerHeight],
