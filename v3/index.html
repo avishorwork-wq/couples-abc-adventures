@@ -210,7 +210,7 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .awl.done .ilbl{color:var(--ink-2)}
 .awl.photo .Lx{background-size:cover;background-position:center;
   -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
-  filter:brightness(.72) saturate(1.15) drop-shadow(0 2px 6px rgb(0 0 0/.22))}
+  filter:saturate(1.12) drop-shadow(0 2px 6px rgb(0 0 0/.22))}
 .awl .tick{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;
   background:var(--a-ink);color:#fff;display:grid;place-items:center}
 .wm{position:fixed;right:-4%;bottom:-6%;z-index:0;pointer-events:none;user-select:none;
@@ -721,7 +721,7 @@ function renderGrid(s){
     const st=state.S[L]||{};
     const ph=st.done?photoOf(L):null;
     const t=el('button','awl'+(ph?' photo':st.done?' done':st.date?' plan':''));
-    let lxStyle=ph?`background-image:url('${ph}')`:'';
+    let lxStyle=ph?`background-image:linear-gradient(rgb(0 0 0/.30),rgb(0 0 0/.30)),url('${ph}')`:'';
     if(st.done&&!ph){
       const h=Math.round(262+li*(71/25)),h2=h+34;
       lxStyle=`background:linear-gradient(150deg,hsl(${h} 74% 30%),hsl(${h2} 84% 60%));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent`;
