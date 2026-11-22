@@ -485,7 +485,8 @@ function M0FromQuad(quad, capW, capH, lw, lh) {
 const api = {
   render: t => { render(t); }, play, TL,
   relayout: () => { layout(); },
-  probe: t => { const M = poseMatrix(pose(t)); return { c: [proj(M, 0, 0), proj(M, S, 0), proj(M, S, S), proj(M, 0, S)], rc: rcard(t), blur: blurPx(t), ie: irisE(t), S }; },
+  probe: t => { const M = poseMatrix(pose(t)); return { c: [proj(M, 0, 0), proj(M, S, 0), proj(M, S, S), proj(M, 0, S)], rc: rcard(t), blur: blurPx(t), ie: irisE(t), S, feather, Rmax, cx, cy }; },
+  time: () => curT,
   setGrid: g => { CONFIG.grid = g; buildCells(); layout(); },
   setBackdrop: cv => {
     cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.46) saturate(.85);z-index:-1';
