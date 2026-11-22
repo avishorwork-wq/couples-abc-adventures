@@ -338,7 +338,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme)
 async function api(path,body){
   const r=await fetch(API+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
   const j=await r.json().catch(()=>({}));
-  if(!r.ok)throw Object.assign(new Error(j.error||('HTTP '+r.status)),{status:r.status,data:j});
+  if(!r.ok)throw Object.assign(new Error(j.err||j.error||('HTTP '+r.status)),{status:r.status,data:j});
   return j;
 }
 async function sync(){
@@ -486,7 +486,7 @@ function renderJoin(preset){
       go('#/app');
       toast('You are in. Say hi with letter A.');
     }catch(err){
-      toast(err.message==='bad code'?'That code did not work. Check it and try again.':(err.message||'Could not join.'));
+      toast(['bad code','code not found or expired'].includes(err.message)?'That code did not work. Check it and try again.':(err.message||'Could not join.'));
       b.disabled=false;b.textContent='Join';
     }
   };
