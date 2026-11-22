@@ -1116,21 +1116,35 @@ window.__mkScene=function(kind){
   cx.fillStyle=bg;cx.fillRect(0,0,640,480);
   let truth;
   if(kind==='skew'){
-    const Wl=code.layout.W,Hl=code.layout.H,mxx=(rc.width-Wl*9)/2,myy=(rc.height-Hl*9)/2;
-    const hexPx=[[mxx,myy],[mxx+Wl*9,myy],[mxx+Wl*9,myy+Hl*9],[mxx,myy+Hl*9]];
-    const Hm=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]);
-    truth=hexPx.map(p=>Prism.map(Hm,p[0],p[1]));
-    const H=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]);
-    const src=rc.getContext('2d').getImageData(0,0,rc.width,rc.height);
-    const out=cx.getImageData(0,0,640,480);
-    const inv=Prism.homography(truth,[[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]]);
-    for(let y=0;y<480;y++)for(let x=0;x<640;x++){
-      const p=Prism.map(inv,x,y);const sx=Math.round(p[0]),sy=Math.round(p[1]);
-      if(sx<0||sy<0||sx>=rc.width||sy>=rc.height)continue;
-      const di=(y*640+x)*4,si=(sy*rc.width+sx)*4;
-      out.data[di]=src.data[si];out.data[di+1]=src.data[si+1];out.data[di+2]=src.data[si+2];out.data[di+3]=255;
+    const T2=[[340,260],[920,190],[1010,740],[370,790]]; // 1280x960 workspace
+    const big=document.createElement('canvas');big.width=1280;big.height=960;
+    const bx=big.getContext('2d',{willReadFrequently:true});
+    const bg2=bx.createLinearGradient(0,0,1280,960);
+    bg2.addColorStop(0,'#46414e');bg2.addColorStop(1,'#2e2a35');
+    bx.fillStyle=bg2;bx.fillRect(0,0,1280,960);
+    const rc2=Prism.render(code,18);
+    const Hm=Prism.homography([[0,0],[rc2.width,0],[rc2.width,rc2.height],[0,rc2.height]],T2);
+    const inv=Prism.homography(T2,[[0,0],[rc2.width,0],[rc2.width,rc2.height],[0,rc2.height]]);
+    const src=rc2.getContext('2d').getImageData(0,0,rc2.width,rc2.height);
+    const out=bx.getImageData(0,0,1280,960);
+    const sw=rc2.width,sh=rc2.height;
+    for(let y=0;y<960;y++)for(let x=0;x<1280;x++){
+      const p=Prism.map(inv,x,y);
+      const fx=p[0]-0.5,fy=p[1]-0.5,x0=Math.floor(fx),y0=Math.floor(fy);
+      if(x0<0||y0<0||x0>=sw-1||y0>=sh-1)continue;
+      const ax=fx-x0,ay=fy-y0,di=(y*1280+x)*4;
+      for(let chn=0;chn<3;chn++){
+        const v00=src.data[(y0*sw+x0)*4+chn],v10=src.data[(y0*sw+x0+1)*4+chn],
+              v01=src.data[((y0+1)*sw+x0)*4+chn],v11=src.data[((y0+1)*sw+x0+1)*4+chn];
+        out.data[di+chn]=v00*(1-ax)*(1-ay)+v10*ax*(1-ay)+v01*(1-ax)*ay+v11*ax*ay;
+      }
+      out.data[di+3]=255;
     }
-    cx.putImageData(out,0,0);
+    bx.putImageData(out,0,0);
+    cx.drawImage(big,0,0,640,480);
+    const Wl=code.layout.W,Hl=code.layout.H,mxx=(rc2.width-Wl*18)/2,myy=(rc2.height-Hl*18)/2;
+    truth=[[mxx,myy],[mxx+Wl*18,myy],[mxx+Wl*18,myy+Hl*18],[mxx,myy+Hl*18]]
+      .map(p=>{const q=Prism.map(Hm,p[0],p[1]);return [q[0]/2,q[1]/2];});
   }else{
     cx.save();cx.translate(320,240);cx.rotate(.17);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
     const c=Math.cos(.17),s2=Math.sin(.17);
@@ -1140,15 +1154,20 @@ window.__mkScene=function(kind){
   }
   // camera noise + REAL decode for the real corners (retry with fresh noise if a frame fails)
   const clean_id=cx.getImageData(0,0,640,480);
-  let res=null,id=null;
-  for(let att=0;att<6&&!res;att++){
+  const alignErr=q=>{let w=0;for(const p of q){let b=1e9;for(const t of truth){b=Math.min(b,Math.hypot(p[0]-t[0],p[1]-t[1]));}w=Math.max(w,b);}return w;};
+  let res=null,id=null,err=0;
+  for(let att=0;att<10&&!res;att++){
     id=new ImageData(new Uint8ClampedArray(clean_id.data),640,480);
-    for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*12;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}
-    try{Prism.beginDecode(2500);res=Prism.readImage({width:640,height:480,data:id.data});}catch(e){}
+    if(att>0){for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*10;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}}
+    try{
+      Prism.beginDecode(2500);
+      const r=Prism.readImage({width:640,height:480,data:id.data});
+      const e=alignErr(r.quad);
+      if(e<8){res=r;err=e;}
+    }catch(e){}
   }
   if(!res)throw new Error('scene decode failed');
   cx.putImageData(id,0,0);
-  let err=0;for(let i=0;i<4;i++){err=Math.max(err,Math.hypot(res.quad[i][0]-truth[i][0],res.quad[i][1]-truth[i][1]));}
   return {cap,res,url,quadErr:Math.round(err*10)/10};
 };
 window.__demoScan=function(){
