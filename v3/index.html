@@ -521,7 +521,9 @@ async function startScan(box){
   const vid=document.createElement('video');
   vid.setAttribute('playsinline','');vid.muted=true;
   vid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
-  ov.insertBefore(vid,stageMount);
+  /* the fx stage has an opaque background: the live feed must sit INSIDE it,
+     below the tracking canvas */
+  stageMount.querySelector('#stage').insertBefore(vid,stageMount.querySelector('#fx'));
   window.__scanFx=fx;
   try{
     scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
@@ -1447,12 +1449,15 @@ window.__liveDemoRecord=function(){
         const cw=cardEl.width,ch=cardEl.height;
         const bf=/blur\(([-\d.]+)px\)/.exec(cardEl.style.filter||'');
         if(bf)rg.filter='blur('+bf[1]+'px)';
-        const NN=12;
+        const NN=20;
+        const PW=(x,y)=>{const X=m[0]*x+m[4]*y+m[12],Y=m[1]*x+m[5]*y+m[13],Ww=m[3]*x+m[7]*y+m[15];return [X/Ww,Y/Ww,Ww];};
+        const okT=(a,b,c)=>a[2]>0.02&&b[2]>0.02&&c[2]>0.02;
         for(let j=0;j<NN;j++)for(let i=0;i<NN;i++){
           const u0=i/NN,u1=(i+1)/NN,v0=j/NN,v1=(j+1)/NN;
-          const S2=(u,v)=>[u*cw,v*ch],Q=(u,v)=>P(u*cw,v*ch);
-          drawTri(cardEl,S2(u0,v0),S2(u1,v0),S2(u1,v1),Q(u0,v0),Q(u1,v0),Q(u1,v1));
-          drawTri(cardEl,S2(u0,v0),S2(u1,v1),S2(u0,v1),Q(u0,v0),Q(u1,v0),Q(u1,v1));
+          const S2=(u,v)=>[u*cw,v*ch],Q=(u,v)=>PW(u*cw,v*ch);
+          const q00=Q(u0,v0),q10=Q(u1,v0),q11=Q(u1,v1),q01=Q(u0,v1);
+          if(okT(q00,q10,q11))drawTri(cardEl,S2(u0,v0),S2(u1,v0),S2(u1,v1),q00,q10,q11);
+          if(okT(q00,q11,q01))drawTri(cardEl,S2(u0,v0),S2(u1,v1),S2(u0,v1),q00,q11,q01);
         }
         rg.filter='none';
       }
