@@ -544,11 +544,20 @@ async function startScan(box){
       try{id=cx.getImageData(0,0,cap.width,cap.height);}catch(e){}
       /* 1) cheap detection pass -> live tracking brackets on the real quad */
       let quad=null;
-      if(id){try{Prism.beginDecode(700);const qs=Prism.detectCurved(Prism.frame(id));if(qs&&qs.length){qs.sort((a,b)=>quadArea(b)-quadArea(a));quad=qs[0];}}catch(e){}}
+      if(id){try{Prism.beginDecode(700);const qs=Prism.detectCurved(Prism.frame(id));if(qs&&qs.length){
+        /* continuity first: when tracking, prefer the candidate nearest the previous
+           quad; otherwise take the largest */
+        if(lastQuad){qs.sort((a,b)=>quadDist(a,lastQuad)-quadDist(b,lastQuad));
+          if(quadDist(qs[0],lastQuad)>cap.width*.25)qs.sort((a,b)=>quadArea(b)-quadArea(a));}
+        else qs.sort((a,b)=>quadArea(b)-quadArea(a));
+        quad=qs[0];}}catch(e){}}
       if(quad){
-        stab=(lastQuad&&quadDist(quad,lastQuad)<cap.width*.045)?Math.min(3,stab+1):1;
+        const d=lastQuad?quadDist(quad,lastQuad):1e9;
+        stab=(lastQuad&&d<cap.width*.08)?Math.min(4,stab+1):1;
         lastQuad=quad.map(p=>[p[0],p[1]]);
-        fx.track(quad.map(capToStage),(stab-1)/2);
+        /* adopt a detection on screen only once it repeats (kills one-frame false
+           positives); confidence grows with stability */
+        if(stab>=2)fx.track(quad.map(capToStage),Math.min(1,(stab-2)/2));
       }else{lastQuad=null;stab=0;fx.track(null,0);}
       /* 2) full decode in the worker (frame-fused) once a candidate is in view */
       tickN++;
