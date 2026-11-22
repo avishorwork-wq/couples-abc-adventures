@@ -1131,13 +1131,16 @@ window.__mkScene=function(kind){
     const c=Math.cos(.17),s2=Math.sin(.17);
     truth=Prism.corners(code.layout).map(p=>{const x=p[0]-rc.width/2,y=p[1]-rc.height/2;return [320+x*c-y*s2,240+x*s2+y*c];});
   }
-  // camera noise
-  const id=cx.getImageData(0,0,640,480);
-  for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*14;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}
+  // camera noise + REAL decode for the real corners (retry with fresh noise if a frame fails)
+  const clean_id=cx.getImageData(0,0,640,480);
+  let res=null,id=null;
+  for(let att=0;att<6&&!res;att++){
+    id=new ImageData(new Uint8ClampedArray(clean_id.data),640,480);
+    for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*12;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}
+    try{Prism.beginDecode(2500);res=Prism.readImage({width:640,height:480,data:id.data});}catch(e){}
+  }
+  if(!res)throw new Error('scene decode failed');
   cx.putImageData(id,0,0);
-  // REAL decode for the real corners
-  Prism.beginDecode(2500);
-  const res=Prism.readImage({width:cap.width,height:cap.height,data:id.data});
   let err=0;for(let i=0;i<4;i++){err=Math.max(err,Math.hypot(res.quad[i][0]-truth[i][0],res.quad[i][1]-truth[i][1]));}
   return {cap,res,url,quadErr:Math.round(err*10)/10};
 };
