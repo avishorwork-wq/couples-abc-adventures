@@ -558,9 +558,10 @@ async function startScan(box){
 }
 function stopScan(){if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}}
 /* ---------- pair (invite) ---------- */
-let pairInfo=null;
+let pairInfo=null,pairExpTimer=null;
 async function renderPair(){
   current='pair';document.body.classList.remove('has-app');
+  clearInterval(pairExpTimer);
   const v=$('#view');v.innerHTML='';
   const s=el('div','screen center-wrap');
   const names=()=>`${esc(state.C.names[0]||'You')} <em>&</em> ${esc(state.C.names[1]||'your person')}`;
@@ -593,7 +594,6 @@ async function renderPair(){
   $('#regen').onclick=async()=>{
     try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
     catch(e){toast('Could not get a new code');}};
-  let expTimer=null;
   function showCode(code,exp){
     $('#pcode').textContent=code;
     const url=location.origin+location.pathname+'#/join='+code;
@@ -601,12 +601,13 @@ async function renderPair(){
     const styled=styledPrism(c,Math.max(9,Math.floor(Math.min(innerWidth-90,420)/(c.layout.W+6))),{offset:1.6,ring:0});
     const w=$('#pwrap');w.innerHTML='';w.appendChild(styled);
     styled.style.cssText='width:100%;height:auto;display:block;border-radius:14px';
-    clearInterval(expTimer);
+    clearInterval(pairExpTimer);
     const tickExp=()=>{const left=Math.max(0,Math.floor((exp-Date.now())/1000));
       const mm=String(Math.floor(left/60)).padStart(2,'0'),ss=String(left%60).padStart(2,'0');
-      $('#pexp').innerHTML=left?('Expires in <b style="color:var(--a-ink)">'+mm+':'+ss+'</b>'):'Expired - get a new code';
-      if(!left)clearInterval(expTimer);};
-    tickExp();expTimer=setInterval(tickExp,1000);
+      const pe=$('#pexp');if(!pe){clearInterval(pairExpTimer);return;}
+      pe.innerHTML=left?('Expires in <b style="color:var(--a-ink)">'+mm+':'+ss+'</b>'):'Expired - get a new code';
+      if(!left)clearInterval(pairExpTimer);};
+    tickExp();pairExpTimer=setInterval(tickExp,1000);
   }
   // load existing code or the one from create
   const fresh=JSON.parse(sessionStorage.getItem(LS+'freshCode')||'null');
@@ -614,7 +615,11 @@ async function renderPair(){
   if(fresh&&fresh.exp>Date.now()){showCode(fresh.code,fresh.exp);}
   else{
     try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
-    catch(e){$('#pexp').textContent='Could not load a code - check connection.';}
+    catch(e){
+      const paired=e&&e.status===409;
+      $('#pwrap').innerHTML='<div style="padding:36px 24px;text-align:center;color:var(--ink-2);font-size:15px;line-height:1.5">'+(paired?'You two are already paired.<br>Remove a device below to invite someone new.':'Could not load a code - check connection.')+'</div>';
+      if(paired){for(const x of[s.querySelector('.tag'),$('#pcode').parentElement,$('#pexp'),$('#copyLink'),$('#share'),$('#regen')])if(x)x.style.display='none';}
+      else $('#pexp').textContent='';}
   }
   // devices
   try{
