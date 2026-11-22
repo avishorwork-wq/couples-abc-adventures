@@ -639,6 +639,148 @@ async function startScan(box){
     const quadDist=(a,b)=>{let best=1e18;for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(a[i][0]-b[(i+r)%4][0],a[i][1]-b[(i+r)%4][1]);best=Math.min(best,d/4);}return best;};
     const capToStage=(p,W,H)=>{const s2=Math.max(innerWidth/W,innerHeight/H);return [p[0]*s2+(innerWidth-W*s2)/2,p[1]*s2+(innerHeight-H*s2)/2];};
     let lastQuad=null,stab=0,decoding=false,tickN=0,blindN=0,verifiedRoi=null;
+    /* automatic capture assist: no UI, no reports, no user steps. The decisive
+       signal is decode quality itself (hypothesis scores in the rolling window);
+       clipping is only a supporting gate. Bounded: at most one rear-camera probe
+       per session with revert-on-no-improvement, at most two manual focusDistance
+       probes when the scene is poor but not blown out, and at most two escalating
+       0.3 EV steps down when it is; every step rolls back toward the opening
+       values when scores do not improve, and if a restore is refused the session
+       reopens the default camera (hardware defaults) or shows the explicit camera
+       error rather than sitting at a worse trial value. All changes are
+       session-scoped applyConstraints; closing the scanner ends them. Never acts
+       while a read is in flight, after Verified, or when no code-like scene is
+       in view. */
+    let lastFrame=null;
+    const auto={t0:Date.now(),win:[],camProbe:'no',evalT0:0,prevMed:0,firstCam:null,evState:'idle',evTried:0,baselineEv:null,fState:'idle',fTried:0,baselineFocus:null,lastAction:0,busy:false,nextAct:0};
+    const autoMed=w=>{if(!w.length)return 0;const bs=w.map(x=>x.best).sort((a,b)=>a-b);return bs[Math.floor(bs.length/2)];};
+    const autoEngaged=w=>w.length>=12&&w.filter(x=>x.n>0).length/w.length>=0.3; /* contours on enough frames: something code-like is actually in view */
+    const autoPoor=w=>autoMed(w)<0.2&&!w.some(x=>x.best>=0.45);
+    const clipFrac=q=>{const id=lastFrame;if(!id)return 0;
+      let x0=cap.width*.25,x1=cap.width*.75,y0=cap.height*.25,y1=cap.height*.75;
+      if(q){const xs=q.map(p=>p[0]),ys=q.map(p=>p[1]);
+        x0=Math.max(0,Math.min(...xs)-cap.width*.05);x1=Math.min(cap.width,Math.max(...xs)+cap.width*.05);
+        y0=Math.max(0,Math.min(...ys)-cap.height*.05);y1=Math.min(cap.height,Math.max(...ys)+cap.height*.05);}
+      let sat=0,n=0;const d=id.data,W=cap.width;
+      for(let y=Math.round(y0);y<y1;y+=3)for(let x=Math.round(x0);x<x1;x+=3){const i4=(y*W+x)*4;
+        if(d[i4]>245&&d[i4+1]>245&&d[i4+2]>245)sat++;n++;}
+      return n?sat/n:0;};
+    const switchTo=async(devId)=>{const old=scanStream;
+      try{const s=await openCam(devId);
+        if(closed){for(const t of s.getTracks())t.stop();return false;}
+        scanStream=s;vid.srcObject=s;await vid.play();
+        if(old)for(const t of old.getTracks())t.stop();
+        return true;
+      }catch(e){return false;}};
+    const setEv=async v=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
+      if(!tr)return false;
+      try{await tr.applyConstraints({advanced:[{exposureCompensation:v}]});return true;}catch(e){return false;}};
+    const setFocus=async fd=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
+      if(!tr)return false;
+      try{const caps=tr.getCapabilities?tr.getCapabilities():{};
+        const adv={focusDistance:fd};
+        if(Array.isArray(caps.focusMode)&&caps.focusMode.includes('manual'))adv.focusMode='manual'; /* only modes the device reports */
+        await tr.applyConstraints({advanced:[adv]});return true;}catch(e){return false;}};
+    const restoreFocus=async()=>{const b=auto.baselineFocus;if(!b)return true;
+      const tr=scanStream&&scanStream.getVideoTracks()[0];if(!tr)return false;
+      const caps=tr.getCapabilities?tr.getCapabilities():{};
+      const adv={};
+      if(b.fm&&Array.isArray(caps.focusMode)&&caps.focusMode.includes(b.fm))adv.focusMode=b.fm; /* a settings/claims mismatch (e.g. settings say continuous, caps say manual-only) must not be reapplied blindly */
+      if(typeof b.fd==='number')adv.focusDistance=b.fd;
+      if(!Object.keys(adv).length)return true;
+      try{await tr.applyConstraints({advanced:[adv]});return true;}catch(e){return false;}};
+    const autoRecover=async()=>{ /* restore refused: reopen the default camera so the session returns to hardware defaults instead of sitting at a worse trial value */
+      try{const old=scanStream;const s=await openCam(null);
+        if(closed){for(const t of s.getTracks())t.stop();return;}
+        scanStream=s;vid.srcObject=s;await vid.play();
+        if(old)for(const t of old.getTracks())t.stop();
+      }catch(e){
+        try{if(scanStream)for(const t of scanStream.getTracks())t.stop();}catch(e2){}
+        scanFail('Camera unavailable'); /* explicit error + code entry, never a pretend-baseline */
+      }};
+    const autoAct=async()=>{
+      if(auto.busy||closed||decoding||verifiedOk)return;
+      const now=Date.now();
+      if(now-auto.t0<3500||now-auto.lastAction<3000)return;
+      const w=auto.win.filter(x=>now-x.t<4500);
+      if(auto.camProbe==='eval'){
+        const w2=auto.win.filter(x=>x.t>auto.evalT0+800&&now-x.t<4500);
+        if(w2.length<10)return; /* still gathering post-switch evidence */
+        auto.lastAction=now;auto.busy=true;
+        try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
+          if(!improved&&auto.firstCam)await switchTo(auto.firstCam); /* revert: the other rear camera was not better */
+          auto.camProbe='done';
+        }finally{auto.busy=false;}
+        return;
+      }
+      if(auto.evState==='eval'){
+        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<6000); /* wide enough for the slower corroborating read path to weigh in before judging */
+        if(w2.length<12)return;
+        auto.lastAction=now;auto.busy=true;
+        try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
+          if(improved){auto.evState='idle';auto.evTried=2; /* accepted: stop stepping */}
+          else{let ok=auto.baselineEv!=null&&await setEv(auto.baselineEv);
+            if(!ok&&auto.baselineEv!=null)ok=await setEv(auto.baselineEv); /* one retry */
+            auto.evState='idle';auto.evTried=2;
+            if(!ok)await autoRecover();}
+        }finally{auto.busy=false;}
+        return;
+      }
+      if(auto.fState==='eval'){
+        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<6000); /* wide enough for the slower corroborating read path to weigh in before judging */
+        if(w2.length<12)return;
+        auto.lastAction=now;auto.busy=true;
+        try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
+          if(improved){auto.fState='idle';auto.fTried=2; /* accepted: keep the distance */}
+          else{let ok=await restoreFocus();
+            if(!ok)ok=await restoreFocus(); /* one retry */
+            auto.fState='idle';auto.fTried=2;
+            if(!ok)await autoRecover();}
+        }finally{auto.busy=false;}
+        return;
+      }
+      if(!autoEngaged(w)||!autoPoor(w))return;
+      auto.lastAction=now;auto.busy=true;
+      try{
+        const tr=scanStream&&scanStream.getVideoTracks()[0];
+        const caps=tr&&tr.getCapabilities?tr.getCapabilities():{};
+        const st=tr&&tr.getSettings?tr.getSettings():{};
+        if(auto.camProbe==='no'){
+          auto.camProbe='trying';
+          let others=[];
+          try{const dv=await navigator.mediaDevices.enumerateDevices();
+            others=dv.filter(d2=>d2.kind==='videoinput'&&/back/i.test(d2.label||'')&&d2.deviceId&&d2.deviceId!==st.deviceId);}catch(e){}
+          if(others.length){
+            auto.prevMed=autoMed(w);auto.firstCam=st.deviceId||null;
+            if(await switchTo(others[0].deviceId)){auto.camProbe='eval';auto.evalT0=Date.now();}
+            else auto.camProbe='done';
+          }else auto.camProbe='done';
+          return;
+        }
+        const fd=caps.focusDistance;
+        if(fd&&typeof fd.min==='number'&&fd.max>fd.min&&auto.fTried<2&&clipFrac(lastQuad)<=0.35){ /* poor but not blown out: defocus is the hypothesis */
+          if(!auto.baselineFocus)auto.baselineFocus={fm:st.focusMode||null,fd:typeof st.focusDistance==='number'?st.focusDistance:null};
+          const span=fd.max-fd.min;
+          const v=Math.min(fd.max,Math.max(fd.min,fd.min+span*(auto.fTried===0?0.5:0.78)));
+          const cur=typeof st.focusDistance==='number'?st.focusDistance:NaN;
+          if(isNaN(cur)||Math.abs(v-cur)>0.02){
+            if(await setFocus(v)){auto.fState='eval';auto.evalT0=Date.now();auto.prevMed=autoMed(w);auto.fTried++;}
+            else auto.fTried=2;
+          }else auto.fTried++;
+          return;
+        }
+        const ec=caps.exposureCompensation;
+        if(ec&&typeof ec.min==='number'&&auto.evTried<2){
+          if(clipFrac(lastQuad)>0.35){ /* the code region is heavily blown out; the score trend decides whether the step stays */
+            const cur=typeof st.exposureCompensation==='number'?st.exposureCompensation:0;
+            if(auto.baselineEv==null)auto.baselineEv=cur;
+            const v=Math.max(ec.min,(auto.baselineEv!=null?auto.baselineEv:cur)-0.3*(auto.evTried+1)); /* escalate from the opening value so a failed step is never retried */
+            if(v<cur-0.01&&await setEv(v)){auto.evState='eval';auto.evalT0=Date.now();auto.prevMed=autoMed(w);auto.evTried++;}
+            else auto.evTried=2;
+          }else auto.evTried=2; /* not a clipping scene: EV is not our hypothesis here */
+        }
+      }finally{auto.busy=false;}
+    };
     const tick=async()=>{
       if(scanStream!==stream){stream=scanStream;curStream=stream;lastQuad=null;stab=0;} /* camera switched: follow the new stream */
       if(closed)return; /* a closed session's loop dies here */
@@ -648,7 +790,7 @@ async function startScan(box){
       cap.width=Math.round(vid.videoWidth*sc);cap.height=Math.round(vid.videoHeight*sc);
       cx.drawImage(vid,0,0,cap.width,cap.height);
       let id=null;
-      try{id=cx.getImageData(0,0,cap.width,cap.height);}catch(e){}
+      try{id=cx.getImageData(0,0,cap.width,cap.height);lastFrame=id;}catch(e){}
       /* 1) cheap detection pass -> live tracking brackets on the real quad */
       let quad=null,rawN=0,bestSc=0;
       if(id){try{Prism.beginDecode(700);const f=Prism.frame(id);const qs=Prism.detectCurved(f);rawN=qs?qs.length:0;
@@ -687,6 +829,8 @@ async function startScan(box){
             quad=pick.q;
           }
         }}catch(e){}}
+      auto.win.push({t:Date.now(),best:bestSc,n:rawN,q:quad?1:0});if(auto.win.length>150)auto.win.shift();
+      if(Date.now()>=auto.nextAct){auto.nextAct=Date.now()+500;autoAct();}
       if(quad){
         const d=lastQuad?quadDist(quad,lastQuad):1e9;
         stab=(lastQuad&&d<cap.width*.08)?Math.min(4,stab+1):1;
