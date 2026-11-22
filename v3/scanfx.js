@@ -556,7 +556,7 @@ const api = {
     if (!locked) { locked = true; curT = Math.max(curT, TL.lock - .35); }
   },
   track: (q, conf) => { trackTarget = q || null; trackConfT = conf || 0; },
-  revoke: () => { didVerify = false; },   // a fresh failed/different read clears the Verified state
+  revoke: () => { didVerify = false; labIdx = -1; },   // labIdx=-1 makes the timeline rewrite the searching label next frame
   verified: label => {
     didVerify = true;
     lab1.textContent = label || 'Verified'; lab1.style.opacity = 1; lab1.style.transform = 'none';
