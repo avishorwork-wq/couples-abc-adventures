@@ -511,8 +511,8 @@ async function startScan(box){
       <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:18px;background:rgba(255,255,255,.08);display:grid;place-items:center;color:#ecebf4">${I.scan}</div>
       <div style="color:#ecebf4;font-size:16px;font-weight:600;margin-bottom:6px">${msg}</div>
       <div style="color:rgba(236,235,244,.62);font-size:14px;line-height:1.5">Type the 6-letter code instead.</div>
-      <button class="btn btn-soft" style="margin-top:18px;padding:10px 24px" id="scanFailClose">Close</button></div>`;
-    c.querySelector('#scanFailClose').onclick=cleanup;
+      <button class="btn btn-primary" style="margin-top:18px;padding:10px 24px" id="scanFailCode">Enter code</button></div>`;
+    c.querySelector('#scanFailCode').onclick=()=>{cleanup();const ci=document.getElementById('code');if(ci){ci.scrollIntoView({block:'center'});ci.focus();}};
     stageMount.appendChild(c);
   };
   if(!navigator.mediaDevices?.getUserMedia){
