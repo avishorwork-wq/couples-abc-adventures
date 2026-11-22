@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>rounded quiet zone</title>
+<style>body{font-family:system-ui;background:#faf9fb;margin:0;padding:24px;display:flex;gap:24px;flex-wrap:wrap}
+figure{margin:0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgb(0 0 0/.08)}
+figcaption{text-align:center;font-size:13px;color:#666;margin-top:8px}
+canvas{width:280px;height:auto}</style>
+<figure><canvas id="a"></canvas><figcaption>notch-free, contour quiet zone (current)</figcaption></figure>
+<figure><canvas id="b"></canvas><figcaption>notch-free, rounded quiet zone</figcaption></figure>
+<script src="prism.js"></script>
+<script src="prism-nogap.js"></script>
+<script src="styled.js"></script>
+<script>
+const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
+const code=PrismNG.encode(new TextEncoder().encode(link),{});
+for(const [id,round] of [['a',0],['b',3.2]]){
+  const st=styledPrism(code,10,{offset:1.8,ring:0,round});
+  const cv=document.getElementById(id);cv.width=st.width;cv.height=st.height;
+  const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(st,0,0);
+}
+</script>

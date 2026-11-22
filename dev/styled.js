@@ -1,7 +1,7 @@
 /* Styled Prism renderer v2: exact geometric silhouette contour.
    Quiet zone = uniform outward offset of the union of drawn hex cells,
    with arc joins at convex corners. Even width by construction. */
-function styledPrism(code,r,{offset=2.0,ring=0.5,border='#e2549b',bg='#ffffff',SS=3}={}){
+function styledPrism(code,r,{offset=2.0,ring=0.5,border='#e2549b',bg='#ffffff',SS=3,round=0}={}){
   const l=code.layout;
   const S3=Math.sqrt(3);
   const cells=l.cells.filter(c=>c.role!=='gap');
@@ -115,8 +115,24 @@ function styledPrism(code,r,{offset=2.0,ring=0.5,border='#e2549b',bg='#ffffff',S
     g.closePath();g.fill();};
   const hi=document.createElement('canvas');hi.width=Wpx;hi.height=Hpx;
   const g=hi.getContext('2d');
-  if(ring>0)draw(g,offsetPath(offset+ring),border);
-  draw(g,offsetPath(offset),bg);
+  if(round>0){
+    // rounded-rectangle quiet zone around the code's bounding box
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(const c of cells){x0=Math.min(x0,c.x-1.03);x1=Math.max(x1,c.x+1.03);y0=Math.min(y0,c.y-1.03);y1=Math.max(y1,c.y+1.03);}
+    x0-=offset;y0-=offset;x1+=offset;y1+=offset;
+    const rr=(rad,col)=>{g.fillStyle=col;g.beginPath();
+      g.moveTo(X(x0+rad),X(y0));
+      g.arcTo(X(x1),X(y0),X(x1),X(y1),X(rad));
+      g.arcTo(X(x1),X(y1),X(x0),X(y1),X(rad));
+      g.arcTo(X(x0),X(y1),X(x0),X(y0),X(rad));
+      g.arcTo(X(x0),X(y0),X(x1),X(y0),X(rad));
+      g.closePath();g.fill();};
+    if(ring>0)rr(round+ring,border);
+    rr(round,bg);
+  }else{
+    if(ring>0)draw(g,offsetPath(offset+ring),border);
+    draw(g,offsetPath(offset),bg);
+  }
   for(const c of cells){const s=code.symbols[c.index];if(s===8)continue;
     g.fillStyle=Prism.HEX[s];g.beginPath();
     for(let k=0;k<6;k++){const a=(30+60*k)*Math.PI/180,
