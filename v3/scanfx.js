@@ -555,7 +555,21 @@ const api = {
     resetTrack();
     if (!locked) { locked = true; curT = Math.max(curT, TL.lock - .35); }
   },
-  track: (q, conf) => { trackTarget = q || null; trackConfT = conf || 0; },
+  track: (q, conf) => {
+    // Detector and decoded quads may use different cyclic starting corners.
+    // Align the order before interpolation, without changing their geometry.
+    const ref = trackTarget || trackQuad;
+    if (q && q.length === 4 && ref && ref.length === 4) {
+      let best = q, bestD = Infinity;
+      for (let r = 0; r < 4; r++) {
+        const trial = q.map((_, i) => q[(i + r) % 4]);
+        const d = trial.reduce((s, p, i) => s + Math.hypot(p[0] - ref[i][0], p[1] - ref[i][1]), 0);
+        if (d < bestD) { best = trial; bestD = d; }
+      }
+      q = best;
+    }
+    trackTarget = q || null; trackConfT = conf || 0;
+  },
   revoke: () => { didVerify = false; labIdx = -1; },   // labIdx=-1 makes the timeline rewrite the searching label next frame
   verified: label => {
     didVerify = true;
