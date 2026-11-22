@@ -302,10 +302,16 @@ const store={
 };
 const state={
   tok:store.get('tok',null), who:store.get('who',null),
+  cid:store.get('cid',null), mtok:store.get('mtok',null),
   S:store.get('S',{}), M:store.get('M',[]),
   C:store.get('C',{cu:0,title:'',emoji:'',names:['',''],theme:null,dates:[]}),
   tab:'grid', dirty:false,
 };
+// Media URLs use the read-only media token when we have one, so image/video
+// URLs no longer carry the full read/write device token (falls back for old state)
+const mediaUrl=(m,thumb)=>state.cid&&state.mtok
+  ?API+'/media?cid='+encodeURIComponent(state.cid)+'&mtok='+encodeURIComponent(state.mtok)+'&id='+m.id+(thumb?'&part=t':'')
+  :API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+(thumb?'&part=t':'');
 const theme=()=>Object.assign({p:'#1c0363',a:'#f8519b',mode:'auto'},state.C.theme||{});
 function applyTheme(){
   const t=theme(),r=document.documentElement;
@@ -327,6 +333,8 @@ async function sync(){
   const j=await api('/sync',{tok:state.tok,S:state.S,M:state.M,C:state.C,cu:state.C.cu});
   state.S=j.S;state.M=j.M;
   if(j.C&&j.C.cu>state.C.cu){state.C=j.C;}
+  if(j.cid){state.cid=j.cid;store.set('cid',j.cid);}
+  if(j.mtok){state.mtok=j.mtok;store.set('mtok',j.mtok);}
   store.set('S',state.S);store.set('M',state.M);store.set('C',state.C);
   state.dirty=false;
   return j;
@@ -764,7 +772,7 @@ function openLetter(L){
     const row=el('div','');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
     for(const m of mine){
       const fig=el('div','');fig.style.cssText='width:64px;height:64px;border-radius:12px;overflow:hidden;background:var(--bg-sunk);position:relative';
-      const url=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+(m.t==='v'?'':'&part=t');
+      const url=mediaUrl(m,m.t!=='v');
       const img=el(m.t==='v'?'video':'img');img.style.cssText='width:100%;height:100%;object-fit:cover';
       if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
       img.src=url;
@@ -829,7 +837,7 @@ async function uploadMedia(L,file){
   bump();
 }
 function openMedia(m){
-  const url=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id;
+  const url=mediaUrl(m,false);
   const sh=$('#sheet');
   sh.innerHTML=`<div class="grab"></div>
     <div style="border-radius:var(--r-m);overflow:hidden;background:#000;margin-bottom:var(--sp-4)">
@@ -863,7 +871,7 @@ function renderGallery(s){
     const img=el(m.t==='v'?'video':'img');
     if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
     else img.loading='lazy';
-    img.src=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+(m.t==='v'?'':'&part=t');
+    img.src=mediaUrl(m,m.t!=='v');
     f.appendChild(img);
     f.insertAdjacentHTML('beforeend',`<span class="lettertag">${m.l}</span>`);
     if(m.t==='v'){const b=el('span','badge');b.innerHTML=I.play;f.appendChild(b);}
