@@ -645,9 +645,12 @@ async function startScan(box){
        per session with revert-on-no-improvement, at most two manual focusDistance
        probes when the scene is poor but not blown out, and at most two escalating
        0.3 EV steps down when it is; every step rolls back toward the opening
-       values when scores do not improve. All changes are session-scoped
-       applyConstraints; closing the scanner ends them. Never acts while a read
-       is in flight, after Verified, or when no code-like scene is in view. */
+       values when scores do not improve, and if a restore is refused the session
+       reopens the default camera (hardware defaults) or shows the explicit camera
+       error rather than sitting at a worse trial value. All changes are
+       session-scoped applyConstraints; closing the scanner ends them. Never acts
+       while a read is in flight, after Verified, or when no code-like scene is
+       in view. */
     let lastFrame=null;
     const auto={t0:Date.now(),win:[],camProbe:'no',evalT0:0,prevMed:0,firstCam:null,evState:'idle',evTried:0,baselineEv:null,fState:'idle',fTried:0,baselineFocus:null,lastAction:0,busy:false,nextAct:0};
     const autoMed=w=>{if(!w.length)return 0;const bs=w.map(x=>x.best).sort((a,b)=>a-b);return bs[Math.floor(bs.length/2)];};
@@ -672,10 +675,29 @@ async function startScan(box){
     const setEv=async v=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
       if(!tr)return false;
       try{await tr.applyConstraints({advanced:[{exposureCompensation:v}]});return true;}catch(e){return false;}};
-    const setFocus=async(fm,fd)=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
+    const setFocus=async fd=>{const tr=scanStream&&scanStream.getVideoTracks()[0];
       if(!tr)return false;
-      try{const adv={};if(fm)adv.focusMode=fm;if(typeof fd==='number')adv.focusDistance=fd;
+      try{const caps=tr.getCapabilities?tr.getCapabilities():{};
+        const adv={focusDistance:fd};
+        if(Array.isArray(caps.focusMode)&&caps.focusMode.includes('manual'))adv.focusMode='manual'; /* only modes the device reports */
         await tr.applyConstraints({advanced:[adv]});return true;}catch(e){return false;}};
+    const restoreFocus=async()=>{const b=auto.baselineFocus;if(!b)return true;
+      const tr=scanStream&&scanStream.getVideoTracks()[0];if(!tr)return false;
+      const caps=tr.getCapabilities?tr.getCapabilities():{};
+      const adv={};
+      if(b.fm&&Array.isArray(caps.focusMode)&&caps.focusMode.includes(b.fm))adv.focusMode=b.fm; /* a settings/claims mismatch (e.g. settings say continuous, caps say manual-only) must not be reapplied blindly */
+      if(typeof b.fd==='number')adv.focusDistance=b.fd;
+      if(!Object.keys(adv).length)return true;
+      try{await tr.applyConstraints({advanced:[adv]});return true;}catch(e){return false;}};
+    const autoRecover=async()=>{ /* restore refused: reopen the default camera so the session returns to hardware defaults instead of sitting at a worse trial value */
+      try{const old=scanStream;const s=await openCam(null);
+        if(closed){for(const t of s.getTracks())t.stop();return;}
+        scanStream=s;vid.srcObject=s;await vid.play();
+        if(old)for(const t of old.getTracks())t.stop();
+      }catch(e){
+        try{if(scanStream)for(const t of scanStream.getTracks())t.stop();}catch(e2){}
+        scanFail('Camera unavailable'); /* explicit error + code entry, never a pretend-baseline */
+      }};
     const autoAct=async()=>{
       if(auto.busy||closed||decoding||verifiedOk)return;
       const now=Date.now();
@@ -699,7 +721,8 @@ async function startScan(box){
           if(improved){auto.evState='idle';auto.evTried=2; /* accepted: stop stepping */}
           else{let ok=auto.baselineEv!=null&&await setEv(auto.baselineEv);
             if(!ok&&auto.baselineEv!=null)ok=await setEv(auto.baselineEv); /* one retry */
-            auto.evState='idle';if(!ok)auto.evTried=2; /* restore failed: stop stepping; residue is session-scoped */}
+            auto.evState='idle';auto.evTried=2;
+            if(!ok)await autoRecover();}
         }finally{auto.busy=false;}
         return;
       }
@@ -709,10 +732,10 @@ async function startScan(box){
         auto.lastAction=now;auto.busy=true;
         try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
           if(improved){auto.fState='idle';auto.fTried=2; /* accepted: keep the distance */}
-          else{const b=auto.baselineFocus;
-            let ok=!b||await setFocus(b.fm,b.fd);
-            if(!ok&&b)ok=await setFocus(b.fm,b.fd); /* one retry */
-            auto.fState='idle';if(!ok)auto.fTried=2;}
+          else{let ok=await restoreFocus();
+            if(!ok)ok=await restoreFocus(); /* one retry */
+            auto.fState='idle';auto.fTried=2;
+            if(!ok)await autoRecover();}
         }finally{auto.busy=false;}
         return;
       }
@@ -741,7 +764,7 @@ async function startScan(box){
           const v=Math.min(fd.max,Math.max(fd.min,fd.min+span*(auto.fTried===0?0.5:0.78)));
           const cur=typeof st.focusDistance==='number'?st.focusDistance:NaN;
           if(isNaN(cur)||Math.abs(v-cur)>0.02){
-            if(await setFocus('manual',v)){auto.fState='eval';auto.evalT0=Date.now();auto.prevMed=autoMed(w);auto.fTried++;}
+            if(await setFocus(v)){auto.fState='eval';auto.evalT0=Date.now();auto.prevMed=autoMed(w);auto.fTried++;}
             else auto.fTried=2;
           }else auto.fTried++;
           return;
