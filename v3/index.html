@@ -578,7 +578,7 @@ async function startScan(box){
   ov.appendChild(closeB);
   document.body.appendChild(ov);
   ov.dataset.scan='1';
-  let fxDone=null, closed=false, verifiedOk=false, verifiedText=null, verifyTimer=null;
+  let fxDone=null, closed=false, verifiedOk=false, verifiedText=null, verifyTimer=null, verifyDeadline=0;
   const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
   const onScanEsc=e=>{if(e.key==='Escape')cleanup();};
   document.addEventListener('keydown',onScanEsc);
@@ -665,7 +665,7 @@ async function startScan(box){
       tickN++;
       /* while verified, keep reading fresh frames: the Verified state must always
          reflect the CURRENT frame, never a stale read kept alive by the timer */
-      if(id&&!decoding&&(verifiedOk||quad||tickN%6===0)){
+      if(id&&!decoding&&((verifiedOk&&Date.now()<verifyDeadline)||(!verifiedOk&&(quad||tickN%6===0)))){
         decoding=true;
         const reqStream=scanStream, capW=cap.width, capH=cap.height; /* bind this request's capture session + dims */
         const revoke=()=>{verifiedOk=false;verifiedText=null;clearTimeout(verifyTimer);fx.revoke();};
@@ -686,12 +686,17 @@ async function startScan(box){
           verifiedOk=true;verifiedText=text;
           fx.track(res.quad.map(p=>capToStage(p,capW,capH)),1);
           fx.verified('Verified');
-          verifyTimer=setTimeout(()=>{
-            if(closed)return;
+          /* close only after the window AND the last in-flight read settle:
+             a stale success must never fill the form while a newer read is pending */
+          verifyDeadline=Date.now()+1400;
+          const tryClose=()=>{
+            if(closed||!verifiedOk)return;
+            if(Date.now()<verifyDeadline||decoding){verifyTimer=setTimeout(tryClose,150);return;}
             cleanup();
             $('#scanBox').style.display='none';
             $('#code').value=m[1];toast('Code found');
-          },1400);
+          };
+          verifyTimer=setTimeout(tryClose,1400);
         },()=>{decoding=false;if(verifiedOk&&!closed&&scanStream===reqStream)revoke();});
       }
       scanBusy=false;
