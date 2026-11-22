@@ -655,10 +655,10 @@ async function startScan(box){
   const showDiag=()=>{
     if(closed)return;
     const p=el('div','');
-    p.style.cssText='position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:95;background:rgba(24,21,32,.96);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;color:#ecebf4;font-size:14px;line-height:1.5';
+    p.style.cssText='position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:95;background:#181520;border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;color:#ecebf4;font-size:14px;line-height:1.5';
     p.innerHTML='<div style="font-weight:600;margin-bottom:6px">Scanner check</div>'
       +'<div style="color:rgba(236,235,244,.75);margin-bottom:12px">Runs about 15 seconds of checks on this device only. Keep pointing the camera at the code as you normally would. It also takes one test photo: the preview may pause for a moment and your phone may make its shutter sound. That photo is read in memory on this phone and thrown away, never saved or uploaded. The report has no photos, code contents, or device IDs; nothing leaves your phone unless you copy and send the report yourself.</div>'
-      +'<div style="display:flex;gap:10px"><button class="btn btn-primary" id="dgGo" style="flex:1;padding:10px">Start check</button><button class="btn" id="dgNo" style="padding:10px">Not now</button></div>';
+      +'<div style="display:flex;gap:10px"><button class="btn btn-primary" id="dgGo" style="flex:1;padding:10px">Start check</button><button class="btn" id="dgNo" style="padding:10px;color:#ecebf4;background:rgba(255,255,255,.08)">Not now</button></div>';
     ov.appendChild(p);
     p.querySelector('#dgNo').onclick=()=>p.remove();
     p.querySelector('#dgGo').onclick=()=>{
@@ -669,7 +669,7 @@ async function startScan(box){
         const rep=buildDiagReport();
         p.innerHTML='<div style="font-weight:600;margin-bottom:6px">Check report</div>'
           +'<pre id="dgRep" style="white-space:pre-wrap;word-break:break-word;font-size:11px;max-height:38vh;overflow:auto;background:rgba(0,0,0,.3);border-radius:10px;padding:10px;margin:0 0 12px"></pre>'
-          +'<div style="display:flex;gap:10px"><button class="btn btn-primary" id="dgCp" style="flex:1;padding:10px">Copy report</button><button class="btn" id="dgDn" style="padding:10px">Done</button></div>';
+          +'<div style="display:flex;gap:10px"><button class="btn btn-primary" id="dgCp" style="flex:1;padding:10px">Copy report</button><button class="btn" id="dgDn" style="padding:10px;color:#ecebf4;background:rgba(255,255,255,.08)">Done</button></div>';
         p.querySelector('#dgRep').textContent=rep;
         p.querySelector('#dgDn').onclick=()=>p.remove();
         p.querySelector('#dgCp').onclick=ev=>{
@@ -681,6 +681,133 @@ async function startScan(box){
     };
   };
   helpB.onclick=showDiag;
+  /* optional capture controls: only what the live track reports, applied per-track.
+     track-scoped settings revert to device defaults when the camera closes, so
+     nothing here persists on the phone. */
+  const capB=el('button','');capB.textContent='\u2699';
+  capB.setAttribute('aria-label','Capture settings');
+  capB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 66px);left:14px;z-index:90;background:rgba(24,21,32,.55);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:rgba(255,255,255,.8);font-size:16px;width:40px;height:40px;line-height:1;padding:0';
+  ov.appendChild(capB);
+  let camList=null,switching=false;
+  const sliderRow=(label,min,max,step,val)=>{
+    const r=el('div','');r.style.cssText='margin:12px 0 2px';
+    r.innerHTML='<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(236,235,244,.8);margin-bottom:4px"><span>'+label+'</span><span class="ccv"></span></div>'
+      +'<input type="range" style="width:100%">';
+    const inp=r.querySelector('input');inp.min=min;inp.max=max;inp.step=step;inp.value=val;
+    const out=r.querySelector('.ccv');out.textContent=(+val).toFixed(1);
+    inp.oninput=()=>{out.textContent=(+inp.value).toFixed(1);};
+    return {r,inp};
+  };
+  const switchCam=async(devId)=>{
+    const old=scanStream;
+    try{
+      const s=await openCam(devId);
+      if(closed){for(const t of s.getTracks())t.stop();return;}
+      scanStream=s;
+      vid.srcObject=s;await vid.play();
+      if(old)for(const t of old.getTracks())t.stop();
+      const trS=s.getVideoTracks()[0];
+      const D0=window.__scanDiag;
+      if(D0){D0.track=trS;
+        try{D0.settings=trS.getSettings();D0.capabilities=trS.getCapabilities();}catch(e){}
+        D0.ticks=[];D0.reads=[];D0.skipped=0;D0.samples=[];D0.still=null;D0.cams=null;D0.armT0=null;}
+    }catch(e){
+      if(old&&scanStream!==old){scanStream=old;vid.srcObject=old;try{await vid.play();}catch(e2){}}
+    }
+  };
+  const showCapture=async()=>{
+    if(closed)return;
+    const D0=window.__scanDiag;const tr=D0&&D0.track;
+    const p=el('div','');
+    p.style.cssText='position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:95;background:#181520;border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;max-height:82vh;overflow:auto;color:#ecebf4';
+    p.innerHTML='<div style="font-weight:600;margin-bottom:2px">Capture</div>'
+      +'<div style="color:rgba(236,235,244,.6);font-size:12px;margin-bottom:6px">Only changes this camera view while the scanner is open.</div>'
+      +'<div id="ccBody"></div>'
+      +'<div style="display:flex;margin-top:14px"><button class="btn" id="ccX" style="flex:1;padding:10px;color:#ecebf4;background:rgba(255,255,255,.08)">Done</button></div>';
+    ov.appendChild(p);
+    p.querySelector('#ccX').onclick=()=>p.remove();
+    const body=p.querySelector('#ccBody');
+    const caps=(tr&&tr.getCapabilities)?tr.getCapabilities():{};
+    const st=(tr&&tr.getSettings)?tr.getSettings():{};
+    let any=false;
+    const note=el('div','');note.style.cssText='color:#f2b8c6;font-size:12px;min-height:16px;margin-top:8px';
+    /* a failed apply reverts the slider to the track's actual setting: the UI never claims a value the camera rejected. Late applies are dropped when the scanner closed or the camera changed. */
+    const applyVal=async(key,val,row,extra)=>{
+      row.pending=val;
+      if(row.busy)return; /* the in-flight apply picks up the newest value when it finishes */
+      row.busy=true;
+      const myTr=tr;
+      while(row.pending!=null){
+        const v=row.pending;row.pending=null;
+        try{const adv=Object.assign({},extra||{});adv[key]=v;
+          await myTr.applyConstraints({advanced:[adv]});
+          if(closed||myTr!==((window.__scanDiag||{}).track)){row.busy=false;return;} /* late apply on a replaced camera: drop it */
+          const cur=myTr.getSettings?myTr.getSettings()[key]:v;
+          if(typeof cur==='number'&&Math.abs(cur-v)>.001){row.inp.value=cur;row.inp.dispatchEvent(new Event('input'));}
+        }catch(e){
+          if(!closed&&myTr===((window.__scanDiag||{}).track)){
+            try{const cur=myTr.getSettings?myTr.getSettings()[key]:null;
+              if(typeof cur==='number'){row.inp.value=cur;row.inp.dispatchEvent(new Event('input'));}}catch(e2){}
+            note.textContent='That setting was not accepted by this camera.';
+            setTimeout(()=>{note.textContent='';},2600);
+          }
+        }
+      }
+      row.busy=false;
+    };
+    const ec=caps.exposureCompensation;
+    if(ec&&typeof ec.min==='number'&&ec.max>ec.min){
+      any=true;
+      const cur=typeof st.exposureCompensation==='number'?st.exposureCompensation:0;
+      const row=sliderRow('Brightness',ec.min,ec.max,ec.step||0.1,cur);
+      body.appendChild(row.r);
+      row.inp.onchange=()=>applyVal('exposureCompensation',+row.inp.value,row);
+    }
+    const fm=caps.focusMode,fd=caps.focusDistance;
+    if(fm&&fm.includes('manual')&&fd&&typeof fd.min==='number'&&fd.max>fd.min){
+      any=true;
+      const cur=typeof st.focusDistance==='number'?st.focusDistance:fd.min;
+      const row=sliderRow('Focus',fd.min,fd.max,fd.step||0.01,cur);
+      body.appendChild(row.r);
+      row.inp.onchange=()=>applyVal('focusDistance',+row.inp.value,row,{focusMode:'manual'});
+    }
+    body.appendChild(note);
+    try{
+      if(!camList&&navigator.mediaDevices&&navigator.mediaDevices.enumerateDevices){
+        const dv=await navigator.mediaDevices.enumerateDevices();
+        camList=dv.filter(d=>d.kind==='videoinput');
+      }
+    }catch(e){}
+    if(closed||!p.isConnected)return;
+    const backs=(camList||[]).filter(d=>/back/i.test(d.label||''));
+    const cands=backs.length>=2?backs:(camList&&camList.length>=2?camList:[]);
+    if(cands.length>=2){
+      any=true;
+      const head=el('div','');head.style.cssText='font-size:12px;color:rgba(236,235,244,.8);margin:14px 0 6px';head.textContent='Camera';
+      body.appendChild(head);
+      const rowB=el('div','');rowB.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+      body.appendChild(rowB);
+      const myId=st.deviceId;
+      cands.forEach((d,i)=>{
+        const b=el('button','btn');b.style.cssText='padding:8px 14px;font-size:13px;color:#ecebf4;background:rgba(255,255,255,.08)';
+        b.textContent='Camera '+(i+1)+(d.deviceId===myId?' \u2713':'');
+        if(d.deviceId===myId)b.classList.add('btn-primary');
+        b.onclick=async()=>{
+          if(switching||d.deviceId===myId)return;
+          switching=true;b.textContent='Switching\u2026';
+          await switchCam(d.deviceId);
+          switching=false;p.remove();
+        };
+        rowB.appendChild(b);
+      });
+    }
+    if(!any){
+      const n=el('div','');n.style.cssText='color:rgba(236,235,244,.6);font-size:13px;margin-top:6px';
+      n.textContent='This camera reports no adjustable settings.';
+      body.appendChild(n);
+    }
+  };
+  capB.onclick=showCapture;
   const scanFail=(msg)=>{
     if(window.__scanDiag)window.__scanDiag.fail=msg;
     fx.stop();
@@ -706,17 +833,25 @@ async function startScan(box){
      below the tracking canvas */
   stageMount.querySelector('#stage').insertBefore(vid,stageMount.querySelector('#fx'));
   window.__scanFx=fx;
-  try{
-    let stream;
-    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});}
-    catch(e){stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});} /* devices that reject hinted constraints still get a camera */
-    try{const tr0=stream.getVideoTracks()[0];const caps=tr0&&tr0.getCapabilities?tr0.getCapabilities():null;
+  const openCam=async(devId)=>{
+    const v=devId?{deviceId:{exact:devId},width:{ideal:1920},height:{ideal:1080}}:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}};
+    let s;
+    try{s=await navigator.mediaDevices.getUserMedia({video:v});}
+    catch(e){
+      if(devId){s=await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:devId}}});}
+      else{s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});} /* devices that reject hinted constraints still get a camera */
+    }
+    try{const tr0=s.getVideoTracks()[0];const caps=tr0&&tr0.getCapabilities?tr0.getCapabilities():null;
       const adv={};
       if(caps&&Array.isArray(caps.focusMode)&&caps.focusMode.includes('continuous'))adv.focusMode='continuous';
       if(caps&&Array.isArray(caps.exposureMode)&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
       if(caps&&Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes('continuous'))adv.whiteBalanceMode='continuous';
       if(Object.keys(adv).length)await tr0.applyConstraints({advanced:[adv]});
     }catch(e){} /* continuous AF/AE/AWB only where the device reports support; defaults elsewhere */
+    return s;
+  };
+  try{
+    let stream=await openCam(null);
     if(closed){for(const t of stream.getTracks())t.stop();return;} /* closed while permission/hardware was pending: never keep the camera */
     try{const trS=stream.getVideoTracks()[0];
       window.__scanDiag={v:(location.pathname.indexOf('v3-staged')>=0?'staged':'v3')+'-diag3',t0:Date.now(),ua:navigator.userAgent,screen:[innerWidth,innerHeight],
@@ -725,6 +860,7 @@ async function startScan(box){
         ticks:[],reads:[],skipped:0,fail:null,armT0:null};
     }catch(e){window.__scanDiag={v:'unknown',t0:Date.now(),settingsError:1,ticks:[],reads:[],skipped:0,fail:null,armT0:null};}
     const D=window.__scanDiag;
+    let curStream=stream;
     scanStream=stream;
     vid.srcObject=scanStream;await vid.play();
     const cap=document.createElement('canvas');const cx=cap.getContext('2d',{willReadFrequently:true});
@@ -734,7 +870,8 @@ async function startScan(box){
     const capToStage=(p,W,H)=>{const s2=Math.max(innerWidth/W,innerHeight/H);return [p[0]*s2+(innerWidth-W*s2)/2,p[1]*s2+(innerHeight-H*s2)/2];};
     let lastQuad=null,stab=0,decoding=false,tickN=0,blindN=0,verifiedRoi=null;
     const tick=async()=>{
-      if(closed||scanStream!==stream)return; /* a closed or superseded session's loop dies here */
+      if(scanStream!==stream){stream=scanStream;curStream=stream;lastQuad=null;stab=0;} /* camera switched: follow the new stream */
+      if(closed)return; /* a closed session's loop dies here */
       if(scanBusy||vid.readyState<2||!vid.videoWidth){D.skipped++;requestAnimationFrame(tick);return;}
       scanBusy=true;
       const sc=Math.min(1,640/vid.videoWidth);
