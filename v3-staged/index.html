@@ -685,9 +685,10 @@ async function startScan(box){
      track-scoped settings revert to device defaults when the camera closes, so
      nothing here persists on the phone. */
   const capB=el('button','');capB.textContent='\u2699';
-  capB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:14px;z-index:90;background:rgba(24,21,32,.55);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:rgba(255,255,255,.8);font-size:16px;width:34px;height:34px;line-height:1;padding:0';
+  capB.setAttribute('aria-label','Capture settings');
+  capB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 66px);left:14px;z-index:90;background:rgba(24,21,32,.55);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:rgba(255,255,255,.8);font-size:16px;width:40px;height:40px;line-height:1;padding:0';
   ov.appendChild(capB);
-  let camList=null,switching=false,evPending=false;
+  let camList=null,switching=false;
   const sliderRow=(label,min,max,step,val)=>{
     const r=el('div','');r.style.cssText='margin:12px 0 2px';
     r.innerHTML='<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(236,235,244,.8);margin-bottom:4px"><span>'+label+'</span><span class="ccv"></span></div>'
@@ -720,7 +721,7 @@ async function startScan(box){
     const p=el('div','');
     p.style.cssText='position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);z-index:95;background:#181520;border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px;max-height:82vh;overflow:auto;color:#ecebf4';
     p.innerHTML='<div style="font-weight:600;margin-bottom:2px">Capture</div>'
-      +'<div style="color:rgba(236,235,244,.6);font-size:12px;margin-bottom:6px">Only changes this camera view. Resets when you close the scanner.</div>'
+      +'<div style="color:rgba(236,235,244,.6);font-size:12px;margin-bottom:6px">Only changes this camera view while the scanner is open.</div>'
       +'<div id="ccBody"></div>'
       +'<div style="display:flex;margin-top:14px"><button class="btn" id="ccX" style="flex:1;padding:10px;color:#ecebf4;background:rgba(255,255,255,.08)">Done</button></div>';
     ov.appendChild(p);
@@ -729,17 +730,38 @@ async function startScan(box){
     const caps=(tr&&tr.getCapabilities)?tr.getCapabilities():{};
     const st=(tr&&tr.getSettings)?tr.getSettings():{};
     let any=false;
+    const note=el('div','');note.style.cssText='color:#f2b8c6;font-size:12px;min-height:16px;margin-top:8px';
+    /* a failed apply reverts the slider to the track's actual setting: the UI never claims a value the camera rejected. Late applies are dropped when the scanner closed or the camera changed. */
+    const applyVal=async(key,val,row,extra)=>{
+      row.pending=val;
+      if(row.busy)return; /* the in-flight apply picks up the newest value when it finishes */
+      row.busy=true;
+      const myTr=tr;
+      while(row.pending!=null){
+        const v=row.pending;row.pending=null;
+        try{const adv=Object.assign({},extra||{});adv[key]=v;
+          await myTr.applyConstraints({advanced:[adv]});
+          if(closed||myTr!==((window.__scanDiag||{}).track)){row.busy=false;return;} /* late apply on a replaced camera: drop it */
+          const cur=myTr.getSettings?myTr.getSettings()[key]:v;
+          if(typeof cur==='number'&&Math.abs(cur-v)>.001){row.inp.value=cur;row.inp.dispatchEvent(new Event('input'));}
+        }catch(e){
+          if(!closed&&myTr===((window.__scanDiag||{}).track)){
+            try{const cur=myTr.getSettings?myTr.getSettings()[key]:null;
+              if(typeof cur==='number'){row.inp.value=cur;row.inp.dispatchEvent(new Event('input'));}}catch(e2){}
+            note.textContent='That setting was not accepted by this camera.';
+            setTimeout(()=>{note.textContent='';},2600);
+          }
+        }
+      }
+      row.busy=false;
+    };
     const ec=caps.exposureCompensation;
     if(ec&&typeof ec.min==='number'&&ec.max>ec.min){
       any=true;
       const cur=typeof st.exposureCompensation==='number'?st.exposureCompensation:0;
       const row=sliderRow('Brightness',ec.min,ec.max,ec.step||0.1,cur);
       body.appendChild(row.r);
-      row.inp.onchange=async()=>{
-        if(evPending||!tr)return;evPending=true;
-        try{await tr.applyConstraints({advanced:[{exposureCompensation:+row.inp.value}]});}catch(e){}
-        evPending=false;
-      };
+      row.inp.onchange=()=>applyVal('exposureCompensation',+row.inp.value,row);
     }
     const fm=caps.focusMode,fd=caps.focusDistance;
     if(fm&&fm.includes('manual')&&fd&&typeof fd.min==='number'&&fd.max>fd.min){
@@ -747,11 +769,9 @@ async function startScan(box){
       const cur=typeof st.focusDistance==='number'?st.focusDistance:fd.min;
       const row=sliderRow('Focus',fd.min,fd.max,fd.step||0.01,cur);
       body.appendChild(row.r);
-      row.inp.onchange=async()=>{
-        if(!tr)return;
-        try{await tr.applyConstraints({advanced:[{focusMode:'manual',focusDistance:+row.inp.value}]});}catch(e){}
-      };
+      row.inp.onchange=()=>applyVal('focusDistance',+row.inp.value,row,{focusMode:'manual'});
     }
+    body.appendChild(note);
     try{
       if(!camList&&navigator.mediaDevices&&navigator.mediaDevices.enumerateDevices){
         const dv=await navigator.mediaDevices.enumerateDevices();
