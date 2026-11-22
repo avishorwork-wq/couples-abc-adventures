@@ -1,0 +1,1776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Alphabet Us - A to Z, together</title>
+<meta name="description" content="A private A-to-Z of dates for the two of you. Plan it, do it, keep the photo.">
+<meta name="theme-color" content="#1c0363">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+@font-face{font-family:'Inter';src:url('fonts/inter-var.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('fonts/fraunces-var.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Fraunces';src:url('fonts/fraunces-it-var.woff2') format('woff2');font-weight:100 900;font-style:italic;font-display:swap}
+:root{
+  --p:#1c0363; --a:#f8519b;
+  --font-ui:'Inter',-apple-system,system-ui,sans-serif;
+  --font-display:'Fraunces',Georgia,serif;
+  --r-s:10px; --r-m:16px; --r-l:24px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  --shadow-1:0 1px 2px rgb(20 10 40/.06),0 2px 8px rgb(20 10 40/.05);
+  --shadow-2:0 4px 16px rgb(20 10 40/.10),0 12px 40px rgb(20 10 40/.08);
+  --ease:cubic-bezier(.32,.72,.24,1);
+}
+:root,[data-mode=light]{
+  color-scheme:light;
+  --bg:color-mix(in oklab,#ffffff 96%,var(--p));
+  --bg-raise:#ffffff;
+  --bg-sunk:color-mix(in oklab,#ffffff 92%,var(--p));
+  --ink:color-mix(in oklab,#17111f 88%,var(--p));
+  --ink-2:color-mix(in oklab,var(--ink) 62%,var(--bg));
+  --ink-3:color-mix(in oklab,var(--ink) 40%,var(--bg));
+  --line:color-mix(in oklab,var(--ink) 10%,var(--bg));
+  --line-2:color-mix(in oklab,var(--ink) 16%,var(--bg));
+  --p-wash:color-mix(in oklab,var(--p) 8%,var(--bg));
+  --a-wash:color-mix(in oklab,var(--a) 12%,var(--bg));
+  --a-ink:color-mix(in oklab,var(--a) 78%,#000 6%);
+  --good:#2e9e5b; --warn:#c47d1a; --bad:#d2445a;
+  --scrim:rgb(20 10 40/.44);
+}
+[data-mode=dark]{
+  color-scheme:dark;
+  --bg:color-mix(in oklab,#0d0a14 92%,var(--p));
+  --bg-raise:color-mix(in oklab,#17131f 90%,var(--p));
+  --bg-sunk:color-mix(in oklab,#080610 94%,var(--p));
+  --ink:color-mix(in oklab,#f4f1fa 92%,var(--a));
+  --ink-2:color-mix(in oklab,var(--ink) 64%,var(--bg));
+  --ink-3:color-mix(in oklab,var(--ink) 42%,var(--bg));
+  --line:color-mix(in oklab,var(--ink) 12%,var(--bg));
+  --line-2:color-mix(in oklab,var(--ink) 20%,var(--bg));
+  --p-wash:color-mix(in oklab,var(--p) 26%,var(--bg));
+  --a-wash:color-mix(in oklab,var(--a) 18%,var(--bg));
+  --a-ink:color-mix(in oklab,var(--a) 88%,#fff 8%);
+  --scrim:rgb(4 2 10/.6);
+  --shadow-1:0 1px 2px rgb(0 0 0/.3);
+  --shadow-2:0 4px 16px rgb(0 0 0/.4),0 12px 40px rgb(0 0 0/.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font-ui);font-size:16px;line-height:1.5;color:var(--ink);
+  background:var(--bg);min-height:100dvh;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:
+    radial-gradient(120vw 90vh at 85% -20%,color-mix(in oklab,var(--a) 14%,transparent),transparent 60%),
+    radial-gradient(100vw 80vh at -20% 110%,color-mix(in oklab,var(--p) 16%,transparent),transparent 60%);
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+img,canvas,video{max-width:100%;display:block}
+a{color:var(--a-ink)}
+::selection{background:color-mix(in oklab,var(--a) 30%,transparent)}
+:focus-visible{outline:2px solid var(--a-ink);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter-spacing:-.01em}
+.serif-i{font-style:italic;font-weight:480}
+
+/* ---------- primitives ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  padding:14px 20px;border-radius:14px;font-weight:600;font-size:15.5px;line-height:1;
+  transition:transform .14s var(--ease),box-shadow .14s var(--ease),background .14s;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{color:#fff;background:linear-gradient(135deg,var(--p),color-mix(in oklab,var(--p) 52%,var(--a)));
+  box-shadow:0 2px 10px color-mix(in oklab,var(--p) 40%,transparent)}
+.btn-soft{background:var(--p-wash);color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}
+.btn-danger{background:color-mix(in oklab,var(--bad) 12%,var(--bg-raise));color:var(--bad)}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--sp-4)}
+.field label{font-size:13px;font-weight:600;color:var(--ink-2);letter-spacing:.01em}
+.input,textarea.input,select.input{
+  padding:13px 15px;border-radius:12px;border:1.5px solid var(--line);
+  background:var(--bg-raise);font-size:16px;width:100%;
+  transition:border-color .15s,box-shadow .15s}
+.input:focus{outline:0;border-color:var(--a-ink);box-shadow:0 0 0 3px color-mix(in oklab,var(--a) 22%,transparent)}
+.input::placeholder{color:var(--ink-3)}
+.card{background:var(--bg-raise);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow-1)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+  font-size:12px;font-weight:600;background:var(--a-wash);color:var(--a-ink)}
+.icon{width:20px;height:20px;flex:none}
+.icon-lg{width:24px;height:24px}
+/* ---------- layout shell ---------- */
+#view{min-height:100dvh;display:flex;flex-direction:column}
+.screen{flex:1;display:flex;flex-direction:column;width:100%;max-width:460px;margin:0 auto;
+  padding:calc(var(--sp-5) + env(safe-area-inset-top)) var(--sp-5) calc(92px + env(safe-area-inset-bottom))}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* entrances stay hidden until the first real paint (.booted) so the stagger plays
+   visibly instead of running during page load */
+.screen>*{opacity:0}
+html.booted .screen>*{animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
+.screen>*:nth-child(1){animation-delay:.02s}
+.screen>*:nth-child(2){animation-delay:.10s}
+.screen>*:nth-child(3){animation-delay:.18s}
+.screen>*:nth-child(4){animation-delay:.26s}
+.screen>*:nth-child(5){animation-delay:.33s}
+.screen>*:nth-child(6){animation-delay:.40s}
+.screen>*:nth-child(7){animation-delay:.46s}
+.screen>*:nth-child(n+8){animation-delay:.52s}
+.screen .stag>*{opacity:0}
+html.booted .screen .stag>*{animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
+.screen .stag>*:nth-child(1){animation-delay:.30s}
+.screen .stag>*:nth-child(2){animation-delay:.40s}
+.screen .stag>*:nth-child(n+3){animation-delay:.48s}
+@keyframes tilein{from{opacity:0;transform:translateY(14px) scale(.92)}to{opacity:1;transform:none}}
+.az-tile{opacity:0}
+html.booted .az-tile{animation:tilein .55s cubic-bezier(.22,1,.36,1) forwards}
+
+@keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(min-width:960px){
+  .screen{max-width:680px}
+  .screen-wide{max-width:1060px;padding-left:var(--sp-7);padding-right:var(--sp-7)}
+}
+.topbar{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-5)}
+.topbar .spacer{flex:1}
+.wordmark{font-family:var(--font-display);font-weight:560;font-size:20px;letter-spacing:-.01em}
+.wordmark em{font-style:italic;font-weight:480;color:var(--a-ink)}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  color:var(--ink-2);background:transparent;transition:background .15s}
+.iconbtn:hover{background:var(--p-wash)}
+.h1{font-size:30px;margin-bottom:var(--sp-2)}
+.sub{color:var(--ink-2);font-size:15px;margin-bottom:var(--sp-5)}
+/* ---------- A-Z grid ---------- */
+.az{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:var(--sp-3)}
+@media(min-width:960px){.az{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:var(--sp-4)}}
+.az-tile{position:relative;aspect-ratio:1;border-radius:var(--r-m);background:var(--bg-raise);
+  border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform .15s var(--ease),box-shadow .15s;box-shadow:var(--shadow-1)}
+.az-tile:active{transform:scale(.96)}
+@media(hover:hover){.az-tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
+.next-card:hover{transform:translateY(-1px)}
+.gal figure:hover{filter:brightness(1.04)}}
+.az-tile .L{font-family:var(--font-display);font-size:36px;font-weight:560;color:var(--ink)}
+.az-tile .idea{font-size:11px;color:var(--ink-3);text-align:center;padding:0 6px;line-height:1.25;
+  max-width:100%;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-break:break-word}
+.az-tile.done{background:linear-gradient(150deg,color-mix(in oklab,var(--p) 14%,var(--bg-raise)),color-mix(in oklab,var(--a) 16%,var(--bg-raise)));
+  border-color:color-mix(in oklab,var(--a) 30%,var(--line))}
+.az-tile.done .L{color:var(--a-ink)}
+.az-tile.done .idea{min-height:27.5px}
+.az-tile .tick{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:50%;
+  background:var(--a-ink);color:#fff;display:grid;place-items:center}
+.az-tile .stars{font-size:9px;letter-spacing:2px;color:var(--a-ink);line-height:1}
+.hero{display:flex;flex-direction:column;gap:var(--sp-3);margin-bottom:var(--sp-4)}
+.hero-top{display:flex;align-items:flex-start;gap:12px}
+.hero-title{font-family:var(--font-display);font-size:30px;font-weight:560;line-height:1.1;letter-spacing:-.01em}
+.hero-sub{font-size:13.5px;color:var(--ink-2);margin-top:3px}
+.pbar{height:5px;border-radius:3px;background:color-mix(in oklab,var(--p) 12%,var(--bg-raise));overflow:hidden}
+.pbar>i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--p),color-mix(in oklab,var(--p) 52%,var(--a)));transition:width .8s cubic-bezier(.22,1,.36,1)}
+.next-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 16px;border:0;cursor:pointer;
+  border-radius:var(--r-m);background:linear-gradient(135deg,var(--p),color-mix(in oklab,var(--p) 52%,var(--a)));color:#fff;
+  box-shadow:0 8px 24px -8px color-mix(in oklab,var(--p) 55%,transparent)}
+.next-card:active{transform:scale(.98)}
+.next-card .nL{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:30px;line-height:1;
+  width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.16);display:grid;place-items:center;flex:none}
+.next-card .nT{flex:1;min-width:0}
+.next-card .nK{display:block;font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;opacity:.85}
+.next-card .nI{display:block;font-weight:600;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.next-card .nA{opacity:.9;flex:none}
+/* ---------- bottom nav ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:flex;background:color-mix(in oklab,var(--bg-raise) 86%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);padding:6px 12px calc(6px + env(safe-area-inset-bottom))}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;
+  font-size:11px;font-weight:600;color:var(--ink-3);border-radius:12px;position:relative}
+@media(max-width:959px){
+.tabbar button::before{content:'';position:absolute;inset:2px 22px;border-radius:12px;
+  background:var(--a-wash);opacity:0;transform:scale(.82);
+  transition:opacity .24s var(--ease),transform .24s var(--ease)}
+.tabbar button.on::before{opacity:1;transform:scale(1)}}
+.tabbar button.on{color:var(--a-ink)}
+.tabbar button>*{position:relative}
+@media(min-width:960px){
+  .tabbar{position:fixed;left:0;top:0;bottom:0;width:216px;flex-direction:column;justify-content:flex-start;
+    gap:4px;border-top:0;border-right:1px solid var(--line);padding:var(--sp-5) var(--sp-3);backdrop-filter:none}
+  .tabbar button{flex:none;flex-direction:row;justify-content:flex-start;gap:var(--sp-3);
+    padding:11px 14px;font-size:14px}
+  .tabbar button.on{background:var(--a-wash)}
+  body.has-app #view{padding-left:216px}
+  body.has-app .screen{padding-bottom:var(--sp-6)}
+}
+
+/* ---------- sheet (letter detail) ---------- */
+.scrim{position:fixed;inset:0;background:var(--scrim);opacity:0;pointer-events:none;
+  transition:opacity .25s var(--ease);z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--bg-raise);
+  border-radius:var(--r-l) var(--r-l) 0 0;box-shadow:var(--shadow-2);
+  max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;
+  transform:translateY(102%);transition:transform .34s var(--ease);
+  padding:var(--sp-4) var(--sp-5) calc(var(--sp-5) + env(safe-area-inset-bottom));
+  max-width:640px;margin:0 auto}
+.sheet.on{transform:none}
+.sheet .grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:2px auto var(--sp-4)}
+.sheet-L{display:flex;align-items:baseline;gap:var(--sp-3);margin-bottom:var(--sp-2)}
+.sheet-L .big{font-family:var(--font-display);font-size:52px;font-weight:560;line-height:1;
+  background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent}
+.chiprow{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-3) 0}
+.chip{padding:7px 12px;border-radius:999px;background:var(--p-wash);font-size:13px;font-weight:500;color:var(--ink-2)}
+.starpick{display:flex;gap:2px;font-size:26px;color:var(--line-2)}
+.starpick button{color:inherit;transition:transform .12s;width:40px;height:40px;display:grid;place-items:center}
+.starpick button.on{color:var(--a-ink)}
+.starpick button:active{transform:scale(1.2)}
+@keyframes starpop{0%{transform:scale(1)}40%{transform:scale(1.45) rotate(-10deg)}100%{transform:scale(1) rotate(0)}}
+.starpick button.pop{animation:starpop .38s var(--ease)}
+/* ---------- gallery ---------- */
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:var(--r-m);overflow:hidden}
+.gal figure{opacity:0}
+html.booted .gal figure{animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes donepop{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
+html.booted .az-tile.just-done{animation:rise .45s cubic-bezier(.22,1,.36,1) forwards,donepop .55s var(--ease) .45s}
+@media(min-width:960px){.gal{grid-template-columns:repeat(5,1fr);gap:6px}}
+.gal figure{aspect-ratio:1;background:var(--bg-sunk);position:relative;overflow:hidden}
+.gal img,.gal video{width:100%;height:100%;object-fit:cover}
+.gal .badge{position:absolute;right:5px;bottom:5px;width:22px;height:22px;border-radius:8px;
+  background:rgb(0 0 0/.55);color:#fff;display:grid;place-items:center}
+.gal .lettertag{position:absolute;left:5px;top:5px;padding:2px 8px;border-radius:99px;
+  background:rgb(0 0 0/.55);color:#fff;font-size:11px;font-weight:600}
+/* ---------- settings ---------- */
+.set-group{margin-bottom:var(--sp-6)}
+.set-group>h3{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:var(--sp-3);font-family:var(--font-ui)}
+.set-row{display:flex;align-items:center;gap:var(--sp-3);padding:14px 16px;
+  background:var(--bg-raise);border:1px solid var(--line)}
+.set-row:first-child{border-radius:var(--r-m) var(--r-m) 0 0}
+.set-row:last-child{border-radius:0 0 var(--r-m) var(--r-m)}
+.set-row:only-child{border-radius:var(--r-m)}
+.set-row+.set-row{border-top:0}
+.set-row .grow{flex:1;min-width:0}
+.set-row .t{font-weight:600;font-size:15px}
+.set-row .d{font-size:13px;color:var(--ink-3)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;padding:6px 2px}
+.swatch{width:44px;height:44px;border-radius:14px;border:2px solid transparent;cursor:pointer;
+  transition:transform .12s}
+.swatch.on{border-color:var(--ink);transform:scale(1.06)}
+input[type=color].colpick{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);
+  padding:2px;background:var(--bg-raise);cursor:pointer}
+/* ---------- prism invite card ---------- */
+.pcard{position:relative;background:var(--bg-raise);border-radius:28px;padding:22px 22px 18px;
+  box-shadow:var(--shadow-2);border:1px solid color-mix(in oklab,var(--p) 14%,transparent)}
+.pcard::before{content:'';position:absolute;inset:6px;border-radius:22px;pointer-events:none;
+  border:1.5px solid transparent;
+  background:linear-gradient(135deg,color-mix(in oklab,var(--p) 55%,transparent),color-mix(in oklab,var(--a) 55%,transparent)) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude}
+.pcard .names{text-align:center;font-family:var(--font-display);font-size:19px;font-weight:560;margin-bottom:14px}
+.pcard .names em{font-style:italic;font-weight:480;color:var(--a-ink)}
+.pcard canvas{width:100%;height:auto;display:block;border-radius:14px}
+.pcard .tag{display:block;width:max-content;margin:8px auto 0;font-size:10.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);background:var(--p-wash);
+  padding:3px 10px;border-radius:999px}
+.bigcode{font-family:var(--font-display);font-size:30px;font-weight:560;letter-spacing:.22em;padding-left:.22em}
+/* ---------- empty states / misc ---------- */
+.empty{text-align:center;padding:var(--sp-7) var(--sp-5);color:var(--ink-3)}
+.empty .art{width:88px;height:88px;margin:0 auto var(--sp-4);border-radius:28px;
+  background:linear-gradient(135deg,var(--p-wash),var(--a-wash));display:grid;place-items:center;color:var(--a-ink)}
+.empty .t{font-family:var(--font-display);font-size:20px;font-weight:560;color:var(--ink);margin-bottom:4px}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+  background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:500;
+  opacity:0;pointer-events:none;transition:all .25s var(--ease);z-index:90;box-shadow:var(--shadow-2)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid color-mix(in oklab,currentColor 25%,transparent);
+  border-top-color:currentColor;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+.center-wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
+.fadein{animation:screen-in .3s var(--ease)}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+<div id="view"></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
+<script src="prism.js?v=9"></script>
+<script src="scanfx.js?v=9"></script>
+<script src="styled.js"></script>
+<script src="icon-recolor.js"></script>
+<script>
+'use strict';
+/* Alphabet Us - a private A-Z of dates for two. */
+const API='https://couples-api.avishorwork.workers.dev';
+const VAPID_PUB='BM6373UlQ6TpTz2oyPZ_r5HPvUmPgmUQIwSWCN8n2AnH3da04TSgQbhGUVN8kZglt40-orkBe_vtnqoBmTeb9xQ';
+const urlB64=s=>{const p='='.repeat((4-s.length%4)%4);const b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0));};
+const LS='au_';
+const $=(s,r=document)=>r.querySelector(s);
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return s;
+  return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});};
+/* ---------- state ---------- */
+const store={
+  get(k,d){try{const v=localStorage.getItem(LS+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){localStorage.setItem(LS+k,JSON.stringify(v));},
+  del(k){localStorage.removeItem(LS+k);}
+};
+const state={
+  tok:store.get('tok',null), who:store.get('who',null),
+  cid:store.get('cid',null), mtok:store.get('mtok',null),
+  S:store.get('S',{}), M:store.get('M',[]),
+  C:store.get('C',{cu:0,title:'',emoji:'',names:['',''],theme:null,dates:[]}),
+  tab:'grid', dirty:false,
+};
+// Media URLs use the read-only media token when we have one, so image/video
+// URLs no longer carry the full read/write device token (falls back for old state)
+const mediaUrl=(m,thumb)=>state.cid&&state.mtok
+  ?API+'/media?cid='+encodeURIComponent(state.cid)+'&mtok='+encodeURIComponent(state.mtok)+'&id='+m.id+(thumb?'&part=t':'')
+  :API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+(thumb?'&part=t':'');
+const theme=()=>Object.assign({p:'#1c0363',a:'#f8519b',mode:'auto'},state.C.theme||{});
+function applyTheme(){
+  const t=theme(),r=document.documentElement;
+  r.style.setProperty('--p',t.p);r.style.setProperty('--a',t.a);
+  const dark=t.mode==='dark'||(t.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
+  r.dataset.mode=dark?'dark':'light';
+  $('meta[name=theme-color]').content=t.p;
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);
+/* ---------- api ---------- */
+async function api(path,body){
+  const r=await fetch(API+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(j.err||j.error||('HTTP '+r.status)),{status:r.status,data:j});
+  return j;
+}
+/* ---------- web push (reminders & partner updates) ---------- */
+const pushOK=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+const myName=()=>state.C.names[state.who==='a'?0:1]||'Your person';
+async function pushSub(){if(!pushOK())return null;try{const r=await navigator.serviceWorker.ready;return await r.pushManager.getSubscription();}catch(e){return null;}}
+async function enablePush(){
+  if(!pushOK())return 'unsupported';
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted')return perm;
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64(VAPID_PUB)});
+  await api('/subscribe',{tok:state.tok,who:myName(),subscription:sub.toJSON()});
+  store.set('pushEp',sub.endpoint);
+  return 'granted';
+}
+async function notifyPartner(body){
+  if(!state.tok)return;
+  try{await api('/broadcast',{tok:state.tok,title:state.C.title||'Alphabet Us',body,from:store.get('pushEp',null)});}catch(e){}
+}
+async function sync(){
+  if(!state.tok)return;
+  const j=await api('/sync',{tok:state.tok,S:state.S,M:state.M,C:state.C,cu:state.C.cu});
+  state.S=j.S;state.M=j.M;
+  if(j.C&&j.C.cu>state.C.cu){state.C=j.C;}
+  if(j.cid){state.cid=j.cid;store.set('cid',j.cid);}
+  if(j.mtok){state.mtok=j.mtok;store.set('mtok',j.mtok);}
+  store.set('S',state.S);store.set('M',state.M);store.set('C',state.C);
+  state.dirty=false;
+  return j;
+}
+let syncTimer=null;
+function bump(){
+  state.C.cu=Date.now();state.dirty=true;
+  store.set('S',state.S);store.set('M',state.M);store.set('C',state.C);
+  clearTimeout(syncTimer);syncTimer=setTimeout(()=>sync().catch(()=>{state.dirty=true;}),700);
+}
+setInterval(()=>{if(!state.dirty&&state.tok)sync().then(()=>{if(current==='app')renderApp();}).catch(()=>{});},30000);
+/* ---------- icons (inline SVG) ---------- */
+const I={
+  grid:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
+  photos:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.4-4.4a1.5 1.5 0 0 0-2.1 0L6 19"/></svg>',
+  gear:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  check:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  copy:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  share:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+  scan:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>',
+  back:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  plus:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  play:'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14Z"/></svg>',
+  heart:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.6 2.4 4.5 6.2 4.1c2.2-.2 4.2 1 5.8 3 1.6-2 3.6-3.2 5.8-3 3.8.4 5.8 4.5 4.2 7.6C19.5 16.1 12 21 12 21Z"/></svg>',
+  calendar:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 9.5h18"/></svg>',
+  trash:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>'
+};
+/* ---------- default ideas ---------- */
+const AZ=[["A","Aquarium date"],["B","Board game night"],["C","Cook a new recipe"],["D","Day trip"],["E","Escape room"],["F","Farmers market"],["G","Go stargazing"],["H","Hike together"],["I","Ice cream crawl"],["J","Jazz bar"],["K","Karaoke night"],["L","Lake picnic"],["M","Museum morning"],["N","Night walk"],["O","Outdoor movie"],["P","Pottery class"],["Q","Quiz night"],["R","Road trip"],["S","Sunrise coffee"],["T","Thrift hunt"],["U","Under the stars camp"],["V","Volunteer together"],["W","Wine tasting"],["X","X marks the spot (treasure hunt)"],["Y","Yoga for two"],["Z","Zoo day"]];
+const ideaFor=l=>{const f=AZ.find(x=>x[0]===l);return f?f[1]:'';};
+/* ---------- back navigation: Android/Samsung back steps back inside the app ---------- */
+const Nav=(()=>{
+  let stack=[],skipPop=false;
+  const inApp=()=>current==='app';
+  function arm(){ /* keep a guard entry under the app so Back at the first screen stays in-app */
+    if(!inApp())return;
+    if(!history.state||!history.state.g){
+      try{history.replaceState({g:'base'},'');history.pushState({g:'guard'},'');}catch(e){}
+    }
+  }
+  function pushState(tag){try{history.pushState({g:'l',t:tag},'');}catch(e){}}
+  function pushTab(t){
+    if(!inApp()||state.tab===t){state.tab=t;renderApp();return;}
+    stack.push({type:'tab',prev:state.tab});
+    pushState('tab');
+    state.tab=t;renderApp();
+  }
+  function pushOverlay(close){const layer={type:'ov',close};stack.push(layer);pushState('ov');return layer;}
+  function removeLayer(l){ /* explicit close control used: consume its history entry */
+    const i=stack.lastIndexOf(l);if(i<0)return;
+    stack.splice(i,1);skipPop=true;history.back();
+  }
+  function closeTop(l){removeLayer(l);l.close();}
+  function reset(){stack=[];}
+  addEventListener('popstate',e=>{
+    if(skipPop){skipPop=false;return;}
+    const top=stack.pop();
+    if(top){
+      if(top.type==='tab'){state.tab=top.prev;renderApp();}
+      else top.close();
+      return;
+    }
+    if(inApp()&&e.state&&e.state.g==='base'){
+      try{history.pushState({g:'guard'},'');}catch(e){}
+    }
+  });
+  return {arm,pushTab,pushOverlay,removeLayer,closeTop,reset};
+})();
+
+/* ---------- router ---------- */
+let current='';
+function go(h){location.hash=h;}
+function route(){
+  const h=location.hash||'#/welcome';
+  closeSheetLocal();
+  Nav.reset();
+  renderApp._key=null;
+  if(h.startsWith('#/join=')){renderJoin(h.slice(7).toUpperCase());}
+  else if(h==='#/create'){renderCreate();}
+  else if(h==='#/join'){renderJoin('');}
+  else if(h==='#/pair'){state.tok?renderPair():go('#/welcome');}
+  else if(h.startsWith('#/app')){state.tok?renderApp():go('#/welcome');}
+  else{renderWelcome();}
+}
+addEventListener('hashchange',route);
+/* ---------- toast ---------- */
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2400);}
+/* ---------- welcome ---------- */
+function renderWelcome(){
+  current='welcome';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  s.innerHTML=`
+    <div class="stag" style="text-align:center;margin-bottom:var(--sp-7)">
+      <div id="wIcon" style="width:96px;height:96px;margin:0 auto var(--sp-4)"></div>
+      <h1 style="font-size:38px;margin-bottom:10px">Alphabet <span class="serif-i" style="color:var(--a-ink)">Us</span></h1>
+      <p style="color:var(--ink-2);font-size:16px;max-width:300px;margin:0 auto">A private A to Z of dates for the two of you. Plan it, do it, keep the photo.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto;width:100%">
+      <button class="btn btn-primary btn-block" id="wCreate">Start our alphabet</button>
+      <button class="btn btn-soft btn-block" id="wJoin">Join my person</button>
+    </div>`;
+  v.appendChild(s);
+  $('#wCreate').onclick=()=>go('#/create');
+  $('#wJoin').onclick=()=>go('#/join');
+  IconRecolor.recolor(theme().p,theme().a,'icons/master-1024.png').then(cv=>{
+    cv.style.cssText='width:96px;height:96px;border-radius:24px';const w=$('#wIcon');if(w){w.innerHTML='';w.appendChild(cv);}
+  }).catch(()=>{});
+}
+/* ---------- create ---------- */
+function renderCreate(){
+  current='create';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  s.innerHTML=`
+    <div class="topbar"><button class="iconbtn" id="back">${I.back}</button></div>
+    <h1 class="h1">Start your alphabet</h1>
+    <p class="sub">Name your couple. You can change everything later.</p>
+    <form id="f">
+      <div class="field"><label for="title">Couple name</label>
+        <input class="input" id="title" maxlength="40" placeholder="Dana & Noam" required></div>
+      <div class="field"><label for="name">Your name</label>
+        <input class="input" id="name" maxlength="24" placeholder="Dana" required></div>
+      <div class="field"><label for="emoji">Your emoji <span style="font-weight:400;color:var(--ink-3)">(optional)</span></label>
+        <input class="input" id="emoji" maxlength="8" placeholder="🧡" style="max-width:120px"></div>
+      <button class="btn btn-primary btn-block" id="go" type="submit">Create</button>
+      <p style="font-size:13px;color:var(--ink-3);text-align:center;margin-top:14px">Free. Private to the two of you. No account, no email.</p>
+    </form>`;
+  v.appendChild(s);
+  $('#back').onclick=()=>go('#/welcome');
+  $('#f').onsubmit=async e=>{
+    e.preventDefault();
+    const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+    try{
+      const j=await api('/create',{title:$('#title').value.trim(),name:$('#name').value.trim()});
+      state.tok=j.tok;state.who='a';store.set('tok',j.tok);store.set('who','a');
+      state.C={cu:Date.now(),title:$('#title').value.trim(),emoji:$('#emoji').value.trim(),names:[$('#name').value.trim(),''],theme:theme(),dates:[]};
+      state.S={};state.M=[];
+      store.set('C',state.C);store.set('S',state.S);store.set('M',state.M);
+      sessionStorage.setItem(LS+'freshCode',JSON.stringify(j));
+      sync().catch(()=>{});
+      go('#/pair');
+    }catch(err){toast(err.message||'Could not create. Try again.');b.disabled=false;b.textContent='Create';}
+  };
+}
+/* ---------- join ---------- */
+function renderJoin(preset){
+  current='join';document.body.classList.remove('has-app');
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  s.innerHTML=`
+    <div class="topbar"><button class="iconbtn" id="back">${I.back}</button></div>
+    <h1 class="h1">Join your person</h1>
+    <p class="sub">Scan their Prism code, or enter the 6-letter code they shared.</p>
+    <button class="btn btn-soft btn-block" id="scanBtn" style="margin-bottom:var(--sp-5)">${I.scan}<span>Scan a Prism code</span></button>
+    <div id="scanBox" style="display:none;margin-bottom:var(--sp-5)"></div>
+    <form id="f">
+      <div class="field"><label for="code">Invite code</label>
+        <input class="input" id="code" maxlength="6" placeholder="K7QX2M" value="${esc(preset)}"
+          style="text-transform:uppercase;letter-spacing:.3em;font-family:var(--font-display);font-size:22px;text-align:center" required></div>
+      <div class="field"><label for="name">Your name</label>
+        <input class="input" id="name" maxlength="24" placeholder="Noam" required></div>
+      <button class="btn btn-primary btn-block" id="go" type="submit">Join</button>
+    </form>`;
+  v.appendChild(s);
+  $('#back').onclick=()=>go('#/welcome');
+  $('#code').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z2-9]/g,'');};
+  $('#f').onsubmit=async e=>{
+    e.preventDefault();
+    const b=$('#go');b.disabled=true;b.innerHTML='<span class="spin"></span>';
+    if(state.tok){
+      const cur=state.C.title||'your current couple';
+      const ok=await modalAsk({title:'This phone is already paired'+(cur?' ('+cur+')':'')+'. Joining a new couple replaces the pairing on this phone. Your partner keeps everything.',ok:'Replace pairing',danger:true,placeholder:null});
+      if(ok!==true){b.disabled=false;b.textContent='Join';return;}
+    }
+    try{
+      const j=await api('/join',{code:$('#code').value.trim(),name:$('#name').value.trim()});
+      state.tok=j.tok;state.who='b';store.set('tok',j.tok);store.set('who','b');
+      state.C=Object.assign(state.C,{title:j.title});state.C.names[1]=$('#name').value.trim();
+      store.set('C',state.C);
+      await sync().catch(()=>{});
+      go('#/app');
+      toast('You are in. Say hi with letter A.');
+    }catch(err){
+      toast(['bad code','code not found or expired'].includes(err.message)?'That code did not work. Check it and try again.':(err.message||'Could not join.'));
+      b.disabled=false;b.textContent='Join';
+    }
+  };
+  $('#scanBtn').onclick=()=>startScan($('#scanBox'));
+}
+/* ---------- prism scan ---------- */
+let scanStream=null,scanBusy=false;
+async function startScan(box){
+  box.style.display='none';
+  const ov=el('div','');
+  ov.style.cssText='position:fixed;inset:0;z-index:80;background:#000';
+  const stageMount=el('div','');stageMount.style.cssText='position:absolute;inset:0';
+  ov.appendChild(stageMount);
+  const closeB=el('button','');closeB.textContent='\u2715';
+  closeB.setAttribute('aria-label','Close scanner');
+  closeB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:14px;z-index:90;width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,.18);background:rgba(24,21,32,.55);color:#fff;font-size:15px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:pointer';
+  ov.appendChild(closeB);
+  document.body.appendChild(ov);
+  ov.dataset.scan='1';
+  let fxDone=null, closed=false, verifiedOk=false, verifiedText=null, verifyTimer=null, verifyDeadline=0;
+  const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
+  const onScanEsc=e=>{if(e.key==='Escape')cleanup();};
+  document.addEventListener('keydown',onScanEsc);
+  let scanLayer=null;
+  const cleanup=()=>{closed=true;clearTimeout(verifyTimer);if(scanLayer){Nav.removeLayer(scanLayer);scanLayer=null;}document.removeEventListener('keydown',onScanEsc);stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
+  scanLayer=Nav.pushOverlay(cleanup);
+  closeB.onclick=cleanup;
+  const scanFail=(msg)=>{
+    fx.stop();
+    stageMount.innerHTML='';
+    const c=el('div','');
+    c.style.cssText='position:absolute;inset:0;display:grid;place-items:center;padding:32px';
+    c.innerHTML=`<div style="text-align:center;max-width:280px">
+      <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:18px;background:rgba(255,255,255,.08);display:grid;place-items:center;color:#ecebf4">${I.scan}</div>
+      <div style="color:#ecebf4;font-size:16px;font-weight:600;margin-bottom:6px">${msg}</div>
+      <div style="color:rgba(236,235,244,.62);font-size:14px;line-height:1.5">Type the 6-letter code instead.</div>
+      <button class="btn btn-primary" style="margin-top:18px;padding:10px 24px" id="scanFailCode">Enter code</button></div>`;
+    c.querySelector('#scanFailCode').onclick=()=>{cleanup();const ci=document.getElementById('code');if(ci){ci.scrollIntoView({block:'center'});ci.focus();}};
+    stageMount.appendChild(c);
+  };
+  if(!navigator.mediaDevices?.getUserMedia){
+    scanFail('Camera needs HTTPS');
+    return;
+  }
+  const vid=document.createElement('video');
+  vid.setAttribute('playsinline','');vid.muted=true;
+  vid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+  /* the fx stage has an opaque background: the live feed must sit INSIDE it,
+     below the tracking canvas */
+  stageMount.querySelector('#stage').insertBefore(vid,stageMount.querySelector('#fx'));
+  window.__scanFx=fx;
+  try{
+    let stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}});}
+    catch(e){stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});} /* devices that reject hinted constraints still get a camera */
+    try{const tr0=stream.getVideoTracks()[0];const caps=tr0&&tr0.getCapabilities?tr0.getCapabilities():null;
+      const adv={};
+      if(caps&&Array.isArray(caps.focusMode)&&caps.focusMode.includes('continuous'))adv.focusMode='continuous';
+      if(caps&&Array.isArray(caps.exposureMode)&&caps.exposureMode.includes('continuous'))adv.exposureMode='continuous';
+      if(caps&&Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes('continuous'))adv.whiteBalanceMode='continuous';
+      if(Object.keys(adv).length)await tr0.applyConstraints({advanced:[adv]});
+    }catch(e){} /* continuous AF/AE/AWB only where the device reports support; defaults elsewhere */
+    if(closed){for(const t of stream.getTracks())t.stop();return;} /* closed while permission/hardware was pending: never keep the camera */
+    scanStream=stream;
+    vid.srcObject=scanStream;await vid.play();
+    const cap=document.createElement('canvas');const cx=cap.getContext('2d',{willReadFrequently:true});
+    const dec=document.createElement('canvas');const dxc=dec.getContext('2d',{willReadFrequently:true}); /* full-resolution frame for worker reads; detection stays on the cheap 640px downscale */
+    const quadArea=q=>{let a=0;for(let i=0;i<4;i++){const p=q[i],r=q[(i+1)%4];a+=p[0]*r[1]-r[0]*p[1];}return Math.abs(a)/2;};
+    const quadDist=(a,b)=>{let best=1e18;for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(a[i][0]-b[(i+r)%4][0],a[i][1]-b[(i+r)%4][1]);best=Math.min(best,d/4);}return best;};
+    const capToStage=(p,W,H)=>{const s2=Math.max(innerWidth/W,innerHeight/H);return [p[0]*s2+(innerWidth-W*s2)/2,p[1]*s2+(innerHeight-H*s2)/2];};
+    let lastQuad=null,stab=0,decoding=false,tickN=0,blindN=0,verifiedRoi=null;
+    const tick=async()=>{
+      if(closed||scanStream!==stream)return; /* a closed or superseded session's loop dies here */
+      if(scanBusy||vid.readyState<2||!vid.videoWidth){requestAnimationFrame(tick);return;}
+      scanBusy=true;
+      const sc=Math.min(1,640/vid.videoWidth);
+      cap.width=Math.round(vid.videoWidth*sc);cap.height=Math.round(vid.videoHeight*sc);
+      cx.drawImage(vid,0,0,cap.width,cap.height);
+      let id=null;
+      try{id=cx.getImageData(0,0,cap.width,cap.height);}catch(e){}
+      /* 1) cheap detection pass -> live tracking brackets on the real quad */
+      let quad=null;
+      if(id){try{Prism.beginDecode(700);const f=Prism.frame(id);const qs=Prism.detectCurved(f);
+        if(qs&&qs.length){
+          /* rank candidates by the decoder's own hypothesis score: a real code's cells
+             match the format; background shapes score near zero */
+          qs.sort((a,b)=>quadArea(b)-quadArea(a));
+          /* cluster near-duplicate contours (one code yields several outlines at
+             slightly different sizes) and score one per cluster: the true code's
+             quad is often NOT among the largest raw quads (its outer card/ring
+             contours are bigger), so a raw top-3 slice starves it */
+          const clusters=[];
+          for(const q0 of qs){
+            if(clusters.some(cl=>quadDist(cl.q,q0)<cap.width*.02&&quadArea(cl.q)/quadArea(q0)>0.55&&quadArea(cl.q)/quadArea(q0)<1.8))continue;
+            clusters.push({q:q0});
+            if(clusters.length>=6)break;
+          }
+          const cand=[];
+          for(const cl of clusters){
+            let best=0;
+            /* cheapest layout first: the invite encoder picks size 0 for the
+               82-byte join URL, and a strong early hit needs no further work */
+            outer:
+            for(const size of [0,1,2]){const lay=Prism.layout(size);
+              for(let rot=0;rot<4;rot++){const q=cl.q.map((_,i)=>cl.q[(i+rot)%4]);
+                const h=Prism.homography(Prism.corners(lay),q);
+                const sc=Prism.hypothesisScore(f,h,lay,0,Prism.whiteBalance(f,h,lay),true);
+                if(sc.score>best)best=sc.score;
+                if(best>=0.9)break outer;}}
+            if(best>=0.45)cand.push({q:cl.q,sc:best});
+          }
+          if(cand.length){
+            cand.sort((a,b)=>b.sc-a.sc);
+            let pick=cand[0];
+            if(lastQuad){const near=cand.find(c=>quadDist(c.q,lastQuad)<cap.width*.08);if(near)pick=near;}
+            quad=pick.q;
+          }
+        }}catch(e){}}
+      if(quad){
+        const d=lastQuad?quadDist(quad,lastQuad):1e9;
+        stab=(lastQuad&&d<cap.width*.08)?Math.min(4,stab+1):1;
+        lastQuad=quad.map(p=>[p[0],p[1]]);
+        /* adopt a detection on screen only once it repeats (kills one-frame false
+           positives); confidence grows with stability */
+        if(stab>=2||verifiedOk)fx.track(quad.map(p=>capToStage(p,cap.width,cap.height)),verifiedOk?1:Math.min(1,(stab-2)/2));
+      }else{lastQuad=null;stab=0;fx.track(null,0);}
+      /* 2) full decode in the worker (frame-fused) once a candidate is in view */
+      tickN++;
+      /* while verified, keep reading fresh frames: the Verified state must always
+         reflect the CURRENT frame, never a stale read kept alive by the timer */
+      if(id&&!decoding&&((verifiedOk&&Date.now()<verifyDeadline)||(!verifiedOk&&(quad||tickN%6===0)))){
+        decoding=true;
+        /* candidate reads decode a FULL-resolution frame: the 640px detection
+           downscale blurs a dense code's cells together before the reader sees
+           them. Blind probes alternate between the cheap full-frame downscale
+           and a full-resolution centered square: users aim the code at the
+           viewfinder center, and centered full-res detail survives where the
+           640px full-frame downscale loses it. */
+        let rid=id, rw=cap.width, rh=cap.height, rox=0, roy=0, reqRoi=null;
+        const wantRoi=!quad&&!verifiedOk&&(++blindN%2===1);
+        const keepRoi=!quad&&verifiedOk&&verifiedRoi; /* fresh verified reads must reuse the ROI route that earned Verified: the whole-frame path can fail where the centered square succeeds */
+        if(quad||verifiedOk||wantRoi){
+          dec.width=vid.videoWidth;dec.height=vid.videoHeight;
+          dxc.drawImage(vid,0,0,dec.width,dec.height);
+          const rr=keepRoi?verifiedRoi:(wantRoi?{sx:Math.round((dec.width-Math.round(Math.min(dec.width,dec.height)*.6))/2),sy:Math.round((dec.height-Math.round(Math.min(dec.width,dec.height)*.6))/2),side:Math.round(Math.min(dec.width,dec.height)*.6)}:null);
+          if(rr){
+            let fid=null;try{fid=dxc.getImageData(rr.sx,rr.sy,rr.side,rr.side);}catch(e){}
+            if(fid){rid=fid;rw=dec.width;rh=dec.height;rox=rr.sx;roy=rr.sy;reqRoi=rr;}
+          }else{
+            let fid=null;try{fid=dxc.getImageData(0,0,dec.width,dec.height);}catch(e){}
+            if(fid){rid=fid;rw=dec.width;rh=dec.height;}
+          }
+        }
+        const reqStream=scanStream; /* bind this request's capture session, frame dims + ROI offset */
+        const revoke=()=>{verifiedOk=false;verifiedText=null;verifiedRoi=null;clearTimeout(verifyTimer);fx.revoke();};
+        AsyncPrismReader.read(rid,{fusion:true}).then(res=>{
+          decoding=false;
+          if(closed||scanStream!==reqStream)return; /* discard results from a closed/reopened session */
+          const text=new TextDecoder().decode(res.bytes||[]);
+          const m=/#\/join=([A-Z2-9]{6})/.exec(text);
+          if(verifiedOk){
+            if(m&&text===verifiedText){fx.track(res.quad.map(p=>capToStage([p[0]+rox,p[1]+roy],rw,rh)),1);}
+            else revoke(); /* changed or unreadable code clears Verified */
+            return;
+          }
+          if(!m)return;
+          window.__lastDecode={quad:res.quad.map(p=>[p[0]+rox,p[1]+roy]),lw:res.layout.W,lh:res.layout.H,capW:rw,capH:rh,roi:!!(rox||roy),fused:res.fusedFrames||0};
+          /* live success: camera keeps running; brackets tighten on the real code
+             in the live view and keep tracking it until the sheet closes */
+          verifiedOk=true;verifiedText=text;verifiedRoi=reqRoi;
+          fx.track(res.quad.map(p=>capToStage([p[0]+rox,p[1]+roy],rw,rh)),1);
+          fx.verified('Verified');
+          /* close only after the window AND the last in-flight read settle:
+             a stale success must never fill the form while a newer read is pending */
+          verifyDeadline=Date.now()+1400;
+          const tryClose=()=>{
+            if(closed||!verifiedOk)return;
+            if(Date.now()<verifyDeadline||decoding){verifyTimer=setTimeout(tryClose,150);return;}
+            cleanup();
+            $('#scanBox').style.display='none';
+            $('#code').value=m[1];toast('Code found');
+          };
+          verifyTimer=setTimeout(tryClose,1400);
+        },()=>{decoding=false;if(verifiedOk&&!closed&&scanStream===reqStream)revoke();});
+      }
+      scanBusy=false;
+      setTimeout(tick,110);
+    };
+    tick();
+  }catch(e){
+    scanFail('Camera unavailable');
+  }
+}
+function stopScan(){if(scanStream){for(const t of scanStream.getTracks())t.stop();scanStream=null;}}
+/* ---------- pair (invite) ---------- */
+let pairInfo=null,pairExpTimer=null;
+async function renderPair(){
+  current='pair';document.body.classList.remove('has-app');
+  clearInterval(pairExpTimer);
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen center-wrap');
+  const names=()=>`${esc(state.C.names[0]||'You')} <em>&</em> ${esc(state.C.names[1]||'your person')}`;
+  s.innerHTML=`
+    <div class="topbar"><div class="wordmark">Alphabet <em>Us</em></div></div>
+    <h1 class="h1">Invite your person</h1>
+    <p class="sub" id="pairSub">They scan this with the app, or tap the link. The code works once, for 15 minutes.</p>
+    <div class="pcard">
+      <div class="names">${names()}</div>
+      <div id="pwrap"><div style="aspect-ratio:1;display:grid;place-items:center"><span class="spin"></span></div></div>
+      <div class="tag">Prism Code</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 4px">
+        <span class="bigcode" id="pcode">······</span>
+        <button class="iconbtn" id="copyCode" aria-label="Copy code">${I.copy}</button></div>
+      <div style="text-align:center;font-size:13px;color:var(--ink-3);margin-bottom:14px" id="pexp"></div>
+      <button class="btn btn-primary btn-block" id="copyLink">${I.copy}<span>Copy invite link</span></button>
+      <button class="btn btn-soft btn-block" id="share" style="margin-top:8px">${I.share}<span>Share...</span></button>
+      <button class="btn btn-ghost btn-block" id="regen" style="margin-top:4px;font-size:14px">Get a new code</button>
+    </div>
+    <div id="devices" style="margin-top:var(--sp-6)"></div>
+    <button class="btn btn-primary btn-block" id="enter" style="margin-top:var(--sp-5)">Enter our alphabet</button>`;
+  v.appendChild(s);
+  $('#enter').onclick=()=>go('#/app');
+  $('#copyCode').onclick=()=>{navigator.clipboard?.writeText($('#pcode').textContent.trim());toast('Code copied');};
+  const link=()=>location.origin+location.pathname+'#/join='+($('#pcode').textContent.trim());
+  $('#copyLink').onclick=()=>{navigator.clipboard?.writeText(link());toast('Invite link copied');};
+  $('#share').onclick=async()=>{
+    if(navigator.share){try{await navigator.share({title:'Join our alphabet',url:link()});}catch(e){}}
+    else{navigator.clipboard?.writeText(link());toast('Invite link copied');}};
+  $('#regen').onclick=async()=>{
+    try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
+    catch(e){toast('Could not get a new code');}};
+  function showCode(code,exp){
+    $('#pcode').textContent=code;
+    const url=location.origin+location.pathname+'#/join='+code;
+    const c=Prism.encode(new TextEncoder().encode(url),{});
+    const styled=styledPrism(c,Math.max(9,Math.floor(Math.min(innerWidth-90,420)/(c.layout.W+6))),{offset:1.6,ring:0});
+    const w=$('#pwrap');w.innerHTML='';w.appendChild(styled);
+    styled.style.cssText='width:100%;height:auto;display:block;border-radius:14px';
+    clearInterval(pairExpTimer);
+    const tickExp=()=>{const left=Math.max(0,Math.floor((exp-Date.now())/1000));
+      const mm=String(Math.floor(left/60)).padStart(2,'0'),ss=String(left%60).padStart(2,'0');
+      const pe=$('#pexp');if(!pe){clearInterval(pairExpTimer);return;}
+      pe.innerHTML=left?('Expires in <b style="color:var(--a-ink)">'+mm+':'+ss+'</b>'):'Expired - get a new code';
+      if(!left)clearInterval(pairExpTimer);};
+    tickExp();pairExpTimer=setInterval(tickExp,1000);
+  }
+  // load existing code or the one from create
+  const fresh=JSON.parse(sessionStorage.getItem(LS+'freshCode')||'null');
+  sessionStorage.removeItem(LS+'freshCode');
+  if(fresh&&fresh.exp>Date.now()){showCode(fresh.code,fresh.exp);}
+  else{
+    try{const j=await api('/newcode',{tok:state.tok});showCode(j.code,j.exp);}
+    catch(e){
+      const paired=e&&e.status===409;
+      $('#pwrap').innerHTML=paired
+        ?'<div style="padding:26px 24px 30px;text-align:center"><div style="width:56px;height:56px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,var(--p-wash),var(--a-wash));color:var(--a-ink);display:grid;place-items:center">'+I.heart.replace('class="icon"','class="icon-lg"')+'</div><div style="color:var(--ink-2);font-size:15px;line-height:1.5">You two are already paired.<br>Remove a device below to invite someone new.</div></div>'
+        :'<div style="padding:36px 24px;text-align:center;color:var(--ink-2);font-size:15px;line-height:1.5">Could not load a code - check connection.</div>';
+      if(paired){const ps=$('#pairSub');if(ps)ps.textContent='Your two devices are linked. Manage them below.';for(const x of[s.querySelector('.tag'),$('#pcode').parentElement,$('#pexp'),$('#copyLink'),$('#share'),$('#regen')])if(x)x.style.display='none';}
+      else $('#pexp').textContent='';}
+  }
+  // devices
+  try{
+    const d=await api('/devices',{tok:state.tok});
+    const box=$('#devices');
+    if(d.devices.length){
+      box.innerHTML='<h3 style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px">Devices</h3>';
+      for(const dev of d.devices){
+        const row=el('div','set-row');
+        row.innerHTML=`<div class="grow"><div class="t">${esc(dev.name||'Device')}${dev.self?' <span class="pill">this one</span>':''}</div>
+          <div class="d">Joined ${new Date(dev.ts).toLocaleDateString()}</div></div>`;
+        if(!dev.self){const rm=el('button','iconbtn');rm.innerHTML=I.trash;rm.title='Remove device';
+          rm.onclick=async()=>{try{await api('/remove',{tok:state.tok,did:dev.did});row.remove();toast('Device removed');}catch(e){toast('Could not remove');}};
+          row.appendChild(rm);}
+        box.appendChild(row);
+      }
+    }
+  }catch(e){}
+}
+/* ---------- main app ---------- */
+function tabbar(){
+  const t=el('nav','tabbar');
+  t.innerHTML=`
+    <button data-tab="grid">${I.grid}<span>A to Z</span></button>
+    <button data-tab="gallery">${I.photos}<span>Photos</span></button>
+    <button data-tab="settings">${I.gear}<span>Us</span></button>`;
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>Nav.pushTab(b.dataset.tab));
+  return t;
+}
+function renderApp(){
+  current='app';document.body.classList.add('has-app');
+  Nav.arm();
+  stopScan();
+  const key=state.tab+'|'+state.C.cu+'|'+Object.values(state.S).map(x=>x.u||0).join(',')+'|'+state.M.length+'|'+state.M.map(m=>m.del?1:0).join('');
+  if(key===renderApp._key&&$('#view .screen'))return;
+  renderApp._key=key;
+  const v=$('#view');v.innerHTML='';
+  const s=el('div','screen'+(state.tab==='grid'?'':' screen-wide'));
+  v.appendChild(s);
+  if(state.tab==='grid')renderGrid(s);
+  else if(state.tab==='gallery')renderGallery(s);
+  else renderSettings(s);
+  v.appendChild(tabbar());
+  v.querySelectorAll(`.tabbar button`).forEach(b=>b.classList.toggle('on',b.dataset.tab===state.tab));
+}
+function appHeader(s,title,sub){
+  const h=el('div','topbar');
+  h.innerHTML=`<div><div style="font-family:var(--font-display);font-size:24px;font-weight:560">${title}</div>
+    ${sub?`<div style="font-size:13px;color:var(--ink-3)">${sub}</div>`:''}</div><div class="spacer"></div>`;
+  const inv=el('button','iconbtn');inv.innerHTML=I.share;inv.title='Invite';inv.onclick=()=>go('#/pair');
+  h.appendChild(inv);
+  if(state.tab!=='settings'){const gear=el('button','iconbtn');gear.innerHTML=I.gear;gear.title='Settings';gear.onclick=()=>Nav.pushTab('settings');h.appendChild(gear);}
+  s.appendChild(h);
+}
+function renderGrid(s){
+  const doneCount=Object.values(state.S).filter(x=>x&&x.done).length;
+  const hero=el('div','hero');
+  const next=AZ.find(([L])=>{const st=state.S[L];return !st||!st.done;});
+  hero.innerHTML=`
+    <div class="hero-top">
+      <div style="flex:1;min-width:0">
+        <div class="hero-title">${esc(state.C.title||'Our alphabet')}</div>
+        <div class="hero-sub">${doneCount} of 26 dates</div>
+      </div>
+      <button class="iconbtn" id="hShare" title="Invite">${I.share}</button>
+      <button class="iconbtn" id="hGear" title="Settings">${I.gear}</button>
+    </div>
+    <div class="pbar"><i style="width:${Math.round(doneCount/26*100)}%"></i></div>
+    ${next?`<button class="next-card" id="hNext">
+      <span class="nL">${next[0]}</span>
+      <span class="nT"><span class="nK">Next up</span>
+      <span class="nI">${esc((state.S[next[0]]&&state.S[next[0]].note)||next[1])}</span></span>
+      <span class="nA">${I.back.replace('m15 18-6-6 6-6','m9 18 6-6-6-6')}</span>
+    </button>`:`<div class="next-card" style="cursor:default">
+      <span class="nL">♥</span>
+      <span class="nT"><span class="nK">Alphabet complete</span>
+      <span class="nI">All 26 dates done. Legendary.</span></span>
+    </div>`}`;
+  s.appendChild(hero);
+  hero.querySelector('#hShare').onclick=()=>go('#/pair');
+  hero.querySelector('#hGear').onclick=()=>Nav.pushTab('settings');
+  const nx=hero.querySelector('#hNext');if(nx)nx.onclick=()=>openLetter(next[0]);
+  const g=el('div','az');
+  for(const [L,idea] of AZ){
+    const st=state.S[L]||{};
+    const firstGrid=renderGrid._done===undefined;
+    const t=el('button','az-tile'+(st.done?' done':''));
+    if(st.done&&!firstGrid&&!renderGrid._done.has(L))t.classList.add('just-done');
+    t.innerHTML=`<span class="L">${L}</span><span class="idea">${esc(st.note||idea)}</span>
+      ${st.r?`<span class="stars">${'★'.repeat(st.r)}</span>`:''}
+      ${st.done?`<span class="tick">${I.check}</span>`:''}`;
+    t.onclick=()=>openLetter(L);
+    g.appendChild(t);
+  }
+  renderGrid._done=new Set(Object.keys(state.S).filter(k=>state.S[k]&&state.S[k].done));
+  s.appendChild(g);
+  requestAnimationFrame(()=>{
+    const cols=Math.max(1,getComputedStyle(g).gridTemplateColumns.split(' ').length);
+    [...g.children].forEach((t,i)=>{
+      if(t.classList.contains('just-done'))return;
+      t.style.animationDelay=Math.min((Math.floor(i/cols)+(i%cols))*80,640)+'ms';
+    });
+  });
+}
+/* ---------- letter sheet ---------- */
+let sheetLayerRef=null;
+function closeSheetLocal(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');sheetLayerRef=null;}
+function closeSheet(fromPop){
+  const l=sheetLayerRef;
+  closeSheetLocal();
+  if(l&&!fromPop)Nav.removeLayer(l);
+}
+$('#scrim').onclick=closeSheet;
+/* Escape closes the topmost layer: modal (handled in modalAsk), scanner, then sheet */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(document.querySelector('.scrim.on:not(#scrim)')||document.querySelector('[data-scan]'))return;
+  if($('#sheet').classList.contains('on'))closeSheet();
+});
+/* drag the sheet down from its grab zone to dismiss (sheet follows the finger, scrim fades) */
+(()=>{
+  const sh=$('#sheet');let y0=0,dy=0,drag=false;
+  sh.addEventListener('touchstart',e=>{
+    if(!sh.classList.contains('on'))return;
+    const t=e.touches[0];
+    const inGrab=t.clientY-sh.getBoundingClientRect().top<28;
+    if(!inGrab&&sh.scrollTop>0)return;
+    drag=true;y0=t.clientY;dy=0;sh.style.transition='none';
+  },{passive:true});
+  sh.addEventListener('touchmove',e=>{
+    if(!drag)return;
+    dy=Math.max(0,e.touches[0].clientY-y0);
+    if(dy>0){sh.style.transform=`translateY(${dy}px)`;$('#scrim').style.opacity=String(Math.max(0,1-dy/320));if(dy>6)e.preventDefault();}
+  },{passive:false});
+  const end=()=>{
+    if(!drag)return;drag=false;
+    const close=dy>110;
+    sh.style.transition='';$('#scrim').style.opacity='';sh.style.transform='';
+    if(close)closeSheet();
+  };
+  sh.addEventListener('touchend',end);sh.addEventListener('touchcancel',end);
+})();
+function openLetter(L){
+  const st=Object.assign({done:false,date:'',dl:'',note:'',r:0},state.S[L]);
+  const sh=$('#sheet');
+  const partner=state.C.names[state.who==='a'?1:0]||'your person';
+  sh.innerHTML=`
+    <div class="grab"></div>
+    <div class="sheet-L"><span class="big">${L}</span>
+      <div><div style="font-weight:600;font-size:17px">${esc(st.note||ideaFor(L))}</div>
+      <div style="font-size:13px;color:var(--ink-3)">${st.done?('Done'+(st.date?' · '+esc(fmtDate(st.date)):'')):'Not yet'}</div></div></div>
+    <div class="field" style="margin-top:var(--sp-4)"><label>Our idea</label>
+      <input class="input" id="sNote" maxlength="60" value="${esc(st.note||'')}" placeholder="${esc(ideaFor(L))}"></div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1"><label>Date</label><input class="input" id="sDate" type="date" value="${esc(st.date||'')}"></div>
+      <div class="field" style="flex:1"><label>Plan by</label><input class="input" id="sDl" type="date" value="${esc(st.dl||'')}"></div>
+    </div>
+    <div class="field"><label>How was it?</label>
+      <div class="starpick" id="sStars">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${st.r>=n?'on':''}">★</button>`).join('')}</div></div>
+    <div class="field"><label>Photos & video</label><div id="sMedia"></div>
+      <label class="btn btn-soft btn-block" style="margin-top:6px">${I.plus}<span>Add from camera roll</span>
+        <input type="file" id="sFile" accept="image/*,video/*" multiple hidden></label></div>
+    <div style="display:flex;gap:10px;margin-top:var(--sp-4)">
+      <button class="btn ${st.done?'btn-soft':'btn-primary'}" id="sDone" style="flex:1">${st.done?'Mark as not done':'We did it'}</button>
+      <button class="btn btn-soft" id="sClose" style="flex:0 0 auto">Close</button>
+    </div>`;
+  sh.classList.add('on');$('#scrim').classList.add('on');
+  sheetLayerRef=Nav.pushOverlay(()=>closeSheet(true));
+  let r=st.r;
+  sh.querySelectorAll('#sStars button').forEach(b=>b.onclick=()=>{
+    const n=+b.dataset.n,prev=r;
+    r=(r===n)?0:n;
+    const ripple=r>0&&r>=prev;
+    sh.querySelectorAll('#sStars button').forEach(x=>{
+      const xn=+x.dataset.n;
+      x.classList.toggle('on',xn<=r);
+      x.classList.remove('pop');x.style.animationDelay='';
+      if(ripple&&xn<=r){x.style.animationDelay=((xn-1)*35)+'ms';void x.offsetWidth;x.classList.add('pop');}
+    });});
+  const cur=()=>Object.assign({},st,state.S[L]);
+  const save=(patch)=>{
+    state.S[L]=Object.assign({},cur(),patch,{u:Date.now()});
+    bump();renderMediaList();
+  };
+  $('#sNote').onchange=e=>save({note:e.target.value.trim()});
+  $('#sDate').onchange=e=>save({date:e.target.value});
+  $('#sDl').onchange=e=>save({dl:e.target.value});
+  $('#sDone').onclick=()=>{const c=cur();save({done:!c.done,date:!c.done?(c.date||new Date().toISOString().slice(0,10)):c.date});
+    if(!c.done)notifyPartner(myName()+' finished "'+(c.note||ideaFor(L))+'" ('+L+')');
+    closeSheet();renderApp();};
+  $('#sClose').onclick=()=>{closeSheet();renderApp();};
+  // media
+  function renderMediaList(){
+    const box=$('#sMedia');if(!box)return;
+    const mine=state.M.filter(m=>m.l===L&&!m.del);
+    box.innerHTML='';
+    if(!mine.length){box.innerHTML='<div style="font-size:13px;color:var(--ink-3)">Nothing yet.</div>';return;}
+    const row=el('div','');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+    for(const m of mine){
+      const fig=el('div','');fig.style.cssText='width:64px;height:64px;border-radius:12px;overflow:hidden;background:var(--bg-sunk);position:relative';
+      const url=mediaUrl(m,m.t!=='v');
+      const img=el(m.t==='v'?'video':'img');img.style.cssText='width:100%;height:100%;object-fit:cover';
+      if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
+      img.src=url;
+      fig.appendChild(img);
+      if(m.t==='v'){const b=el('div','badge');b.innerHTML=I.play;b.style.cssText='position:absolute;inset:0;margin:auto;width:20px;height:20px;display:grid;place-items:center;background:rgb(0 0 0/.5);border-radius:50%;color:#fff';fig.appendChild(b);}
+      fig.onclick=()=>openMedia(m);
+      row.appendChild(fig);
+    }
+    box.appendChild(row);
+  }
+  renderMediaList();
+  $('#sFile').onchange=async e=>{
+    const files=[...e.target.files];e.target.value='';
+    for(const f of files){
+      try{toast('Uploading...');await uploadMedia(L,f);toast('Added');}
+      catch(err){toast(err.message||'Upload failed');}
+    }
+    renderMediaList();
+  };
+  const starSave=()=>save({r});
+  sh.querySelectorAll('#sStars button').forEach(b=>b.addEventListener('click',()=>setTimeout(starSave,0)));
+}
+/* ---------- media upload (chunked, matches worker /up) ---------- */
+async function compressImage(file){
+  const bmp=await createImageBitmap(file);
+  const scale=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+  const w=Math.round(bmp.width*scale),h=Math.round(bmp.height*scale);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  cv.getContext('2d').drawImage(bmp,0,0,w,h);
+  const th=document.createElement('canvas');
+  const ts=Math.min(1,420/Math.max(w,h));
+  th.width=Math.round(w*ts);th.height=Math.round(h*ts);
+  th.getContext('2d').drawImage(cv,0,0,th.width,th.height);
+  const full=await new Promise(r=>cv.toBlob(r,'image/jpeg',.82));
+  const thumb=await new Promise(r=>th.toBlob(r,'image/jpeg',.7));
+  return {full,thumb,mime:'image/jpeg'};
+}
+function b64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(blob);});}
+async function uploadMedia(L,file){
+  const isVideo=file.type.startsWith('video/');
+  if(isVideo&&file.size>8*1024*1024)throw new Error('Videos up to 8 MB');
+  if(!isVideo&&!file.type.startsWith('image/'))throw new Error('Photos or videos only');
+  const id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const ts=Date.now();
+  const mime=isVideo?file.type:'image/jpeg';
+  const CH=950000;
+  let data,size,thumb=null;
+  if(isVideo){
+    data=await b64(file);size=file.size;
+  }else{
+    const c=await compressImage(file);
+    data=await b64(c.full);size=c.full.size;thumb=await b64(c.thumb);
+  }
+  if(thumb)await api('/up',{tok:state.tok,id,part:'t',data:thumb,size});
+  const n=Math.max(1,Math.ceil(data.length/CH));
+  for(let i=0;i<n;i++){
+    const last=i===n-1;
+    await api('/up',{tok:state.tok,id,part:String(i),data:data.slice(i*CH,(i+1)*CH),
+      ...(last?{final:true,size,l:L,t:isVideo?'v':'i',ts,mime,n,thumb:!!thumb}:{size})});
+  }
+  state.M.push({id,l:L,t:isVideo?'v':'i',ts,mime,size,n,thumb:!!thumb});
+  notifyPartner(myName()+' added '+(isVideo?'a video':'a photo')+' to '+L+' \u00b7 '+((state.S[L]&&state.S[L].note)||ideaFor(L)));
+  bump();
+}
+function openMedia(m){
+  const url=mediaUrl(m,false);
+  const sh=$('#sheet');
+  sh.innerHTML=`<div class="grab"></div>
+    <div style="border-radius:var(--r-m);overflow:hidden;background:#000;margin-bottom:var(--sp-4)">
+    ${m.t==='v'?`<video src="${url}" controls playsinline style="width:100%;max-height:60dvh"></video>`
+      :`<img src="${url}" style="width:100%;max-height:60dvh;object-fit:contain">`}</div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-soft" id="mClose" style="flex:1">Close</button>
+      <button class="btn btn-danger" id="mDel">${I.trash}<span>Delete</span></button>
+    </div>`;
+  sh.classList.add('on');$('#scrim').classList.add('on');
+  sheetLayerRef=Nav.pushOverlay(()=>closeSheet(true));
+  $('#mClose').onclick=closeSheet;
+  $('#mDel').onclick=async()=>{
+    try{await api('/del',{tok:state.tok,id:m.id});}catch(e){}
+    m.del=true;bump();closeSheet();renderApp();
+  };
+}
+/* ---------- gallery ---------- */
+function renderGallery(s){
+  appHeader(s,'Photos','Everything you kept, A to Z');
+  const items=state.M.filter(m=>!m.del).sort((a,b)=>b.ts-a.ts);
+  if(!items.length){
+    s.appendChild(el('div','empty',`<div class="art">${I.photos.replace('class="icon"','class="icon-lg"')}</div>
+      <div class="t">No photos yet</div><div>Open a letter and add your first memory.</div>`));
+    return;
+  }
+  const g=el('div','gal');
+  let gi=0;
+  for(const m of items){
+    const f=el('figure');
+    f.style.animationDelay=Math.min(gi++*65,520)+'ms';
+    const img=el(m.t==='v'?'video':'img');
+    if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
+    else img.loading='lazy';
+    img.src=mediaUrl(m,m.t!=='v');
+    f.appendChild(img);
+    f.insertAdjacentHTML('beforeend',`<span class="lettertag">${m.l}</span>`);
+    if(m.t==='v'){const b=el('span','badge');b.innerHTML=I.play;f.appendChild(b);}
+    f.onclick=()=>openMedia(m);
+    g.appendChild(f);
+  }
+  s.appendChild(g);
+}
+/* ---------- settings ---------- */
+const PRESETS=[
+  ['Classic','#1c0363','#f8519b'],['Midnight Rose','#33204a','#ff6ec4'],
+  ['Peach Cream','#f2c9e8','#ff6ec4'],['Ocean Deep','#1d3a46','#38c6d9'],
+  ['Sunset','#ff8e6e','#ff3d8a'],['Forest','#2d5a4a','#9bd45f'],
+  ['Candy Sky','#5a4a9e','#ffb3d9'],['Royal','#5b2a86','#e8b64c'],
+  ['Teal+Lime','#0e6e6b','#b8e04a'],['Mono','#22242a','#8a8f9e']];
+function renderSettings(s){
+  const t=theme();
+  appHeader(s,'Us','Your couple, your colors');
+  const w=el('div');
+  const names=state.C.names.map(esc);
+  w.innerHTML=`
+    <div class="set-group">
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:var(--sp-4)">
+        <div id="setIcon" style="width:72px;height:72px;flex:none"></div>
+        <div><div style="font-family:var(--font-display);font-size:22px;font-weight:560">${esc(state.C.title||'Our alphabet')}</div>
+        <div style="color:var(--ink-3);font-size:14px">${names[0]||'You'}${names[1]?' & '+names[1]:' · invite pending'}</div></div>
+      </div>
+    </div>
+    <div class="set-group"><h3>Couple</h3>
+      <div class="set-row"><div class="grow"><div class="t">Couple name</div></div>
+        <input class="input" id="cTitle" style="max-width:170px" maxlength="40" value="${esc(state.C.title||'')}"></div>
+      <div class="set-row" style="display:block"><div class="t" style="margin-bottom:8px">Your names</div>
+        <div style="display:flex;gap:8px"><input class="input" id="cN0" style="flex:1;min-width:0" maxlength="24" placeholder="You" value="${names[0]||''}">
+        <input class="input" id="cN1" style="flex:1;min-width:0" maxlength="24" placeholder="Your person" value="${names[1]||''}"></div></div>
+      <div class="set-row"><div class="grow"><div class="t">Emoji</div><div class="d">A little icon for your couple</div></div>
+        <input class="input" id="cEmoji" style="max-width:84px;text-align:center" maxlength="8" placeholder="🧡" value="${esc(state.C.emoji||'')}"></div>
+    </div>
+    <div class="set-group"><h3>Colors</h3>
+      <div class="set-row" style="display:block">
+        <div class="t" style="margin-bottom:8px">Theme</div>
+        <div class="swatches" id="sw"></div>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:10px">
+          <div><div class="d" style="margin-bottom:4px">Primary</div><input type="color" class="colpick" id="cP" value="${t.p}"></div>
+          <div><div class="d" style="margin-bottom:4px">Accent</div><input type="color" class="colpick" id="cA" value="${t.a}"></div>
+          <div style="flex:1"></div>
+          <div><div class="d" style="margin-bottom:4px">Mode</div>
+            <select class="input" id="cMode" style="padding:8px 12px">
+              <option value="auto"${t.mode==='auto'?' selected':''}>Auto</option>
+              <option value="light"${t.mode==='light'?' selected':''}>Light</option>
+              <option value="dark"${t.mode==='dark'?' selected':''}>Dark</option></select></div>
+        </div>
+        <div class="d" style="margin-top:10px">The app icon above repaints itself from your two colors.</div>
+      </div>
+    </div>
+    <div class="set-group"><h3>Special dates</h3><div id="dates"></div>
+      <button class="btn btn-soft btn-block" id="addDate" style="margin-top:8px">${I.plus}<span>Add a date</span></button></div>
+    <div class="set-group"><h3>Notifications</h3>
+      <div class="set-row"><div class="grow"><div class="t">Reminders & partner updates</div>
+        <div class="d" id="notifSub">Plan-by reminders, new photos, finished dates.</div></div>
+        <button class="btn btn-soft" id="notifBtn" style="padding:10px 16px">\u2026</button></div>
+    </div>
+    <div class="set-group"><h3>Sharing</h3>
+      <div class="set-row"><div class="grow"><div class="t">Invite your person</div>
+        <div class="d">Prism code, link or 6-letter code</div></div>
+        <button class="btn btn-soft" id="goPair" style="padding:10px 16px">Open</button></div>
+    </div>
+    <div class="set-group"><h3>Danger zone</h3>
+      <div class="set-row"><div class="grow"><div class="t">Leave this couple</div>
+        <div class="d">Removes this device. Your partner keeps everything.</div></div>
+        <button class="btn btn-danger" id="leave" style="padding:10px 16px">Leave</button></div>
+    </div>
+    <p style="text-align:center;color:var(--ink-3);font-size:12px;margin:var(--sp-6) 0">Alphabet Us · free, private, no account</p>`;
+  s.appendChild(w);
+  const setIcon=()=>IconRecolor.recolor(theme().p,theme().a,'icons/master-1024.png').then(cv=>{
+    cv.style.cssText='width:72px;height:72px;border-radius:18px';
+    const box=$('#setIcon');if(box){box.innerHTML='';box.appendChild(cv);}}).catch(()=>{});
+  setIcon();
+  const notifBtn=$('#notifBtn'),notifSub=$('#notifSub');
+  const paintNotif=async()=>{
+    if(!pushOK()){notifBtn.textContent='N/A';notifSub.textContent='This browser does not support web push.';return;}
+    if(/iP(hone|ad|od)/.test(navigator.userAgent)&&!navigator.standalone){
+      notifBtn.textContent='Enable';
+      notifSub.textContent='On iPhone, add the app to your Home Screen first, then enable.';}
+    const sub=await pushSub();
+    if(sub){store.set('pushEp',sub.endpoint);notifBtn.textContent='On';notifSub.textContent='Plan-by reminders, new photos, finished dates.';}
+    else if(Notification.permission==='denied'){notifBtn.textContent='Blocked';notifSub.textContent='Notifications are blocked - allow them in your browser settings.';}
+    else notifBtn.textContent='Enable';
+  };
+  paintNotif();
+  notifBtn.onclick=async()=>{
+    notifBtn.textContent='\u2026';
+    try{const r=await enablePush();
+      if(r==='granted')toast('Notifications on');
+      else if(r==='denied')toast('Notifications blocked by the browser');
+      else if(r==='unsupported')toast('Not supported on this browser');
+    }catch(e){toast('Could not enable notifications');}
+    paintNotif();
+  };
+  const commit=()=>{state.C.title=$('#cTitle').value.trim();
+    state.C.names=[$('#cN0').value.trim(),$('#cN1').value.trim()];
+    state.C.emoji=$('#cEmoji').value.trim();bump();};
+  ['cTitle','cN0','cN1','cEmoji'].forEach(id=>$('#'+id).onchange=commit);
+  const sw=$('#sw');
+  for(const [name,p,a] of PRESETS){
+    const b=el('button','swatch'+((t.p===p&&t.a===a)?' on':''));
+    b.style.background=`linear-gradient(135deg,${p} 50%,${a} 50%)`;b.title=name;
+    b.onclick=()=>{state.C.theme={p,a,mode:theme().mode};bump();applyTheme();renderApp();};
+    sw.appendChild(b);
+  }
+  $('#cP').oninput=e=>{state.C.theme=Object.assign(theme(),{p:e.target.value});applyTheme();};
+  $('#cP').onchange=()=>{bump();setIcon();};
+  $('#cA').oninput=e=>{state.C.theme=Object.assign(theme(),{a:e.target.value});applyTheme();};
+  $('#cA').onchange=()=>{bump();setIcon();};
+  $('#cMode').onchange=e=>{state.C.theme=Object.assign(theme(),{mode:e.target.value});bump();applyTheme();};
+  const dates=state.C.dates||(state.C.dates=[]);
+  const drawDates=()=>{
+    const box=$('#dates');box.innerHTML='';
+    if(!dates.length)box.innerHTML='<div class="set-row"><div class="d">Anniversaries, birthdays, whatever matters.</div></div>';
+    dates.forEach((d,i)=>{
+      const row=el('div','set-row');
+      row.innerHTML=`<div class="grow"><div class="t">${esc(d.t||'')}</div><div class="d">${esc(fmtDate(d.d)||'')}</div></div>`;
+      const rm=el('button','iconbtn');rm.innerHTML=I.trash;
+      rm.onclick=()=>{dates.splice(i,1);bump();drawDates();};
+      row.appendChild(rm);box.appendChild(row);
+    });
+  };
+  drawDates();
+  $('#addDate').onclick=async()=>{
+    const t2=await modalAsk({title:'What is the date called?',placeholder:'Our anniversary'});
+    if(!t2)return;
+    const d=await modalAsk({title:'When? (YYYY-MM-DD)',placeholder:'2026-02-18'});
+    if(!d)return;
+    dates.push({t:t2,d});bump();drawDates();
+  };
+  $('#goPair').onclick=()=>go('#/pair');
+  $('#leave').onclick=async()=>{
+    if(!await modalAsk({title:'Leave this couple on this device?',ok:'Leave',danger:true,placeholder:null}))return;
+    try{const d=await api('/devices',{tok:state.tok});const me=d.devices.find(x=>x.self);
+      if(me)await api('/remove',{tok:state.tok,did:me.did});}catch(e){}
+    ['tok','who','S','M','C'].forEach(k=>store.del(k));
+    state.tok=null;state.who=null;state.S={};state.M=[];state.C={cu:0,title:'',emoji:'',names:['',''],theme:null,dates:[]};
+    applyTheme();go('#/welcome');
+  };
+}
+/* iOS PWA-safe modals (window.prompt/confirm are broken in home-screen apps) */
+function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
+  return new Promise(res=>{
+    const ov=el('div','scrim');ov.style.zIndex=95;
+    const box=el('div','card');
+    box.style.cssText='position:fixed;left:50%;top:28%;transform:translateX(-50%) translateY(10px) scale(.96);opacity:0;z-index:96;padding:18px;width:min(330px,86vw);transition:opacity .22s var(--ease),transform .22s var(--ease)';
+    box.innerHTML=`<div style="font-weight:600;margin-bottom:12px">${esc(title)}</div>
+      ${placeholder!==null?`<input class="input" id="pv" value="${esc(value)}" placeholder="${esc(placeholder)}">`:''}
+      <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-soft" id="pc" style="flex:1">Cancel</button>
+      <button class="btn ${danger?'btn-danger':'btn-primary'}" id="pk" style="flex:1">${esc(ok)}</button></div>`;
+    document.body.append(ov,box);
+    requestAnimationFrame(()=>{ov.classList.add('on');box.style.opacity='1';box.style.transform='translateX(-50%) translateY(0) scale(1)';});
+    const inp=box.querySelector('#pv');if(inp)inp.focus();
+    let closing=false;
+    const maLayer=Nav.pushOverlay(()=>done(null));
+    const done=v=>{
+      if(closing)return;closing=true;
+      Nav.removeLayer(maLayer);
+      document.removeEventListener('keydown',onAskEsc);
+      ov.classList.remove('on');box.style.opacity='0';box.style.transform='translateX(-50%) translateY(6px) scale(.97)';
+      setTimeout(()=>{ov.remove();box.remove();res(v);},180);
+    };
+    const onAskEsc=e=>{if(e.key==='Escape')done(null);};
+    document.addEventListener('keydown',onAskEsc);
+    ov.onclick=()=>done(null);
+    box.querySelector('#pc').onclick=()=>done(null);
+    box.querySelector('#pk').onclick=()=>done(inp?inp.value.trim():true);
+    if(inp)inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim());};
+  });
+}
+/* ---------- scan success animation (Avi's reference render, driven by real detection) ---------- */
+function gridFromClean(clean,lw,lh,cols,rows){
+  const cx=clean.getContext('2d',{willReadFrequently:true});
+  const hx0=(clean.width-lw*9)/2, hy0=(clean.height-lh*9)/2;
+  const colors=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const u=(x+.5+(y&1)*.5)/(cols+.5), v=(1+1.5*y)/(1.5*rows+.5);
+    const px=Math.max(0,Math.min(clean.width-1,Math.round(hx0+u*lw*9)));
+    const py=Math.max(0,Math.min(clean.height-1,Math.round(hy0+v*lh*9)));
+    const d=cx.getImageData(px,py,1,1).data;
+    colors.push('#'+((1<<24)+(d[0]<<16)+(d[1]<<8)+d[2]).toString(16).slice(1));
+  }
+  return {cols,rows,colors};
+}
+function scanSuccessFX(fx,cap,res,text,code6,onComplete){
+  /* the worker/fused decode reports a refined FRACTIONAL layout; re-encoding the
+     decoded text gives the code's true integer grid, which is what the clean
+     render, the cell sampling and the pose mapping must all use */
+  let clean,lw,lh;
+  try{
+    const code=Prism.encode(new TextEncoder().encode(text),{});
+    clean=Prism.render(code,9);
+    lw=code.layout.W;lh=code.layout.H;
+  }catch(e){clean=cap;lw=res.layout.W;lh=res.layout.H;}
+  const grid=gridFromClean(clean,lw,lh,Math.round(lw),Math.round(lh));
+  const m0=fx.M0FromQuad(res.quad.map(p=>[p[0],p[1]]),cap.width,cap.height,lw,lh);
+  fx.lock(grid,cap,m0);
+  return onComplete;
+}
+/* demo hooks: synthetic camera scenes, decoded for REAL with Prism.readImage */
+window.__mkScene=function(kind){
+  const url=location.origin+location.pathname+'#/join=K7QX2M';
+  const code=Prism.encode(new TextEncoder().encode(url),{});
+  const rc=Prism.render(code,9);
+  const cap=document.createElement('canvas');cap.width=640;cap.height=480;
+  const cx=cap.getContext('2d',{willReadFrequently:true});
+  const bg=cx.createLinearGradient(0,0,640,480);
+  bg.addColorStop(0,'#46414e');bg.addColorStop(1,'#2e2a35');
+  cx.fillStyle=bg;cx.fillRect(0,0,640,480);
+  let truth;
+  if(kind==='skew'){
+    const T2=[[340,260],[920,190],[1010,740],[370,790]]; // 1280x960 workspace
+    const big=document.createElement('canvas');big.width=1280;big.height=960;
+    const bx=big.getContext('2d',{willReadFrequently:true});
+    const bg2=bx.createLinearGradient(0,0,1280,960);
+    bg2.addColorStop(0,'#46414e');bg2.addColorStop(1,'#2e2a35');
+    bx.fillStyle=bg2;bx.fillRect(0,0,1280,960);
+    const rc2=Prism.render(code,18);
+    const Hm=Prism.homography([[0,0],[rc2.width,0],[rc2.width,rc2.height],[0,rc2.height]],T2);
+    const inv=Prism.homography(T2,[[0,0],[rc2.width,0],[rc2.width,rc2.height],[0,rc2.height]]);
+    const src=rc2.getContext('2d').getImageData(0,0,rc2.width,rc2.height);
+    const out=bx.getImageData(0,0,1280,960);
+    const sw=rc2.width,sh=rc2.height;
+    for(let y=0;y<960;y++)for(let x=0;x<1280;x++){
+      const p=Prism.map(inv,x,y);
+      const fx=p[0]-0.5,fy=p[1]-0.5,x0=Math.floor(fx),y0=Math.floor(fy);
+      if(x0<0||y0<0||x0>=sw-1||y0>=sh-1)continue;
+      const ax=fx-x0,ay=fy-y0,di=(y*1280+x)*4;
+      for(let chn=0;chn<3;chn++){
+        const v00=src.data[(y0*sw+x0)*4+chn],v10=src.data[(y0*sw+x0+1)*4+chn],
+              v01=src.data[((y0+1)*sw+x0)*4+chn],v11=src.data[((y0+1)*sw+x0+1)*4+chn];
+        out.data[di+chn]=v00*(1-ax)*(1-ay)+v10*ax*(1-ay)+v01*(1-ax)*ay+v11*ax*ay;
+      }
+      out.data[di+3]=255;
+    }
+    bx.putImageData(out,0,0);
+    cx.drawImage(big,0,0,640,480);
+    const Wl=code.layout.W,Hl=code.layout.H,mxx=(rc2.width-Wl*18)/2,myy=(rc2.height-Hl*18)/2;
+    truth=[[mxx,myy],[mxx+Wl*18,myy],[mxx+Wl*18,myy+Hl*18],[mxx,myy+Hl*18]]
+      .map(p=>{const q=Prism.map(Hm,p[0],p[1]);return [q[0]/2,q[1]/2];});
+  }else{
+    cx.save();cx.translate(320,240);cx.rotate(.17);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
+    const c=Math.cos(.17),s2=Math.sin(.17);
+    const Wl=code.layout.W,Hl=code.layout.H,mxx=(rc.width-Wl*9)/2,myy=(rc.height-Hl*9)/2;
+    truth=[[mxx,myy],[mxx+Wl*9,myy],[mxx+Wl*9,myy+Hl*9],[mxx,myy+Hl*9]]
+      .map(p=>{const x=p[0]-rc.width/2,y=p[1]-rc.height/2;return [320+x*c-y*s2,240+x*s2+y*c];});
+  }
+  // camera noise + REAL decode for the real corners (retry with fresh noise if a frame fails)
+  const clean_id=cx.getImageData(0,0,640,480);
+  const alignErr=q=>{let w=0;for(const p of q){let b=1e9;for(const t of truth){b=Math.min(b,Math.hypot(p[0]-t[0],p[1]-t[1]));}w=Math.max(w,b);}return w;};
+  let res=null,id=null,err=0;
+  for(let att=0;att<10&&!res;att++){
+    id=new ImageData(new Uint8ClampedArray(clean_id.data),640,480);
+    if(att>0){for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*10;id.data[i]+=n;id.data[i+1]+=n;id.data[i+2]+=n;}}
+    try{
+      Prism.beginDecode(2500);
+      const r=Prism.readImage({width:640,height:480,data:id.data});
+      const e=alignErr(r.quad);
+      if(e<8){res=r;err=e;}
+    }catch(e){}
+  }
+  if(!res)throw new Error('scene decode failed');
+  cx.putImageData(id,0,0);
+  return {cap,res,url,quadErr:Math.round(err*10)/10};
+};
+window.__demoScan=function(kind,delayMs){
+  const ov=el('div','');ov.style.cssText='position:fixed;inset:0;z-index:80;background:#000';
+  document.body.appendChild(ov);
+  const fx=ScanFX(ov,{searching:true,onDone:()=>{window.__demoDone=true;}});
+  const sc=__mkScene(kind||'rot');
+  setTimeout(()=>{
+    const lw=sc.res.layout.W,lh=sc.res.layout.H;
+    const clean=Prism.render(Prism.encode(new TextEncoder().encode(sc.url),{}),9);
+    const grid=gridFromClean(clean,lw,lh,Math.round(lw),Math.round(lh));
+    const m0=fx.M0FromQuad(sc.res.quad.map(p=>[p[0],p[1]]),sc.cap.width,sc.cap.height,lw,lh);
+    fx.lock(grid,sc.cap,m0);
+  },delayMs==null?1200:delayMs);
+  window.__demoFx=fx;window.__demoOv=ov;
+  return JSON.stringify({quadErr:sc.quadErr});
+};
+/* 60fps compositing recorder for the ScanFX stage (canvas layers + DOM pill) */
+window.__demoRecord=function(kind){
+  const ov=el('div','');ov.style.cssText='position:fixed;inset:0;z-index:80;background:#000';
+  document.body.appendChild(ov);
+  const fx=ScanFX(ov,{searching:true,onDone:()=>{window.__recDone=performance.now();}});
+  const sc=__mkScene(kind||'rot');
+  const q=s=>ov.querySelector(s);
+  const cardEl=q('#card'),fxEl=q('#fx'),pill=q('#pill'),arc=q('#arc'),checkEl=q('#check'),
+        lab0=q('#lab0'),lab1=q('#lab1'),pctEl=q('#pct');
+  const dpr=Math.min(devicePixelRatio||1,2),W=innerWidth,H=innerHeight;
+  const rec=document.createElement('canvas');rec.width=W*dpr;rec.height=H*dpr;
+  const rg=rec.getContext('2d');
+  const lightCv=document.createElement('canvas');lightCv.width=rec.width;lightCv.height=rec.height;
+  const lg=lightCv.getContext('2d');
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  function drawTri(img,s0,s1,s2,d0,d1,d2){
+    const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
+    if(Math.abs(den)<1e-6)return;
+    const a=(d0[0]*(s1[1]-s2[1])+d1[0]*(s2[1]-s0[1])+d2[0]*(s0[1]-s1[1]))/den;
+    const b=(d0[1]*(s1[1]-s2[1])+d1[1]*(s2[1]-s0[1])+d2[1]*(s0[1]-s1[1]))/den;
+    const c=(d0[0]*(s2[0]-s1[0])+d1[0]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
+    const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[1]*(s1[0]-s0[0]))/den;
+    const e=d0[0]-a*s0[0]-c*s0[1],f=d0[1]-b*s0[0]-d*s0[1];
+    rg.save();rg.beginPath();rg.moveTo(d0[0],d0[1]);rg.lineTo(d1[0],d1[1]);rg.lineTo(d2[0],d2[1]);rg.closePath();rg.clip();
+    rg.transform(a,b,c,d,e,f);rg.drawImage(img,0,0);rg.restore();
+  }
+  function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+  function drawPill(){
+    const cs=getComputedStyle(pill);
+    const op=parseFloat(pill.style.opacity||'0');if(op<=0.01)return;
+    const bg=cs.getPropertyValue('--bg').trim(),fg=cs.getPropertyValue('--fg').trim(),
+          bd=cs.getPropertyValue('--bd').trim(),acc=cs.getPropertyValue('--acc').trim();
+    const ty=parseFloat((pill.style.transform.match(/,\s*([-\d.]+)px\)/)||[0,0])[1]);
+    const pw=Math.min(272,W*.86),ph=48,px=(W-pw)/2,py=H-Math.max(30,H*.075)-ph+ty;
+    rg.save();rg.globalAlpha=op;
+    rr(rg,px,py,pw,ph,24);rg.fillStyle=bg;rg.fill();rg.lineWidth=1;rg.strokeStyle=bd;rg.stroke();
+    // ring
+    const rcx=px+13+12,rcy=py+24;
+    rg.lineWidth=2.4;rg.lineCap='round';
+    rg.strokeStyle=fg;rg.globalAlpha=op*.2;rg.beginPath();rg.arc(rcx,rcy,9,0,7);rg.stroke();
+    rg.globalAlpha=op;
+    const dash=(arc.style.strokeDasharray||'0 1').split(' ')[0];
+    const len=parseFloat(dash),rot=parseFloat((arc.getAttribute('transform')||'').match(/rotate\(([-\d.]+)/)?.[1]||'-90');
+    const arcOp=parseFloat(arc.style.opacity||'1');
+    if(len>.004&&arcOp>.01){rg.globalAlpha=op*arcOp;rg.strokeStyle=acc;
+      rg.beginPath();rg.arc(rcx,rcy,9,(rot-90)*Math.PI/180,(rot-90)*Math.PI/180+len*Math.PI*2);rg.stroke();}
+    const chkOff=parseFloat(checkEl.style.strokeDashoffset||'1');
+    if(chkOff<.999){rg.globalAlpha=op;rg.strokeStyle=acc;rg.lineWidth=2.4;
+      const pts=[[7.6,12.5],[10.6,15.5],[16.5,9.2]],tot=3+6.85;let drawn=(1-chkOff)*tot;
+      rg.beginPath();rg.moveTo(rcx+7.6-12,rcy+12.5-12);
+      let p0=[rcx+7.6-12,rcy+12.5-12];
+      for(const [x,y] of pts.slice(1)){const p1=[rcx+x-12,rcy+y-12];const seg=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);
+        if(drawn>=seg){rg.lineTo(p1[0],p1[1]);drawn-=seg;p0=p1;}
+        else{const f=Math.max(0,drawn)/seg;rg.lineTo(p0[0]+(p1[0]-p0[0])*f,p0[1]+(p1[1]-p0[1])*f);drawn=0;break;}}
+      rg.stroke();}
+    // labels
+    rg.font='600 14.5px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+    rg.textBaseline='middle';rg.textAlign='left';
+    const lx=px+13+24+12,ly=py+24;
+    const o0=parseFloat(lab0.style.opacity||'0'),y0=parseFloat((lab0.style.transform.match(/translateY\(([-\d.]+)px\)/)||[0,0])[1]);
+    const o1=parseFloat(lab1.style.opacity||'0'),y1=parseFloat((lab1.style.transform.match(/translateY\(([-\d.]+)px\)/)||[0,0])[1]);
+    rg.fillStyle=fg;
+    if(o0>.01&&lab0.textContent){rg.globalAlpha=op*o0;rg.fillText(lab0.textContent,lx,ly+1+y0);}
+    if(o1>.01&&lab1.textContent){rg.globalAlpha=op*o1;rg.fillText(lab1.textContent,lx,ly+1+y1);}
+    const pOp=parseFloat(pctEl.style.opacity||'0');
+    if(pOp>.01){rg.globalAlpha=op*pOp;rg.textAlign='right';rg.fillText(pctEl.textContent,px+pw-18,ly+1);}
+    rg.restore();
+  }
+  function composite(){
+    const t=fx.time(),pr=fx.probe(t);
+    rg.setTransform(dpr,0,0,dpr,0,0);
+    const bc=q('#dark canvas');
+    if(bc&&getComputedStyle(q('#dark')).visibility!=='hidden'){
+      rg.filter='brightness(.46) saturate(.85)';
+      const s2=Math.max(W/bc.width,H/bc.height);
+      rg.drawImage(bc,(W-bc.width*s2)/2,(H-bc.height*s2)/2,bc.width*s2,bc.height*s2);
+      rg.filter='none';
+    }else{
+      const dg=rg.createRadialGradient(W*.28,H*.16,10,W*.5,H*.5,Math.max(W,H)*.9);
+      dg.addColorStop(0,'#4b4654');dg.addColorStop(.52,'#34313c');dg.addColorStop(1,'#25222d');
+      rg.fillStyle=dg;rg.fillRect(0,0,W,H);
+    }
+    const vg=rg.createRadialGradient(W/2,H*.44,Math.min(W,H)*.30,W/2,H*.44,Math.max(W,H)*.78);
+    vg.addColorStop(0,'rgba(8,6,14,0)');vg.addColorStop(1,'rgba(8,6,14,.66)');
+    if(bc&&getComputedStyle(q('#dark')).visibility!=='hidden'){rg.fillStyle=vg;rg.fillRect(0,0,W,H);}
+    if(pr.ie>0){
+      const R=lerp(-pr.feather,pr.Rmax,pr.ie);
+      lg.setTransform(dpr,0,0,dpr,0,0);lg.clearRect(0,0,W,H);
+      const gr=lg.createRadialGradient(W/2,H*.38,10,W/2,H*.38,Math.max(W,H)*.75);
+      gr.addColorStop(0,'#fcfaff');gr.addColorStop(.58,'#f4f1fc');gr.addColorStop(1,'#e9e5f6');
+      lg.fillStyle=gr;lg.fillRect(0,0,W,H);
+      lg.globalCompositeOperation='destination-in';
+      const mk=lg.createRadialGradient(pr.cx,pr.cy,Math.max(.01,R-pr.feather),pr.cx,pr.cy,Math.max(.01,R+pr.feather));
+      mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop(1,'rgba(0,0,0,0)');
+      lg.fillStyle=mk;lg.fillRect(0,0,W,H);
+      lg.globalCompositeOperation='source-over';
+      rg.drawImage(lightCv,0,0,W,H);
+    }
+    const tr=cardEl.style.transform||'';
+    if(tr.startsWith('matrix3d')&&cardEl.style.visibility!=='hidden'){
+      const m=tr.slice(9,-1).split(',').map(Number);
+      const P=(x,y)=>{const X=m[0]*x+m[4]*y+m[12],Y=m[1]*x+m[5]*y+m[13],Ww=m[3]*x+m[7]*y+m[15];return [X/Ww,Y/Ww];};
+      const cw=cardEl.width,ch=cardEl.height;
+      const bf=/blur\(([-\d.]+)px\)/.exec(cardEl.style.filter||'');
+      if(bf)rg.filter='blur('+bf[1]+'px)';
+      const NN=12;
+      for(let j=0;j<NN;j++)for(let i=0;i<NN;i++){
+        const u0=i/NN,u1=(i+1)/NN,v0=j/NN,v1=(j+1)/NN;
+        const S2=(u,v)=>[u*cw,v*ch],Q=(u,v)=>P(u*cw,v*ch);
+        drawTri(cardEl,S2(u0,v0),S2(u1,v0),S2(u1,v1),Q(u0,v0),Q(u1,v0),Q(u1,v1));
+        drawTri(cardEl,S2(u0,v0),S2(u1,v1),S2(u0,v1),Q(u0,v0),Q(u1,v1),Q(u0,v1));
+      }
+      rg.filter='none';
+    }
+    rg.setTransform(1,0,0,1,0,0);rg.drawImage(fxEl,0,0);rg.setTransform(dpr,0,0,dpr,0,0);
+    drawPill();
+  }
+  const stream=rec.captureStream(60);
+  const mr=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:14000000});
+  const chunks=[];mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  mr.start(100);
+  let raf;
+  const loop=()=>{composite();raf=requestAnimationFrame(loop);};
+  loop();
+  setTimeout(()=>{
+    const lw=sc.res.layout.W,lh=sc.res.layout.H;
+    const clean=Prism.render(Prism.encode(new TextEncoder().encode(sc.url),{}),9);
+    const grid=gridFromClean(clean,lw,lh,Math.round(lw),Math.round(lh));
+    const m0=fx.M0FromQuad(sc.res.quad.map(p=>[p[0],p[1]]),sc.cap.width,sc.cap.height,lw,lh);
+    fx.lock(grid,sc.cap,m0);
+  },1200);
+  window.__recStop=function(){
+    return new Promise(res2=>{
+      cancelAnimationFrame(raf);
+      mr.onstop=()=>{
+        const blob=new Blob(chunks,{type:'video/webm'});
+        window.__recBlob=blob;res2(blob.size);
+      };
+      mr.stop();
+    });
+  };
+  return JSON.stringify({quadErr:sc.quadErr,w:rec.width,h:rec.height});
+};
+/* live-scanner demo: simulated moving-code camera (canvas stream) through the REAL
+   startScan pipeline (getUserMedia -> detectCurved tracking -> worker decode -> lock
+   -> success sequence), composited and recorded at 60fps. Camera itself is simulated;
+   everything that reacts to it is the production code. */
+window.__liveDemoRecord=function(){
+  const cam=document.createElement('canvas');cam.width=1280;cam.height=720;
+  const cc=cam.getContext('2d',{willReadFrequently:true});
+  const url=location.origin+location.pathname+'#/join=K7QX2M';
+  const pCode=Prism.encode(new TextEncoder().encode(url),{});
+  const rc=Prism.render(pCode,9);
+  const LW=pCode.layout.W,LH=pCode.layout.H,MX=(rc.width-LW*9)/2,MY=(rc.height-LH*9)/2;
+  const T0=performance.now();
+  let truth=null;
+  const ease=x=>x<0?0:x>1?1:x*x*(3-2*x);
+  function pose(t){
+    if(t<1.0)return null;
+    const ein=ease((t-1.0)/1.1),steady=ease((t-5.6)/1.2),wob=1-steady;
+    return {
+      x:1280*(1.35-0.85*ein)+wob*46*Math.sin(t*1.7)+8*Math.sin(t*4.3),
+      y:720*(0.30+0.20*ein)+wob*34*Math.sin(t*1.3+1)+6*Math.sin(t*3.7),
+      rot:wob*(.28*Math.sin(t*.9)+.05*Math.sin(t*2.9)),
+      s:(0.62+0.38*ein)*(1+wob*.05*Math.sin(t*2.2))};
+  }
+  function drawCam(){
+    const t=(performance.now()-T0)/1000;
+    const g=cc.createLinearGradient(0,0,1280,720);
+    g.addColorStop(0,'#46414e');g.addColorStop(1,'#2e2a35');
+    cc.fillStyle=g;cc.fillRect(0,0,1280,720);
+    cc.strokeStyle='rgba(255,255,255,.03)';cc.lineWidth=2;
+    for(let i=0;i<8;i++){cc.beginPath();cc.moveTo(0,90*i+20);cc.lineTo(1280,90*i+40);cc.stroke();}
+    const p=pose(t);
+    if(p){
+      cc.save();cc.translate(p.x,p.y);cc.rotate(p.rot);cc.scale(p.s,p.s);
+      cc.drawImage(rc,-rc.width/2,-rc.height/2);cc.restore();
+      const c=Math.cos(p.rot),s2=Math.sin(p.rot),hw=rc.width/2,hh=rc.height/2;
+      truth=[[MX,MY],[MX+LW*9,MY],[MX+LW*9,MY+LH*9],[MX,MY+LH*9]]
+        .map(q=>{const x=q[0]-hw,y=q[1]-hh;return [p.x+(x*c-y*s2)*p.s,p.y+(x*s2+y*c)*p.s];});
+    }else truth=null;
+  }
+  drawCam();setInterval(drawCam,33);
+  navigator.mediaDevices.getUserMedia=async()=>cam.captureStream(30);
+  /* hidden join-form stubs so the success callback's DOM touches can't crash */
+  for(const [id,tag] of [['scanBox','div'],['code','input'],['name','input']])
+    if(!document.getElementById(id)){const d=document.createElement(tag);d.id=id;d.style.display='none';document.body.appendChild(d);}
+  startScan(document.getElementById('scanBox'));
+  const ov=[...document.body.children].find(c=>c.style&&c.style.zIndex==='80');
+  const q=s=>ov.querySelector(s);
+  const dpr=1,W=innerWidth,H=innerHeight;
+  const rec=document.createElement('canvas');rec.width=W*dpr;rec.height=H*dpr;
+  const rg=rec.getContext('2d');
+  const lightCv=document.createElement('canvas');lightCv.width=rec.width;lightCv.height=rec.height;
+  const lg=lightCv.getContext('2d');
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  function drawTri(img,s0,s1,s2,d0,d1,d2){
+    const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
+    if(Math.abs(den)<1e-6)return;
+    const a=(d0[0]*(s1[1]-s2[1])+d1[0]*(s2[1]-s0[1])+d2[0]*(s0[1]-s1[1]))/den;
+    const b=(d0[1]*(s1[1]-s2[1])+d1[1]*(s2[1]-s0[1])+d2[1]*(s0[1]-s1[1]))/den;
+    const c=(d0[0]*(s2[0]-s1[0])+d1[0]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
+    const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[1]*(s1[0]-s0[0]))/den;
+    const e=d0[0]-a*s0[0]-c*s0[1],f=d0[1]-b*s0[0]-d*s0[1];
+    rg.save();rg.beginPath();rg.moveTo(d0[0],d0[1]);rg.lineTo(d1[0],d1[1]);rg.lineTo(d2[0],d2[1]);rg.closePath();rg.clip();
+    rg.transform(a,b,c,d,e,f);rg.drawImage(img,0,0);rg.restore();
+  }
+  function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+r,y,r);g.closePath();}
+  function drawPill(){
+    const pill=q('#pill'),arc=q('#arc'),checkEl=q('#check'),lab0=q('#lab0'),lab1=q('#lab1'),pctEl=q('#pct');
+    const cs=getComputedStyle(pill);
+    const op=parseFloat(pill.style.opacity||'0');if(op<=0.01)return;
+    const bg=cs.getPropertyValue('--bg').trim(),fg=cs.getPropertyValue('--fg').trim(),
+          bd=cs.getPropertyValue('--bd').trim(),acc=cs.getPropertyValue('--acc').trim();
+    const ty=parseFloat((pill.style.transform.match(/,\s*([-\d.]+)px\)/)||[0,0])[1]);
+    const pw=Math.min(272,W*.86),ph=48,px=(W-pw)/2,py=H-Math.max(30,H*.075)-ph+ty;
+    rg.save();rg.globalAlpha=op;
+    rr(rg,px,py,pw,ph,24);rg.fillStyle=bg;rg.fill();rg.lineWidth=1;rg.strokeStyle=bd;rg.stroke();
+    const rcx=px+13+12,rcy=py+24;
+    rg.lineWidth=2.4;rg.lineCap='round';
+    rg.strokeStyle=fg;rg.globalAlpha=op*.2;rg.beginPath();rg.arc(rcx,rcy,9,0,7);rg.stroke();
+    rg.globalAlpha=op;
+    const dash=(arc.style.strokeDasharray||'0 1').split(' ')[0];
+    const len=parseFloat(dash),rot=parseFloat((arc.getAttribute('transform')||'').match(/rotate\(([-\d.]+)/)?.[1]||'-90');
+    const arcOp=parseFloat(arc.style.opacity||'1');
+    if(len>.004&&arcOp>.01){rg.globalAlpha=op*arcOp;rg.strokeStyle=acc;
+      rg.beginPath();rg.arc(rcx,rcy,9,(rot-90)*Math.PI/180,(rot-90)*Math.PI/180+len*Math.PI*2);rg.stroke();}
+    const chkOff=parseFloat(checkEl.style.strokeDashoffset||'1');
+    if(chkOff<.999){rg.globalAlpha=op;rg.strokeStyle=acc;rg.lineWidth=2.4;
+      const pts=[[7.6,12.5],[10.6,15.5],[16.5,9.2]],tot=3+6.85;let drawn=(1-chkOff)*tot;
+      rg.beginPath();let p0=[rcx+7.6-12,rcy+12.5-12];rg.moveTo(p0[0],p0[1]);
+      for(const [x,y] of pts.slice(1)){const p1=[rcx+x-12,rcy+y-12];const seg=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);
+        if(drawn>=seg){rg.lineTo(p1[0],p1[1]);drawn-=seg;p0=p1;}
+        else{const f=Math.max(0,drawn)/seg;rg.lineTo(p0[0]+(p1[0]-p0[0])*f,p0[1]+(p1[1]-p0[1])*f);drawn=0;break;}}
+      rg.stroke();}
+    rg.font='600 14.5px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+    rg.textBaseline='middle';rg.textAlign='left';
+    const lx=px+13+24+12,ly=py+24;
+    const o0=parseFloat(lab0.style.opacity||'0'),y0=parseFloat((lab0.style.transform.match(/translateY\(([-\d.]+)px\)/)||[0,0])[1]);
+    const o1=parseFloat(lab1.style.opacity||'0'),y1=parseFloat((lab1.style.transform.match(/translateY\(([-\d.]+)px\)/)||[0,0])[1]);
+    rg.fillStyle=fg;
+    if(o0>.01&&lab0.textContent){rg.globalAlpha=op*o0;rg.fillText(lab0.textContent,lx,ly+1+y0);}
+    if(o1>.01&&lab1.textContent){rg.globalAlpha=op*o1;rg.fillText(lab1.textContent,lx,ly+1+y1);}
+    const pOp=parseFloat(pctEl.style.opacity||'0');
+    if(pOp>.01){rg.globalAlpha=op*pOp;rg.textAlign='right';rg.fillText(pctEl.textContent,px+pw-18,ly+1);}
+    rg.restore();
+  }
+  const camToStage=p=>{const sc=Math.max(W/cam.width,H/cam.height);return [p[0]*sc+(W-cam.width*sc)/2,p[1]*sc+(H-cam.height*sc)/2];};
+  window.__trackLog=[];
+  let lockT=0;
+  const logger=setInterval(()=>{
+    const fx=window.__scanFx;if(!fx)return;
+    const t=(performance.now()-T0)/1000;
+    if(!lockT&&fx.time()>=fx.TL.lock)lockT=t;
+    window.__trackLog.push({t,q:fx.trackProbe?fx.trackProbe():null,
+      truth:truth?truth.map(camToStage):null,ft:fx.time()});
+  },200);
+  function composite(){
+    const fx=window.__scanFx;
+    const cardEl=q('#card'),fxEl=q('#fx');
+    rg.setTransform(dpr,0,0,dpr,0,0);
+    const darkEl=q('#dark');
+    const darkVisible=darkEl&&getComputedStyle(darkEl).visibility!=='hidden';
+    const bc=darkEl&&darkEl.querySelector('canvas');
+    if(!darkVisible){
+      rg.fillStyle='#000';rg.fillRect(0,0,W,H);
+      const s2=Math.max(W/cam.width,H/cam.height);
+      rg.drawImage(cam,(W-cam.width*s2)/2,(H-cam.height*s2)/2,cam.width*s2,cam.height*s2);
+    }else if(bc){
+      rg.filter='brightness(.46) saturate(.85)';
+      const s2=Math.max(W/bc.width,H/bc.height);
+      rg.drawImage(bc,(W-bc.width*s2)/2,(H-bc.height*s2)/2,bc.width*s2,bc.height*s2);
+      rg.filter='none';
+      const vg=rg.createRadialGradient(W/2,H*.44,Math.min(W,H)*.30,W/2,H*.44,Math.max(W,H)*.78);
+      vg.addColorStop(0,'rgba(8,6,14,0)');vg.addColorStop(1,'rgba(8,6,14,.66)');
+      rg.fillStyle=vg;rg.fillRect(0,0,W,H);
+    }
+    if(fx){
+      const t=fx.time(),pr=fx.probe(t);
+      if(pr.ie>0){
+        const R=lerp(-pr.feather,pr.Rmax,pr.ie);
+        lg.setTransform(dpr,0,0,dpr,0,0);lg.clearRect(0,0,W,H);
+        const gr=lg.createRadialGradient(W/2,H*.38,10,W/2,H*.38,Math.max(W,H)*.75);
+        gr.addColorStop(0,'#fcfaff');gr.addColorStop(.58,'#f4f1fc');gr.addColorStop(1,'#e9e5f6');
+        lg.fillStyle=gr;lg.fillRect(0,0,W,H);
+        lg.globalCompositeOperation='destination-in';
+        const mk=lg.createRadialGradient(pr.cx,pr.cy,Math.max(.01,R-pr.feather),pr.cx,pr.cy,Math.max(.01,R+pr.feather));
+        mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop(1,'rgba(0,0,0,0)');
+        lg.fillStyle=mk;lg.fillRect(0,0,W,H);
+        lg.globalCompositeOperation='source-over';
+        rg.drawImage(lightCv,0,0,W,H);
+      }
+      const tr=cardEl.style.transform||'';
+      if(tr.startsWith('matrix3d')&&cardEl.style.visibility!=='hidden'){
+        const m=tr.slice(9,-1).split(',').map(Number);
+        const P=(x,y)=>{const X=m[0]*x+m[4]*y+m[12],Y=m[1]*x+m[5]*y+m[13],Ww=m[3]*x+m[7]*y+m[15];return [X/Ww,Y/Ww];};
+        const cw=cardEl.width,ch=cardEl.height;
+        const bf=/blur\(([-\d.]+)px\)/.exec(cardEl.style.filter||'');
+        if(bf)rg.filter='blur('+bf[1]+'px)';
+        const NN=20;
+        const PW=(x,y)=>{const X=m[0]*x+m[4]*y+m[12],Y=m[1]*x+m[5]*y+m[13],Ww=m[3]*x+m[7]*y+m[15];return [X/Ww,Y/Ww,Ww];};
+        const okT=(a,b,c)=>a[2]>0.02&&b[2]>0.02&&c[2]>0.02;
+        for(let j=0;j<NN;j++)for(let i=0;i<NN;i++){
+          const u0=i/NN,u1=(i+1)/NN,v0=j/NN,v1=(j+1)/NN;
+          const S2=(u,v)=>[u*cw,v*ch],Q=(u,v)=>PW(u*cw,v*ch);
+          const q00=Q(u0,v0),q10=Q(u1,v0),q11=Q(u1,v1),q01=Q(u0,v1);
+          if(okT(q00,q10,q11))drawTri(cardEl,S2(u0,v0),S2(u1,v0),S2(u1,v1),q00,q10,q11);
+          if(okT(q00,q11,q01))drawTri(cardEl,S2(u0,v0),S2(u1,v1),S2(u0,v1),q00,q11,q01);
+        }
+        rg.filter='none';
+      }
+      rg.setTransform(1,0,0,1,0,0);rg.drawImage(fxEl,0,0);rg.setTransform(dpr,0,0,dpr,0,0);
+      drawPill();
+    }
+  }
+  const stream=rec.captureStream(60);
+  const mr=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:4500000});
+  const chunks=[];mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  mr.start(100);
+  let raf;const loop=()=>{composite();raf=requestAnimationFrame(loop);};
+  loop();
+  window.__recStop=function(){
+    return new Promise(res2=>{
+      cancelAnimationFrame(raf);clearInterval(logger);
+      mr.onstop=()=>{
+        const blob=new Blob(chunks,{type:'video/webm'});
+        window.__recBlob=blob;res2(JSON.stringify({size:blob.size,lockT}));
+      };
+      mr.stop();
+    });
+  };
+  return JSON.stringify({started:true,w:rec.width,h:rec.height});
+};
+window.__liveDemoResult=function(){
+  const log=window.__trackLog||[];
+  const errs=[];
+  for(const s of log){
+    if(!s.q||!s.truth||s.t<1.6)continue;
+    let best=1e18;
+    for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(s.q[i][0]-s.truth[(i+r)%4][0],s.q[i][1]-s.truth[(i+r)%4][1]);best=Math.min(best,d/4);}
+    errs.push({t:+s.t.toFixed(2),err:+best.toFixed(1)});
+  }
+  const seen=log.filter(s=>s.truth).length,tracked=log.filter(s=>s.truth&&s.q).length;
+  return JSON.stringify({samples:log.length,seen,tracked,errs});
+};
+window.__recUpload=async function(){
+  const f=new File([window.__recBlob],'scan-live.webm',{type:'video/webm'});
+  const before=state.M.length;
+  await uploadMedia('Z',f);
+  const m=state.M[state.M.length-1];
+  return JSON.stringify({added:state.M.length-before,id:m.id,url:mediaUrl(m,false),size:m.size});
+};
+window.__recPurge=async function(id){
+  await api('/del',{tok:state.tok,id});
+  state.M=state.M.filter(m=>m.id!==id);
+  return 'purged';
+};
+/* ---------- boot ---------- */
+applyTheme();
+route();
+/* start entrance animations only after the first real paint, so the stagger
+   is visible on the page rather than spent during load */
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('booted')));
+if('serviceWorker' in navigator){
+  addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
