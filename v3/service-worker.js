@@ -1,5 +1,5 @@
-const CACHE='alphabet-us-v2';
-const ASSETS=['./','./index.html','./manifest.json','./prism.js','./styled.js','./icon-recolor.js',
+const CACHE='alphabet-us-v3';
+const ASSETS=['./','./index.html','./manifest.json','./prism.js','./scanfx.js','./styled.js','./icon-recolor.js',
   './fonts/inter-var.woff2','./fonts/fraunces-var.woff2','./fonts/fraunces-it-var.woff2',
   './icons/master-1024.png','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',e=>{
@@ -21,10 +21,14 @@ self.addEventListener('fetch',e=>{
     );
     return;
   }
+  // static assets: stale-while-revalidate so new deploys land on next load
   e.respondWith(
-    caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{
-      if(r.ok&&e.request.method==='GET'){const cp=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));}
-      return r;
-    }))
+    caches.match(e.request).then(hit=>{
+      const net=fetch(e.request).then(r=>{
+        if(r.ok&&e.request.method==='GET'){const cp=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));}
+        return r;
+      }).catch(()=>hit);
+      return hit||net;
+    })
   );
 });
