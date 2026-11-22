@@ -721,7 +721,7 @@ function renderGrid(s){
     const st=state.S[L]||{};
     const ph=st.done?photoOf(L):null;
     const t=el('button','awl'+(ph?' photo':st.done?' done':st.date?' plan':''));
-    let lxStyle=ph?`background-image:linear-gradient(rgb(0 0 0/.30),rgb(0 0 0/.30)),url('${ph}')`:'';
+    let lxStyle=ph?`background-image:linear-gradient(rgb(0 0 0/.38),rgb(0 0 0/.38)),url('${ph}')`:'';
     if(st.done&&!ph){
       const h=Math.round(262+li*(71/25)),h2=h+34;
       lxStyle=`background:linear-gradient(150deg,hsl(${h} 74% 30%),hsl(${h2} 84% 60%));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent`;
