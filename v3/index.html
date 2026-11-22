@@ -500,9 +500,12 @@ async function startScan(box){
   closeB.style.cssText='position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:14px;z-index:90;width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,.18);background:rgba(24,21,32,.55);color:#fff;font-size:15px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);cursor:pointer';
   ov.appendChild(closeB);
   document.body.appendChild(ov);
+  ov.dataset.scan='1';
   let fxDone=null;
   const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
-  const cleanup=()=>{stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
+  const onScanEsc=e=>{if(e.key==='Escape')cleanup();};
+  document.addEventListener('keydown',onScanEsc);
+  const cleanup=()=>{document.removeEventListener('keydown',onScanEsc);stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
   closeB.onclick=cleanup;
   const scanFail=(msg)=>{
     fx.stop();
@@ -773,6 +776,12 @@ function renderGrid(s){
 /* ---------- letter sheet ---------- */
 function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
 $('#scrim').onclick=closeSheet;
+/* Escape closes the topmost layer: modal (handled in modalAsk), scanner, then sheet */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(document.querySelector('.scrim.on:not(#scrim)')||document.querySelector('[data-scan]'))return;
+  if($('#sheet').classList.contains('on'))closeSheet();
+});
 function openLetter(L){
   const st=Object.assign({done:false,date:'',dl:'',note:'',r:0},state.S[L]);
   const sh=$('#sheet');
@@ -1064,9 +1073,12 @@ function modalAsk({title,value='',ok='OK',danger=false,placeholder=''}){
     let closing=false;
     const done=v=>{
       if(closing)return;closing=true;
+      document.removeEventListener('keydown',onAskEsc);
       ov.classList.remove('on');box.style.opacity='0';box.style.transform='translateX(-50%) translateY(6px) scale(.97)';
       setTimeout(()=>{ov.remove();box.remove();res(v);},180);
     };
+    const onAskEsc=e=>{if(e.key==='Escape')done(null);};
+    document.addEventListener('keydown',onAskEsc);
     ov.onclick=()=>done(null);
     box.querySelector('#pc').onclick=()=>done(null);
     box.querySelector('#pk').onclick=()=>done(inp?inp.value.trim():true);
