@@ -622,7 +622,7 @@ async function renderPair(){
   s.innerHTML=`
     <div class="topbar"><div class="wordmark">Alphabet <em>Us</em></div></div>
     <h1 class="h1">Invite your person</h1>
-    <p class="sub">They scan this with the app, or tap the link. The code works once, for 15 minutes.</p>
+    <p class="sub" id="pairSub">They scan this with the app, or tap the link. The code works once, for 15 minutes.</p>
     <div class="pcard">
       <div class="names">${names()}</div>
       <div id="pwrap"><div style="aspect-ratio:1;display:grid;place-items:center"><span class="spin"></span></div></div>
@@ -674,7 +674,7 @@ async function renderPair(){
       $('#pwrap').innerHTML=paired
         ?'<div style="padding:26px 24px 30px;text-align:center"><div style="width:56px;height:56px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(135deg,var(--p-wash),var(--a-wash));color:var(--a-ink);display:grid;place-items:center">'+I.heart.replace('class="icon"','class="icon-lg"')+'</div><div style="color:var(--ink-2);font-size:15px;line-height:1.5">You two are already paired.<br>Remove a device below to invite someone new.</div></div>'
         :'<div style="padding:36px 24px;text-align:center;color:var(--ink-2);font-size:15px;line-height:1.5">Could not load a code - check connection.</div>';
-      if(paired){for(const x of[s.querySelector('.tag'),$('#pcode').parentElement,$('#pexp'),$('#copyLink'),$('#share'),$('#regen')])if(x)x.style.display='none';}
+      if(paired){const ps=$('#pairSub');if(ps)ps.textContent='Your two devices are linked. Manage them below.';for(const x of[s.querySelector('.tag'),$('#pcode').parentElement,$('#pexp'),$('#copyLink'),$('#share'),$('#regen')])if(x)x.style.display='none';}
       else $('#pexp').textContent='';}
   }
   // devices
