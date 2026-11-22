@@ -305,6 +305,8 @@ input[type=color].colpick{width:44px;height:44px;border-radius:14px;border:1px s
 'use strict';
 /* Alphabet Us - a private A-Z of dates for two. */
 const API='https://couples-api.avishorwork.workers.dev';
+const VAPID_PUB='BM6373UlQ6TpTz2oyPZ_r5HPvUmPgmUQIwSWCN8n2AnH3da04TSgQbhGUVN8kZglt40-orkBe_vtnqoBmTeb9xQ';
+const urlB64=s=>{const p='='.repeat((4-s.length%4)%4);const b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0));};
 const LS='au_';
 const $=(s,r=document)=>r.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
@@ -344,6 +346,24 @@ async function api(path,body){
   const j=await r.json().catch(()=>({}));
   if(!r.ok)throw Object.assign(new Error(j.err||j.error||('HTTP '+r.status)),{status:r.status,data:j});
   return j;
+}
+/* ---------- web push (reminders & partner updates) ---------- */
+const pushOK=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+const myName=()=>state.C.names[state.who==='a'?0:1]||'Your person';
+async function pushSub(){if(!pushOK())return null;try{const r=await navigator.serviceWorker.ready;return await r.pushManager.getSubscription();}catch(e){return null;}}
+async function enablePush(){
+  if(!pushOK())return 'unsupported';
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted')return perm;
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64(VAPID_PUB)});
+  await api('/subscribe',{tok:state.tok,who:myName(),subscription:sub.toJSON()});
+  store.set('pushEp',sub.endpoint);
+  return 'granted';
+}
+async function notifyPartner(body){
+  if(!state.tok)return;
+  try{await api('/broadcast',{tok:state.tok,title:state.C.title||'Alphabet Us',body,from:store.get('pushEp',null)});}catch(e){}
 }
 async function sync(){
   if(!state.tok)return;
@@ -864,6 +884,7 @@ function openLetter(L){
   $('#sDate').onchange=e=>save({date:e.target.value});
   $('#sDl').onchange=e=>save({dl:e.target.value});
   $('#sDone').onclick=()=>{const c=cur();save({done:!c.done,date:!c.done?(c.date||new Date().toISOString().slice(0,10)):c.date});
+    if(!c.done)notifyPartner(myName()+' finished "'+(c.note||ideaFor(L))+'" ('+L+')');
     closeSheet();renderApp();};
   $('#sClose').onclick=()=>{closeSheet();renderApp();};
   // media
@@ -937,6 +958,7 @@ async function uploadMedia(L,file){
       ...(last?{final:true,size,l:L,t:isVideo?'v':'i',ts,mime,n,thumb:!!thumb}:{size})});
   }
   state.M.push({id,l:L,t:isVideo?'v':'i',ts,mime,size,n,thumb:!!thumb});
+  notifyPartner(myName()+' added '+(isVideo?'a video':'a photo')+' to '+L+' \u00b7 '+((state.S[L]&&state.S[L].note)||ideaFor(L)));
   bump();
 }
 function openMedia(m){
@@ -1031,6 +1053,11 @@ function renderSettings(s){
     </div>
     <div class="set-group"><h3>Special dates</h3><div id="dates"></div>
       <button class="btn btn-soft btn-block" id="addDate" style="margin-top:8px">${I.plus}<span>Add a date</span></button></div>
+    <div class="set-group"><h3>Notifications</h3>
+      <div class="set-row"><div class="grow"><div class="t">Reminders & partner updates</div>
+        <div class="d" id="notifSub">Plan-by reminders, new photos, finished dates.</div></div>
+        <button class="btn btn-soft" id="notifBtn" style="padding:10px 16px">\u2026</button></div>
+    </div>
     <div class="set-group"><h3>Sharing</h3>
       <div class="set-row"><div class="grow"><div class="t">Invite your person</div>
         <div class="d">Prism code, link or 6-letter code</div></div>
@@ -1047,6 +1074,27 @@ function renderSettings(s){
     cv.style.cssText='width:72px;height:72px;border-radius:18px';
     const box=$('#setIcon');if(box){box.innerHTML='';box.appendChild(cv);}}).catch(()=>{});
   setIcon();
+  const notifBtn=$('#notifBtn'),notifSub=$('#notifSub');
+  const paintNotif=async()=>{
+    if(!pushOK()){notifBtn.textContent='N/A';notifSub.textContent='This browser does not support web push.';return;}
+    if(/iP(hone|ad|od)/.test(navigator.userAgent)&&!navigator.standalone){
+      notifBtn.textContent='Enable';
+      notifSub.textContent='On iPhone, add the app to your Home Screen first, then enable.';}
+    const sub=await pushSub();
+    if(sub){store.set('pushEp',sub.endpoint);notifBtn.textContent='On';notifSub.textContent='Plan-by reminders, new photos, finished dates.';}
+    else if(Notification.permission==='denied'){notifBtn.textContent='Blocked';notifSub.textContent='Notifications are blocked - allow them in your browser settings.';}
+    else notifBtn.textContent='Enable';
+  };
+  paintNotif();
+  notifBtn.onclick=async()=>{
+    notifBtn.textContent='\u2026';
+    try{const r=await enablePush();
+      if(r==='granted')toast('Notifications on');
+      else if(r==='denied')toast('Notifications blocked by the browser');
+      else if(r==='unsupported')toast('Not supported on this browser');
+    }catch(e){toast('Could not enable notifications');}
+    paintNotif();
+  };
   const commit=()=>{state.C.title=$('#cTitle').value.trim();
     state.C.names=[$('#cN0').value.trim(),$('#cN1').value.trim()];
     state.C.emoji=$('#cEmoji').value.trim();bump();};

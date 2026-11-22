@@ -32,3 +32,24 @@ self.addEventListener('fetch',e=>{
     })
   );
 });
+
+/* ---------- web push ---------- */
+self.addEventListener('push', e => {
+  let d = { title: 'Alphabet Us', body: 'Something new' };
+  try { Object.assign(d, e.data.json()); } catch (err) {}
+  e.waitUntil(self.registration.showNotification(String(d.title || 'Alphabet Us'), {
+    body: String(d.body || ''),
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    tag: 'alphabet-us'
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+      for (const c of cs) { if (c.url.startsWith(self.registration.scope) && 'focus' in c) return c.focus(); }
+      return clients.openWindow('./');
+    })
+  );
+});
