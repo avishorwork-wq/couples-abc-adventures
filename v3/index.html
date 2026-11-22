@@ -153,7 +153,7 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 
 @keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(min-width:960px){
-  .screen{max-width:600px}
+  .screen{max-width:680px}
   .screen-wide{max-width:1060px;padding-left:var(--sp-7);padding-right:var(--sp-7)}
 }
 .topbar{display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-5)}
@@ -167,7 +167,7 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .sub{color:var(--ink-2);font-size:15px;margin-bottom:var(--sp-5)}
 /* ---------- A-Z grid ---------- */
 .az{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:var(--sp-3)}
-@media(min-width:960px){.az{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--sp-4)}}
+@media(min-width:960px){.az{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:var(--sp-4)}}
 .az-tile{position:relative;aspect-ratio:1;border-radius:var(--r-m);background:var(--bg-raise);
   border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   transition:transform .15s var(--ease),box-shadow .15s;box-shadow:var(--shadow-1)}
@@ -232,8 +232,8 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
   background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent}
 .chiprow{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-3) 0}
 .chip{padding:7px 12px;border-radius:999px;background:var(--p-wash);font-size:13px;font-weight:500;color:var(--ink-2)}
-.starpick{display:flex;gap:6px;font-size:26px;color:var(--line-2)}
-.starpick button{color:inherit;transition:transform .12s}
+.starpick{display:flex;gap:2px;font-size:26px;color:var(--line-2)}
+.starpick button{color:inherit;transition:transform .12s;width:40px;height:40px;display:grid;place-items:center}
 .starpick button.on{color:var(--a-ink)}
 .starpick button:active{transform:scale(1.2)}
 /* ---------- gallery ---------- */
@@ -871,17 +871,17 @@ function renderSettings(s){
       <div style="display:flex;gap:16px;align-items:center;margin-bottom:var(--sp-4)">
         <div id="setIcon" style="width:72px;height:72px;flex:none"></div>
         <div><div style="font-family:var(--font-display);font-size:22px;font-weight:560">${esc(state.C.title||'Our alphabet')}</div>
-        <div style="color:var(--ink-3);font-size:14px">${names[0]||'You'} & ${names[1]||'...'}</div></div>
+        <div style="color:var(--ink-3);font-size:14px">${names[0]||'You'}${names[1]?' & '+names[1]:' · invite pending'}</div></div>
       </div>
     </div>
     <div class="set-group"><h3>Couple</h3>
       <div class="set-row"><div class="grow"><div class="t">Couple name</div></div>
         <input class="input" id="cTitle" style="max-width:170px" maxlength="40" value="${esc(state.C.title||'')}"></div>
-      <div class="set-row"><div class="grow"><div class="t">Your names</div></div>
-        <div style="display:flex;gap:6px"><input class="input" id="cN0" style="max-width:100px" maxlength="24" value="${names[0]||''}">
-        <input class="input" id="cN1" style="max-width:100px" maxlength="24" value="${names[1]||''}"></div></div>
-      <div class="set-row"><div class="grow"><div class="t">Emoji</div></div>
-        <input class="input" id="cEmoji" style="max-width:80px" maxlength="8" value="${esc(state.C.emoji||'')}"></div>
+      <div class="set-row" style="display:block"><div class="t" style="margin-bottom:8px">Your names</div>
+        <div style="display:flex;gap:8px"><input class="input" id="cN0" style="flex:1;min-width:0" maxlength="24" placeholder="You" value="${names[0]||''}">
+        <input class="input" id="cN1" style="flex:1;min-width:0" maxlength="24" placeholder="Your person" value="${names[1]||''}"></div></div>
+      <div class="set-row"><div class="grow"><div class="t">Emoji</div><div class="d">A little icon for your couple</div></div>
+        <input class="input" id="cEmoji" style="max-width:84px;text-align:center" maxlength="8" placeholder="🧡" value="${esc(state.C.emoji||'')}"></div>
     </div>
     <div class="set-group"><h3>Colors</h3>
       <div class="set-row" style="display:block">
