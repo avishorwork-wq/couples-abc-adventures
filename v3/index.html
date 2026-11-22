@@ -784,6 +784,29 @@ document.addEventListener('keydown',e=>{
   if(document.querySelector('.scrim.on:not(#scrim)')||document.querySelector('[data-scan]'))return;
   if($('#sheet').classList.contains('on'))closeSheet();
 });
+/* drag the sheet down from its grab zone to dismiss (sheet follows the finger, scrim fades) */
+(()=>{
+  const sh=$('#sheet');let y0=0,dy=0,drag=false;
+  sh.addEventListener('touchstart',e=>{
+    if(!sh.classList.contains('on'))return;
+    const t=e.touches[0];
+    const inGrab=t.clientY-sh.getBoundingClientRect().top<28;
+    if(!inGrab&&sh.scrollTop>0)return;
+    drag=true;y0=t.clientY;dy=0;sh.style.transition='none';
+  },{passive:true});
+  sh.addEventListener('touchmove',e=>{
+    if(!drag)return;
+    dy=Math.max(0,e.touches[0].clientY-y0);
+    if(dy>0){sh.style.transform=`translateY(${dy}px)`;$('#scrim').style.opacity=String(Math.max(0,1-dy/320));if(dy>6)e.preventDefault();}
+  },{passive:false});
+  const end=()=>{
+    if(!drag)return;drag=false;
+    const close=dy>110;
+    sh.style.transition='';$('#scrim').style.opacity='';sh.style.transform='';
+    if(close)closeSheet();
+  };
+  sh.addEventListener('touchend',end);sh.addEventListener('touchcancel',end);
+})();
 function openLetter(L){
   const st=Object.assign({done:false,date:'',dl:'',note:'',r:0},state.S[L]);
   const sh=$('#sheet');
