@@ -754,8 +754,10 @@ function openLetter(L){
     const row=el('div','');row.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
     for(const m of mine){
       const fig=el('div','');fig.style.cssText='width:64px;height:64px;border-radius:12px;overflow:hidden;background:var(--bg-sunk);position:relative';
-      const img=el('img');img.style.cssText='width:100%;height:100%;object-fit:cover';
-      img.src=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+'&part=t';
+      const url=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+(m.t==='v'?'':'&part=t');
+      const img=el(m.t==='v'?'video':'img');img.style.cssText='width:100%;height:100%;object-fit:cover';
+      if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
+      img.src=url;
       fig.appendChild(img);
       if(m.t==='v'){const b=el('div','badge');b.innerHTML=I.play;b.style.cssText='position:absolute;inset:0;margin:auto;width:20px;height:20px;display:grid;place-items:center;background:rgb(0 0 0/.5);border-radius:50%;color:#fff';fig.appendChild(b);}
       fig.onclick=()=>openMedia(m);
@@ -846,8 +848,10 @@ function renderGallery(s){
   const g=el('div','gal');
   for(const m of items){
     const f=el('figure');
-    const img=el('img');img.loading='lazy';
-    img.src=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+'&part=t';
+    const img=el(m.t==='v'?'video':'img');
+    if(m.t==='v'){img.preload='metadata';img.muted=true;img.playsInline=true;}
+    else img.loading='lazy';
+    img.src=API+'/media?tok='+encodeURIComponent(state.tok)+'&id='+m.id+(m.t==='v'?'':'&part=t');
     f.appendChild(img);
     f.insertAdjacentHTML('beforeend',`<span class="lettertag">${m.l}</span>`);
     if(m.t==='v'){const b=el('span','badge');b.innerHTML=I.play;f.appendChild(b);}
