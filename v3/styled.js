@@ -115,6 +115,9 @@ function styledPrism(code,r,{offset=2.0,ring=0.5,border='#e2549b',bg='#ffffff',S
     g.closePath();g.fill();};
   const hi=document.createElement('canvas');hi.width=Wpx;hi.height=Hpx;
   const g=hi.getContext('2d');
+  /* opaque white backing: dark card backgrounds showed through transparent
+     silhouette gaps/corners and broke scanning in dark mode */
+  g.fillStyle='#ffffff';g.fillRect(0,0,Wpx,Hpx);
   if(ring>0)draw(g,offsetPath(offset+ring),border);
   draw(g,offsetPath(offset),bg);
   for(const c of cells){const s=code.symbols[c.index];

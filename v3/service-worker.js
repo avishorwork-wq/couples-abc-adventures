@@ -1,4 +1,4 @@
-const CACHE='alphabet-us-v3-20261122';
+const CACHE='alphabet-us-v3-20261122-2';
 const ASSETS=['./','./index.html','./manifest.json','./prism.js','./scanfx.js','./styled.js','./icon-recolor.js',
   './fonts/inter-var.woff2','./fonts/fraunces-var.woff2','./fonts/fraunces-it-var.woff2',
   './icons/master-1024.png','./icons/icon-192.png','./icons/icon-512.png'];
