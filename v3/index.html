@@ -738,15 +738,15 @@ function openLetter(L){
   sh.querySelectorAll('#sStars button').forEach(b=>b.onclick=()=>{
     r=(r===+b.dataset.n)?0:+b.dataset.n;
     sh.querySelectorAll('#sStars button').forEach(x=>x.classList.toggle('on',+x.dataset.n<=r));});
+  const cur=()=>Object.assign({},st,state.S[L]);
   const save=(patch)=>{
-    state.S[L]=Object.assign({},state.S[L],st,patch,{u:Date.now()});
+    state.S[L]=Object.assign({},cur(),patch,{u:Date.now()});
     bump();renderMediaList();
-    if(current==='app'&&state.tab==='grid'){const tiles=$('#view .az');}
   };
   $('#sNote').onchange=e=>save({note:e.target.value.trim()});
   $('#sDate').onchange=e=>save({date:e.target.value});
   $('#sDl').onchange=e=>save({dl:e.target.value});
-  $('#sDone').onclick=()=>{save({done:!st.done,date:!st.done?(st.date||new Date().toISOString().slice(0,10)):st.date});
+  $('#sDone').onclick=()=>{const c=cur();save({done:!c.done,date:!c.done?(c.date||new Date().toISOString().slice(0,10)):c.date});
     closeSheet();renderApp();};
   $('#sClose').onclick=()=>{closeSheet();renderApp();};
   setInterval(()=>{},0);
