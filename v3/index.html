@@ -214,6 +214,8 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 .starpick button{color:inherit;transition:transform .12s;width:40px;height:40px;display:grid;place-items:center}
 .starpick button.on{color:var(--a-ink)}
 .starpick button:active{transform:scale(1.2)}
+@keyframes starpop{0%{transform:scale(1)}40%{transform:scale(1.45) rotate(-10deg)}100%{transform:scale(1) rotate(0)}}
+.starpick button.pop{animation:starpop .38s var(--ease)}
 /* ---------- gallery ---------- */
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:var(--r-m);overflow:hidden}
 .gal figure{opacity:0;animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
@@ -750,8 +752,15 @@ function openLetter(L){
   sh.classList.add('on');$('#scrim').classList.add('on');
   let r=st.r;
   sh.querySelectorAll('#sStars button').forEach(b=>b.onclick=()=>{
-    r=(r===+b.dataset.n)?0:+b.dataset.n;
-    sh.querySelectorAll('#sStars button').forEach(x=>x.classList.toggle('on',+x.dataset.n<=r));});
+    const n=+b.dataset.n,prev=r;
+    r=(r===n)?0:n;
+    const ripple=r>0&&r>=prev;
+    sh.querySelectorAll('#sStars button').forEach(x=>{
+      const xn=+x.dataset.n;
+      x.classList.toggle('on',xn<=r);
+      x.classList.remove('pop');x.style.animationDelay='';
+      if(ripple&&xn<=r){x.style.animationDelay=((xn-1)*35)+'ms';void x.offsetWidth;x.classList.add('pop');}
+    });});
   const cur=()=>Object.assign({},st,state.S[L]);
   const save=(patch)=>{
     state.S[L]=Object.assign({},cur(),patch,{u:Date.now()});
