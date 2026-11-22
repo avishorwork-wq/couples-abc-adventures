@@ -170,6 +170,56 @@ function layout() {
 let locked = !opts.searching, swayT = 0, M0 = null;
 const lerpM = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 
+/* ---------- live tracking overlay (real detection while searching) ---------- */
+let trackTarget = null, trackQuad = null, trackAlpha = 0, trackConf = 0, trackConfT = 0;
+function resetTrack() { trackTarget = null; trackQuad = null; trackAlpha = 0; trackConf = 0; trackConfT = 0; }
+function drawTrackFX(f) {
+  if (trackTarget) {
+    if (!trackQuad) trackQuad = trackTarget.map(p => [p[0], p[1]]);
+    else for (let i = 0; i < 4; i++) { trackQuad[i][0] = lerp(trackQuad[i][0], trackTarget[i][0], .38); trackQuad[i][1] = lerp(trackQuad[i][1], trackTarget[i][1], .38); }
+    trackAlpha = Math.min(1, trackAlpha + .09);
+  } else {
+    trackAlpha = Math.max(0, trackAlpha - .07);
+    if (trackAlpha <= 0) trackQuad = null;
+  }
+  trackConf = lerp(trackConf, trackConfT, .18);
+  f.lineCap = 'round'; f.lineJoin = 'round';
+  const stroke = (paths, col, a, w) => {
+    if (!paths.length || a <= .002) return;
+    f.beginPath();
+    for (const pts of paths) for (let i = 0; i < pts.length; i++) i ? f.lineTo(pts[i][0], pts[i][1]) : f.moveTo(pts[i][0], pts[i][1]);
+    f.strokeStyle = rgba([col[0], col[1], col[2], a * .16]); f.lineWidth = w * 3.4; f.stroke();
+    f.strokeStyle = rgba([col[0], col[1], col[2], a]); f.lineWidth = w; f.stroke();
+  };
+  if (trackQuad) {
+    const q = trackQuad, cxq = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4, cyq = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4;
+    const el = i => Math.hypot(q[(i + 1) % 4][0] - q[i][0], q[(i + 1) % 4][1] - q[i][1]);
+    const minE = Math.min(el(0), el(1), el(2), el(3));
+    if (minE > 8) {
+      const pad = minE * .075, arm = minE * (.17 + .09 * trackConf), lw = Math.max(2.4, minE * .042);
+      const Q = q.map(p => { const d = Math.hypot(p[0] - cxq, p[1] - cyq) || 1; return [cxq + (p[0] - cxq) * (d + pad) / d, cyq + (p[1] - cyq) * (d + pad) / d]; });
+      const groups = [];
+      for (let i = 0; i < 4; i++) {
+        const p = Q[i], pv = Q[(i + 3) % 4], nx = Q[(i + 1) % 4];
+        const l1 = Math.hypot(pv[0] - p[0], pv[1] - p[1]) || 1, l2 = Math.hypot(nx[0] - p[0], nx[1] - p[1]) || 1;
+        const a1 = Math.min(arm, l1 * .48), a2 = Math.min(arm, l2 * .48);
+        groups.push([[p[0] + (pv[0] - p[0]) / l1 * a1, p[1] + (pv[1] - p[1]) / l1 * a1], [p[0], p[1]], [p[0] + (nx[0] - p[0]) / l2 * a2, p[1] + (nx[1] - p[1]) / l2 * a2]]);
+      }
+      const a = trackAlpha * (.55 + .45 * trackConf);
+      stroke(groups, CYAN, a, lw);
+      if (trackConf > .5) stroke([[Q[0], Q[1], Q[2], Q[3], Q[0]]], CYAN, a * (trackConf - .5) * 1.1, lw * .55);
+      return;
+    }
+  }
+  // neutral guide: soft centered frame while no code is in view
+  const gs = Math.min(W, H) * .52 * (1 + .012 * Math.sin(swayT * 1.7));
+  const gx = W / 2, gy = H * .46, h = gs / 2, arm = gs * .13, lw = Math.max(2.4, gs * .012);
+  const groups = [];
+  for (const [px, py, sx, sy] of [[gx - h, gy - h, 1, 1], [gx + h, gy - h, -1, 1], [gx + h, gy + h, -1, -1], [gx - h, gy + h, 1, -1]])
+    groups.push([[px + sx * arm, py], [px, py], [px, py + sy * arm]]);
+  stroke(groups, CYAN, .38 + .05 * Math.sin(swayT * 1.7), lw);
+}
+
 /* ---------- camera pose ---------- */
 const FLAT = { rx: 0, ry: 0, rz: 0, tx: 0, ty: 0, s: 1 };
 const CAM0 = { rx: 27, ry: -21, rz: -10, tx: -.06, ty: .045, s: .80 };
@@ -321,6 +371,7 @@ const CYAN = [25, 182, 230], GREEN = [23, 196, 138];
 
 function drawFX(t, M) {
   const f = fctx; f.setTransform(dpr, 0, 0, dpr, 0, 0); f.clearRect(0, 0, W, H);
+  if (opts.searching && !locked) { drawTrackFX(f); return; }
   f.lineCap = 'round'; f.lineJoin = 'round';
   const lw = Math.max(2.4, S * .0105), rc = rcard(t), step = 4;
   const strokePts = (paths, col, a, w) => {
@@ -498,10 +549,13 @@ const api = {
     if (grid) api.setGrid(grid);
     if (backdrop) api.setBackdrop(backdrop);
     M0 = m0 || null;
+    resetTrack();
     if (!locked) { locked = true; curT = Math.max(curT, TL.lock - .35); }
   },
+  track: (q, conf) => { trackTarget = q || null; trackConfT = conf || 0; },
+  trackProbe: () => trackQuad ? trackQuad.map(p => [p[0], p[1]]) : null,
   M0FromQuad,
-  stop: () => { playing = false; document.documentElement.classList.remove('scanfx-lock'); }
+  stop: () => { playing = false; resetTrack(); document.documentElement.classList.remove('scanfx-lock'); }
 };
 render(0); play();
 return api;

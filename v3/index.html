@@ -499,7 +499,7 @@ async function startScan(box){
   document.body.appendChild(ov);
   let fxDone=null;
   const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
-  const cleanup=()=>{stopScan();fx.stop();ov.remove();};
+  const cleanup=()=>{stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
   closeB.onclick=cleanup;
   const scanFail=(msg)=>{
     fx.stop();
@@ -522,10 +522,15 @@ async function startScan(box){
   vid.setAttribute('playsinline','');vid.muted=true;
   vid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
   ov.insertBefore(vid,stageMount);
+  window.__scanFx=fx;
   try{
     scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
     vid.srcObject=scanStream;await vid.play();
     const cap=document.createElement('canvas');const cx=cap.getContext('2d',{willReadFrequently:true});
+    const quadArea=q=>{let a=0;for(let i=0;i<4;i++){const p=q[i],r=q[(i+1)%4];a+=p[0]*r[1]-r[0]*p[1];}return Math.abs(a)/2;};
+    const quadDist=(a,b)=>{let best=1e18;for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(a[i][0]-b[(i+r)%4][0],a[i][1]-b[(i+r)%4][1]);best=Math.min(best,d/4);}return best;};
+    const capToStage=p=>{const s2=Math.max(innerWidth/cap.width,innerHeight/cap.height);return [p[0]*s2+(innerWidth-cap.width*s2)/2,p[1]*s2+(innerHeight-cap.height*s2)/2];};
+    let lastQuad=null,stab=0,decoding=false,tickN=0;
     const tick=async()=>{
       if(!scanStream)return;
       if(scanBusy||vid.readyState<2||!vid.videoWidth){requestAnimationFrame(tick);return;}
@@ -533,26 +538,39 @@ async function startScan(box){
       const sc=Math.min(1,640/vid.videoWidth);
       cap.width=Math.round(vid.videoWidth*sc);cap.height=Math.round(vid.videoHeight*sc);
       cx.drawImage(vid,0,0,cap.width,cap.height);
-      try{
-        const id=cx.getImageData(0,0,cap.width,cap.height);
-        Prism.beginDecode(900);
-        const res=Prism.readImage({width:cap.width,height:cap.height,data:id.data});
-        const text=new TextDecoder().decode(res.bytes||[]);
-        const m=/#\/join=([A-Z2-9]{6})/.exec(text);
-        if(m){
+      let id=null;
+      try{id=cx.getImageData(0,0,cap.width,cap.height);}catch(e){}
+      /* 1) cheap detection pass -> live tracking brackets on the real quad */
+      let quad=null;
+      if(id){try{Prism.beginDecode(700);const qs=Prism.detectCurved(Prism.frame(id));if(qs&&qs.length){qs.sort((a,b)=>quadArea(b)-quadArea(a));quad=qs[0];}}catch(e){}}
+      if(quad){
+        stab=(lastQuad&&quadDist(quad,lastQuad)<cap.width*.045)?Math.min(3,stab+1):1;
+        lastQuad=quad.map(p=>[p[0],p[1]]);
+        fx.track(quad.map(capToStage),(stab-1)/2);
+      }else{lastQuad=null;stab=0;fx.track(null,0);}
+      /* 2) full decode in the worker (frame-fused) once a candidate is in view */
+      tickN++;
+      if(id&&!decoding&&(quad||tickN%6===0)){
+        decoding=true;
+        AsyncPrismReader.read(id,{fusion:true}).then(res=>{
+          decoding=false;
+          if(!scanStream)return;
+          const text=new TextDecoder().decode(res.bytes||[]);
+          const m=/#\/join=([A-Z2-9]{6})/.exec(text);
+          if(!m)return;
           for(const t of scanStream.getTracks())t.stop();scanStream=null;
           vid.remove();
+          fx.track(null,0);
           fxDone=scanSuccessFX(fx,cap,res,text,m[1],()=>{
             cleanup();
             $('#scanBox').style.display='none';
             $('#code').value=m[1];toast('Code found');
             const nm=$('#name');if(nm)nm.focus();
           });
-          return;
-        }
-      }catch(e){}
+        },()=>{decoding=false;});
+      }
       scanBusy=false;
-      setTimeout(tick,120);
+      setTimeout(tick,110);
     };
     tick();
   }catch(e){
@@ -1272,6 +1290,214 @@ window.__demoRecord=function(kind){
     });
   };
   return JSON.stringify({quadErr:sc.quadErr,w:rec.width,h:rec.height});
+};
+/* live-scanner demo: simulated moving-code camera (canvas stream) through the REAL
+   startScan pipeline (getUserMedia -> detectCurved tracking -> worker decode -> lock
+   -> success sequence), composited and recorded at 60fps. Camera itself is simulated;
+   everything that reacts to it is the production code. */
+window.__liveDemoRecord=function(){
+  const cam=document.createElement('canvas');cam.width=1280;cam.height=720;
+  const cc=cam.getContext('2d',{willReadFrequently:true});
+  const url=location.origin+location.pathname+'#/join=K7QX2M';
+  const rc=Prism.render(Prism.encode(new TextEncoder().encode(url),{}),9);
+  const T0=performance.now();
+  let truth=null;
+  const ease=x=>x<0?0:x>1?1:x*x*(3-2*x);
+  function pose(t){
+    if(t<1.0)return null;
+    const ein=ease((t-1.0)/1.1),steady=ease((t-5.6)/1.2),wob=1-steady;
+    return {
+      x:1280*(1.35-0.85*ein)+wob*46*Math.sin(t*1.7)+8*Math.sin(t*4.3),
+      y:720*(0.30+0.20*ein)+wob*34*Math.sin(t*1.3+1)+6*Math.sin(t*3.7),
+      rot:wob*(.28*Math.sin(t*.9)+.05*Math.sin(t*2.9)),
+      s:(0.62+0.38*ein)*(1+wob*.05*Math.sin(t*2.2))};
+  }
+  function drawCam(){
+    const t=(performance.now()-T0)/1000;
+    const g=cc.createLinearGradient(0,0,1280,720);
+    g.addColorStop(0,'#46414e');g.addColorStop(1,'#2e2a35');
+    cc.fillStyle=g;cc.fillRect(0,0,1280,720);
+    cc.strokeStyle='rgba(255,255,255,.03)';cc.lineWidth=2;
+    for(let i=0;i<8;i++){cc.beginPath();cc.moveTo(0,90*i+20);cc.lineTo(1280,90*i+40);cc.stroke();}
+    const p=pose(t);
+    if(p){
+      cc.save();cc.translate(p.x,p.y);cc.rotate(p.rot);cc.scale(p.s,p.s);
+      cc.drawImage(rc,-rc.width/2,-rc.height/2);cc.restore();
+      const c=Math.cos(p.rot),s2=Math.sin(p.rot),hw=rc.width/2,hh=rc.height/2;
+      truth=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(q=>[p.x+(q[0]*c-q[1]*s2)*p.s,p.y+(q[0]*s2+q[1]*c)*p.s]);
+    }else truth=null;
+  }
+  drawCam();setInterval(drawCam,33);
+  navigator.mediaDevices.getUserMedia=async()=>cam.captureStream(30);
+  /* hidden join-form stubs so the success callback's DOM touches can't crash */
+  for(const [id,tag] of [['scanBox','div'],['code','input'],['name','input']])
+    if(!document.getElementById(id)){const d=document.createElement(tag);d.id=id;d.style.display='none';document.body.appendChild(d);}
+  startScan(document.getElementById('scanBox'));
+  const ov=[...document.body.children].find(c=>c.style&&c.style.zIndex==='80');
+  const q=s=>ov.querySelector(s);
+  const dpr=1,W=innerWidth,H=innerHeight;
+  const rec=document.createElement('canvas');rec.width=W*dpr;rec.height=H*dpr;
+  const rg=rec.getContext('2d');
+  const lightCv=document.createElement('canvas');lightCv.width=rec.width;lightCv.height=rec.height;
+  const lg=lightCv.getContext('2d');
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  function drawTri(img,s0,s1,s2,d0,d1,d2){
+    const den=s0[0]*(s1[1]-s2[1])+s1[0]*(s2[1]-s0[1])+s2[0]*(s0[1]-s1[1]);
+    if(Math.abs(den)<1e-6)return;
+    const a=(d0[0]*(s1[1]-s2[1])+d1[0]*(s2[1]-s0[1])+d2[0]*(s0[1]-s1[1]))/den;
+    const b=(d0[1]*(s1[1]-s2[1])+d1[1]*(s2[1]-s0[1])+d2[1]*(s1[0]-s0[0]))/den;
+    const c=(d0[0]*(s2[0]-s1[0])+d1[0]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
+    const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
+    const e=d0[0]-a*s0[0]-c*s0[1],f=d0[1]-b*s0[0]-d*s0[1];
+    rg.save();rg.beginPath();rg.moveTo(d0[0],d0[1]);rg.lineTo(d1[0],d1[1]);rg.lineTo(d2[0],d2[1]);rg.closePath();rg.clip();
+    rg.transform(a,b,c,d,e,f);rg.drawImage(img,0,0);rg.restore();
+  }
+  function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+r,y,r);g.closePath();}
+  function drawPill(){
+    const pill=q('#pill'),arc=q('#arc'),checkEl=q('#check'),lab0=q('#lab0'),lab1=q('#lab1'),pctEl=q('#pct');
+    const cs=getComputedStyle(pill);
+    const op=parseFloat(pill.style.opacity||'0');if(op<=0.01)return;
+    const bg=cs.getPropertyValue('--bg').trim(),fg=cs.getPropertyValue('--fg').trim(),
+          bd=cs.getPropertyValue('--bd').trim(),acc=cs.getPropertyValue('--acc').trim();
+    const ty=parseFloat((pill.style.transform.match(/,\s*([-\d.]+)px\)/)||[0,0])[1]);
+    const pw=Math.min(272,W*.86),ph=48,px=(W-pw)/2,py=H-Math.max(30,H*.075)-ph+ty;
+    rg.save();rg.globalAlpha=op;
+    rr(rg,px,py,pw,ph,24);rg.fillStyle=bg;rg.fill();rg.lineWidth=1;rg.strokeStyle=bd;rg.stroke();
+    const rcx=px+13+12,rcy=py+24;
+    rg.lineWidth=2.4;rg.lineCap='round';
+    rg.strokeStyle=fg;rg.globalAlpha=op*.2;rg.beginPath();rg.arc(rcx,rcy,9,0,7);rg.stroke();
+    rg.globalAlpha=op;
+    const dash=(arc.style.strokeDasharray||'0 1').split(' ')[0];
+    const len=parseFloat(dash),rot=parseFloat((arc.getAttribute('transform')||'').match(/rotate\(([-\d.]+)/)?.[1]||'-90');
+    const arcOp=parseFloat(arc.style.opacity||'1');
+    if(len>.004&&arcOp>.01){rg.globalAlpha=op*arcOp;rg.strokeStyle=acc;
+      rg.beginPath();rg.arc(rcx,rcy,9,(rot-90)*Math.PI/180,(rot-90)*Math.PI/180+len*Math.PI*2);rg.stroke();}
+    const chkOff=parseFloat(checkEl.style.strokeDashoffset||'1');
+    if(chkOff<.999){rg.globalAlpha=op;rg.strokeStyle=acc;rg.lineWidth=2.4;
+      const pts=[[7.6,12.5],[10.6,15.5],[16.5,9.2]],tot=3+6.85;let drawn=(1-chkOff)*tot;
+      rg.beginPath();let p0=[rcx+7.6-12,rcy+12.5-12];rg.moveTo(p0[0],p0[1]);
+      for(const [x,y] of pts.slice(1)){const p1=[rcx+x-12,rcy+y-12];const seg=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]);
+        if(drawn>=seg){rg.lineTo(p1[0],p1[1]);drawn-=seg;p0=p1;}
+        else{const f=Math.max(0,drawn)/seg;rg.lineTo(p0[0]+(p1[0]-p0[0])*f,p0[1]+(p1[1]-p0[1])*f);drawn=0;break;}}
+      rg.stroke();}
+    rg.font='600 14.5px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+    rg.textBaseline='middle';rg.textAlign='left';
+    const lx=px+13+24+12,ly=py+24;
+    const o0=parseFloat(lab0.style.opacity||'0'),y0=parseFloat((lab0.style.transform.match(/translateY\(([-\d.]+)px\)/)||[0,0])[1]);
+    const o1=parseFloat(lab1.style.opacity||'0'),y1=parseFloat((lab1.style.transform.match(/translateY\(([-\d.]+)px\)/)||[0,0])[1]);
+    rg.fillStyle=fg;
+    if(o0>.01&&lab0.textContent){rg.globalAlpha=op*o0;rg.fillText(lab0.textContent,lx,ly+1+y0);}
+    if(o1>.01&&lab1.textContent){rg.globalAlpha=op*o1;rg.fillText(lab1.textContent,lx,ly+1+y1);}
+    const pOp=parseFloat(pctEl.style.opacity||'0');
+    if(pOp>.01){rg.globalAlpha=op*pOp;rg.textAlign='right';rg.fillText(pctEl.textContent,px+pw-18,ly+1);}
+    rg.restore();
+  }
+  const camToStage=p=>{const sc=Math.max(W/cam.width,H/cam.height);return [p[0]*sc+(W-cam.width*sc)/2,p[1]*sc+(H-cam.height*sc)/2];};
+  window.__trackLog=[];
+  let lockT=0;
+  const logger=setInterval(()=>{
+    const fx=window.__scanFx;if(!fx)return;
+    const t=(performance.now()-T0)/1000;
+    if(!lockT&&fx.time()>=fx.TL.lock)lockT=t;
+    window.__trackLog.push({t,q:fx.trackProbe?fx.trackProbe():null,
+      truth:truth?truth.map(camToStage):null,ft:fx.time()});
+  },200);
+  function composite(){
+    const fx=window.__scanFx;
+    const cardEl=q('#card'),fxEl=q('#fx');
+    rg.setTransform(dpr,0,0,dpr,0,0);
+    const darkEl=q('#dark');
+    const darkVisible=darkEl&&getComputedStyle(darkEl).visibility!=='hidden';
+    const bc=darkEl&&darkEl.querySelector('canvas');
+    if(!darkVisible){
+      rg.fillStyle='#000';rg.fillRect(0,0,W,H);
+      const s2=Math.max(W/cam.width,H/cam.height);
+      rg.drawImage(cam,(W-cam.width*s2)/2,(H-cam.height*s2)/2,cam.width*s2,cam.height*s2);
+    }else if(bc){
+      rg.filter='brightness(.46) saturate(.85)';
+      const s2=Math.max(W/bc.width,H/bc.height);
+      rg.drawImage(bc,(W-bc.width*s2)/2,(H-bc.height*s2)/2,bc.width*s2,bc.height*s2);
+      rg.filter='none';
+      const vg=rg.createRadialGradient(W/2,H*.44,Math.min(W,H)*.30,W/2,H*.44,Math.max(W,H)*.78);
+      vg.addColorStop(0,'rgba(8,6,14,0)');vg.addColorStop(1,'rgba(8,6,14,.66)');
+      rg.fillStyle=vg;rg.fillRect(0,0,W,H);
+    }
+    if(fx){
+      const t=fx.time(),pr=fx.probe(t);
+      if(pr.ie>0){
+        const R=lerp(-pr.feather,pr.Rmax,pr.ie);
+        lg.setTransform(dpr,0,0,dpr,0,0);lg.clearRect(0,0,W,H);
+        const gr=lg.createRadialGradient(W/2,H*.38,10,W/2,H*.38,Math.max(W,H)*.75);
+        gr.addColorStop(0,'#fcfaff');gr.addColorStop(.58,'#f4f1fc');gr.addColorStop(1,'#e9e5f6');
+        lg.fillStyle=gr;lg.fillRect(0,0,W,H);
+        lg.globalCompositeOperation='destination-in';
+        const mk=lg.createRadialGradient(pr.cx,pr.cy,Math.max(.01,R-pr.feather),pr.cx,pr.cy,Math.max(.01,R+pr.feather));
+        mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop(1,'rgba(0,0,0,0)');
+        lg.fillStyle=mk;lg.fillRect(0,0,W,H);
+        lg.globalCompositeOperation='source-over';
+        rg.drawImage(lightCv,0,0,W,H);
+      }
+      const tr=cardEl.style.transform||'';
+      if(tr.startsWith('matrix3d')&&cardEl.style.visibility!=='hidden'){
+        const m=tr.slice(9,-1).split(',').map(Number);
+        const P=(x,y)=>{const X=m[0]*x+m[4]*y+m[12],Y=m[1]*x+m[5]*y+m[13],Ww=m[3]*x+m[7]*y+m[15];return [X/Ww,Y/Ww];};
+        const cw=cardEl.width,ch=cardEl.height;
+        const bf=/blur\(([-\d.]+)px\)/.exec(cardEl.style.filter||'');
+        if(bf)rg.filter='blur('+bf[1]+'px)';
+        const NN=12;
+        for(let j=0;j<NN;j++)for(let i=0;i<NN;i++){
+          const u0=i/NN,u1=(i+1)/NN,v0=j/NN,v1=(j+1)/NN;
+          const S2=(u,v)=>[u*cw,v*ch],Q=(u,v)=>P(u*cw,v*ch);
+          drawTri(cardEl,S2(u0,v0),S2(u1,v0),S2(u1,v1),Q(u0,v0),Q(u1,v0),Q(u1,v1));
+          drawTri(cardEl,S2(u0,v0),S2(u1,v1),S2(u0,v1),Q(u0,v0),Q(u1,v0),Q(u1,v1));
+        }
+        rg.filter='none';
+      }
+      rg.setTransform(1,0,0,1,0,0);rg.drawImage(fxEl,0,0);rg.setTransform(dpr,0,0,dpr,0,0);
+      drawPill();
+    }
+  }
+  const stream=rec.captureStream(60);
+  const mr=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:4500000});
+  const chunks=[];mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  mr.start(100);
+  let raf;const loop=()=>{composite();raf=requestAnimationFrame(loop);};
+  loop();
+  window.__recStop=function(){
+    return new Promise(res2=>{
+      cancelAnimationFrame(raf);clearInterval(logger);
+      mr.onstop=()=>{
+        const blob=new Blob(chunks,{type:'video/webm'});
+        window.__recBlob=blob;res2(JSON.stringify({size:blob.size,lockT}));
+      };
+      mr.stop();
+    });
+  };
+  return JSON.stringify({started:true,w:rec.width,h:rec.height});
+};
+window.__liveDemoResult=function(){
+  const log=window.__trackLog||[];
+  const errs=[];
+  for(const s of log){
+    if(!s.q||!s.truth||s.t<1.6)continue;
+    let best=1e18;
+    for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(s.q[i][0]-s.truth[(i+r)%4][0],s.q[i][1]-s.truth[(i+r)%4][1]);best=Math.min(best,d/4);}
+    errs.push({t:+s.t.toFixed(2),err:+best.toFixed(1)});
+  }
+  const seen=log.filter(s=>s.truth).length,tracked=log.filter(s=>s.truth&&s.q).length;
+  return JSON.stringify({samples:log.length,seen,tracked,errs});
+};
+window.__recUpload=async function(){
+  const f=new File([window.__recBlob],'scan-live.webm',{type:'video/webm'});
+  const before=state.M.length;
+  await uploadMedia('Z',f);
+  const m=state.M[state.M.length-1];
+  return JSON.stringify({added:state.M.length-before,id:m.id,url:mediaUrl(m,false),size:m.size});
+};
+window.__recPurge=async function(id){
+  await api('/del',{tok:state.tok,id});
+  state.M=state.M.filter(m=>m.id!==id);
+  return 'purged';
 };
 /* ---------- boot ---------- */
 applyTheme();
