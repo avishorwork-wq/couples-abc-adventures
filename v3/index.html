@@ -298,7 +298,7 @@ input[type=color].colpick{width:44px;height:44px;border-radius:14px;border:1px s
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
 <div class="toast" id="toast"></div>
 <script src="prism.js"></script>
-<script src="scanfx.js?v=4"></script>
+<script src="scanfx.js?v=5"></script>
 <script src="styled.js"></script>
 <script src="icon-recolor.js"></script>
 <script>
@@ -578,12 +578,12 @@ async function startScan(box){
   ov.appendChild(closeB);
   document.body.appendChild(ov);
   ov.dataset.scan='1';
-  let fxDone=null;
+  let fxDone=null, closed=false, verifiedOk=false;
   const fx=ScanFX(stageMount,{searching:true,onDone:()=>{if(fxDone)fxDone();}});
   const onScanEsc=e=>{if(e.key==='Escape')cleanup();};
   document.addEventListener('keydown',onScanEsc);
   let scanLayer=null;
-  const cleanup=()=>{if(scanLayer){Nav.removeLayer(scanLayer);scanLayer=null;}document.removeEventListener('keydown',onScanEsc);stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
+  const cleanup=()=>{closed=true;if(scanLayer){Nav.removeLayer(scanLayer);scanLayer=null;}document.removeEventListener('keydown',onScanEsc);stopScan();try{AsyncPrismReader.reset()}catch(e){}fx.stop();ov.remove();};
   scanLayer=Nav.pushOverlay(cleanup);
   closeB.onclick=cleanup;
   const scanFail=(msg)=>{
@@ -657,29 +657,31 @@ async function startScan(box){
         lastQuad=quad.map(p=>[p[0],p[1]]);
         /* adopt a detection on screen only once it repeats (kills one-frame false
            positives); confidence grows with stability */
-        if(stab>=2)fx.track(quad.map(capToStage),Math.min(1,(stab-2)/2));
+        if(stab>=2||verifiedOk)fx.track(quad.map(capToStage),verifiedOk?1:Math.min(1,(stab-2)/2));
       }else{lastQuad=null;stab=0;fx.track(null,0);}
       /* 2) full decode in the worker (frame-fused) once a candidate is in view */
       tickN++;
-      if(id&&!decoding&&(quad||tickN%6===0)){
+      if(id&&!decoding&&!verifiedOk&&(quad||tickN%6===0)){
         decoding=true;
+        const stream=scanStream, capW=cap.width, capH=cap.height; /* bind this request's capture session + dims */
         AsyncPrismReader.read(id,{fusion:true}).then(res=>{
           decoding=false;
-          if(!scanStream)return;
+          if(closed||scanStream!==stream)return; /* discard results from a closed/reopened session */
           const text=new TextDecoder().decode(res.bytes||[]);
           const m=/#\/join=([A-Z2-9]{6})/.exec(text);
           if(!m)return;
-          window.__lastDecode={quad:res.quad.map(p=>[p[0],p[1]]),lw:res.layout.W,lh:res.layout.H,capW:cap.width,capH:cap.height,fused:res.fusedFrames||0};
-          for(const t of scanStream.getTracks())t.stop();scanStream=null;
-          vid.remove();
-          fx.track(null,0);
-          fxDone=scanSuccessFX(fx,cap,res,text,m[1],()=>{
+          window.__lastDecode={quad:res.quad.map(p=>[p[0],p[1]]),lw:res.layout.W,lh:res.layout.H,capW,capH,fused:res.fusedFrames||0};
+          /* live success: camera keeps running; brackets tighten on the real code
+             in the live view and keep tracking it until the sheet closes */
+          verifiedOk=true;
+          fx.track(res.quad.map(p=>[p[0],p[1]]).map(capToStage),1);
+          fx.verified('Verified');
+          setTimeout(()=>{
+            if(closed)return;
             cleanup();
             $('#scanBox').style.display='none';
             $('#code').value=m[1];toast('Code found');
-            /* do not auto-focus the name field: on phones it pops the keyboard,
-               hides the Join button and crops the header right after a successful scan */
-          });
+          },1400);
         },()=>{decoding=false;});
       }
       scanBusy=false;

@@ -172,6 +172,7 @@ const lerpM = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 
 /* ---------- live tracking overlay (real detection while searching) ---------- */
 let trackTarget = null, trackQuad = null, trackAlpha = 0, trackConf = 0, trackConfT = 0;
+let didVerify = false;   // live-success: green brackets + pill over the LIVE camera view
 function resetTrack() { trackTarget = null; trackQuad = null; trackAlpha = 0; trackConf = 0; trackConfT = 0; }
 function drawTrackFX(f) {
   if (trackTarget) {
@@ -205,9 +206,10 @@ function drawTrackFX(f) {
         const a1 = Math.min(arm, l1 * .48), a2 = Math.min(arm, l2 * .48);
         groups.push([[p[0] + (pv[0] - p[0]) / l1 * a1, p[1] + (pv[1] - p[1]) / l1 * a1], [p[0], p[1]], [p[0] + (nx[0] - p[0]) / l2 * a2, p[1] + (nx[1] - p[1]) / l2 * a2]]);
       }
-      const a = trackAlpha * (.55 + .45 * trackConf);
-      stroke(groups, CYAN, a, lw);
-      if (trackConf > .5) stroke([[Q[0], Q[1], Q[2], Q[3], Q[0]]], CYAN, a * (trackConf - .5) * 1.1, lw * .55);
+      const col = didVerify ? GREEN : CYAN;
+      const a = didVerify ? trackAlpha : trackAlpha * (.55 + .45 * trackConf);
+      stroke(groups, col, a, lw);
+      if (didVerify || trackConf > .5) stroke([[Q[0], Q[1], Q[2], Q[3], Q[0]]], col, didVerify ? a : a * (trackConf - .5) * 1.1, lw * .55);
       return;
     }
   }
@@ -447,6 +449,7 @@ function updateScene(t) {
   curtain.style.opacity = (1 - E.out(clamp(t / .5))).toFixed(3);
   curtain.style.visibility = t > .55 ? 'hidden' : 'visible';
 
+  if (didVerify) return;   // verified overlay is event-driven, not timeline-driven
   // HUD
   const vis = E.out(clamp((t - .25) / .45));
   pill.style.opacity = vis; pill.style.transform = 'translate(-50%,' + ((1 - vis) * 10) + 'px)'; ctrls.style.opacity = vis;
@@ -553,6 +556,17 @@ const api = {
     if (!locked) { locked = true; curT = Math.max(curT, TL.lock - .35); }
   },
   track: (q, conf) => { trackTarget = q || null; trackConfT = conf || 0; },
+  verified: label => {
+    didVerify = true;
+    lab1.textContent = label || 'Verified'; lab1.style.opacity = 1; lab1.style.transform = 'none';
+    lab0.textContent = ''; lab0.style.opacity = 0;
+    pill.style.opacity = 1; pill.style.transform = 'translate(-50%,0)';
+    applyUI(pill, 0, 1);
+    arc.style.opacity = 0;
+    checkEl.style.strokeDasharray = '1 1'; checkEl.style.strokeDashoffset = 0;
+    pctEl.style.opacity = 0;
+    try { navigator.vibrate && navigator.vibrate([10, 50, 16]); } catch (e) {}
+  },
   trackProbe: () => trackQuad ? trackQuad.map(p => [p[0], p[1]]) : null,
   M0FromQuad,
   stop: () => { playing = false; resetTrack(); document.documentElement.classList.remove('scanfx-lock'); const _sx=document.getElementById('scanfx-css'); if(_sx)_sx.remove(); }
