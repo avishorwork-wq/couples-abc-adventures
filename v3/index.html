@@ -677,7 +677,8 @@ async function startScan(box){
             cleanup();
             $('#scanBox').style.display='none';
             $('#code').value=m[1];toast('Code found');
-            const nm=$('#name');if(nm)nm.focus();
+            /* do not auto-focus the name field: on phones it pops the keyboard,
+               hides the Join button and crops the header right after a successful scan */
           });
         },()=>{decoding=false;});
       }
