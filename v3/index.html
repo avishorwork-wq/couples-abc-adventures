@@ -1382,7 +1382,7 @@ window.__liveDemoRecord=function(){
     const a=(d0[0]*(s1[1]-s2[1])+d1[0]*(s2[1]-s0[1])+d2[0]*(s0[1]-s1[1]))/den;
     const b=(d0[1]*(s1[1]-s2[1])+d1[1]*(s2[1]-s0[1])+d2[1]*(s0[1]-s1[1]))/den;
     const c=(d0[0]*(s2[0]-s1[0])+d1[0]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
-    const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[0]*(s1[0]-s0[0]))/den;
+    const d=(d0[1]*(s2[0]-s1[0])+d1[1]*(s0[0]-s2[0])+d2[1]*(s1[0]-s0[0]))/den;
     const e=d0[0]-a*s0[0]-c*s0[1],f=d0[1]-b*s0[0]-d*s0[1];
     rg.save();rg.beginPath();rg.moveTo(d0[0],d0[1]);rg.lineTo(d1[0],d1[1]);rg.lineTo(d2[0],d2[1]);rg.closePath();rg.clip();
     rg.transform(a,b,c,d,e,f);rg.drawImage(img,0,0);rg.restore();
