@@ -912,14 +912,18 @@ function scanSuccess(cap,res,text,code6){
     const inv=Prism.homography(quad,[[0,0],[W,0],[W,H],[0,H]]);
     const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
     const dst=straight.getContext('2d').createImageData(S,S);
-    const sx2=S, sy2=Math.round(S*H/W);
-    const padU=0,scale=S/W;
+    const scale=S/W,cw2=cap.width,ch2=cap.height;
     for(let y=0;y<S;y++)for(let x=0;x<S;x++){
       const p=Prism.map(inv,x/scale,y/(S/H));
-      const sx=Math.round(p[0]),sy=Math.round(p[1]),di=(y*S+x)*4;
-      if(sx<0||sy<0||sx>=cap.width||sy>=cap.height){dst.data[di+3]=0;continue;}
-      const si=(sy*cap.width+sx)*4;
-      dst.data[di]=src.data[si];dst.data[di+1]=src.data[si+1];dst.data[di+2]=src.data[si+2];dst.data[di+3]=255;
+      const fx=p[0]-0.5,fy=p[1]-0.5,x0=Math.floor(fx),y0=Math.floor(fy),di=(y*S+x)*4;
+      if(x0<0||y0<0||x0>=cw2-1||y0>=ch2-1){dst.data[di+3]=0;continue;}
+      const ax=fx-x0,ay=fy-y0;
+      for(let c3=0;c3<3;c3++){
+        const v00=src.data[(y0*cw2+x0)*4+c3],v10=src.data[(y0*cw2+x0+1)*4+c3],
+              v01=src.data[((y0+1)*cw2+x0)*4+c3],v11=src.data[((y0+1)*cw2+x0+1)*4+c3];
+        dst.data[di+c3]=v00*(1-ax)*(1-ay)+v10*ax*(1-ay)+v01*(1-ax)*ay+v11*ax*ay;
+      }
+      dst.data[di+3]=255;
     }
     straight.getContext('2d').putImageData(dst,0,0);
   }catch(e){}
@@ -1044,7 +1048,7 @@ function scanSuccess(cap,res,text,code6){
     }
     // reticle: converges from wide pose onto the REAL detected corners, snap at PA
     if(t<PA+240){
-      const rt=Math.min(1,t/PA),kk=eX(Math.min(1,rt*1.06));
+      const rt=Math.min(1,t/PA),kk=eB(rt);
       const cur=quad.map((p,i)=>[startQ[i][0]+(p[0]-startQ[i][0])*kk,startQ[i][1]+(p[1]-startQ[i][1])*kk]);
       const snap=Math.max(0,(t-PA)/220);
       g.save();
@@ -1073,9 +1077,9 @@ function scanSuccess(cap,res,text,code6){
       g.save();
       g.strokeStyle='rgba(52,229,160,'+(0.85*(1-x))+')';g.lineWidth=3;g.shadowColor='#34E5A0';g.shadowBlur=26*(1-x);
       g.beginPath();g.roundRect(sqX-6,sqY-6,sq+12,sq+12,24);g.stroke();
-      const rr=sq*0.5*(1+0.35*eO(x));
-      g.strokeStyle='rgba(52,229,160,'+(0.5*(1-x))+')';g.lineWidth=2;
-      g.beginPath();g.arc(cx0,cy0,rr,0,7);g.stroke();
+      const grow=4+26*eO(x);
+      g.strokeStyle='rgba(52,229,160,'+(0.45*(1-x))+')';g.lineWidth=2;g.shadowBlur=0;
+      g.beginPath();g.roundRect(sqX-grow,sqY-grow,sq+grow*2,sq+grow*2,26+grow*0.4);g.stroke();
       g.restore();
       g.restore(); // bounce transform
     }
