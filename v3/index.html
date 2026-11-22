@@ -629,7 +629,7 @@ async function startScan(box){
     const quadArea=q=>{let a=0;for(let i=0;i<4;i++){const p=q[i],r=q[(i+1)%4];a+=p[0]*r[1]-r[0]*p[1];}return Math.abs(a)/2;};
     const quadDist=(a,b)=>{let best=1e18;for(let r=0;r<4;r++){let d=0;for(let i=0;i<4;i++)d+=Math.hypot(a[i][0]-b[(i+r)%4][0],a[i][1]-b[(i+r)%4][1]);best=Math.min(best,d/4);}return best;};
     const capToStage=(p,W,H)=>{const s2=Math.max(innerWidth/W,innerHeight/H);return [p[0]*s2+(innerWidth-W*s2)/2,p[1]*s2+(innerHeight-H*s2)/2];};
-    let lastQuad=null,stab=0,decoding=false,tickN=0;
+    let lastQuad=null,stab=0,decoding=false,tickN=0,blindN=0;
     const tick=async()=>{
       if(closed||scanStream!==stream)return; /* a closed or superseded session's loop dies here */
       if(scanBusy||vid.readyState<2||!vid.videoWidth){requestAnimationFrame(tick);return;}
@@ -693,15 +693,26 @@ async function startScan(box){
         decoding=true;
         /* candidate reads decode a FULL-resolution frame: the 640px detection
            downscale blurs a dense code's cells together before the reader sees
-           them. Blind probes keep the cheap downscaled frame they already use. */
-        let rid=id, capW=cap.width, capH=cap.height;
-        if(quad||verifiedOk){
+           them. Blind probes alternate between the cheap full-frame downscale
+           and a full-resolution centered square: users aim the code at the
+           viewfinder center, and centered full-res detail survives where the
+           640px full-frame downscale loses it. */
+        let rid=id, rw=cap.width, rh=cap.height, rox=0, roy=0;
+        const wantRoi=!quad&&!verifiedOk&&(++blindN%2===1);
+        if(quad||verifiedOk||wantRoi){
           dec.width=vid.videoWidth;dec.height=vid.videoHeight;
           dxc.drawImage(vid,0,0,dec.width,dec.height);
-          let fid=null;try{fid=dxc.getImageData(0,0,dec.width,dec.height);}catch(e){}
-          if(fid){rid=fid;capW=dec.width;capH=dec.height;}
+          if(wantRoi){
+            const side=Math.round(Math.min(dec.width,dec.height)*.6);
+            const sx=Math.round((dec.width-side)/2),sy=Math.round((dec.height-side)/2);
+            let fid=null;try{fid=dxc.getImageData(sx,sy,side,side);}catch(e){}
+            if(fid){rid=fid;rw=dec.width;rh=dec.height;rox=sx;roy=sy;}
+          }else{
+            let fid=null;try{fid=dxc.getImageData(0,0,dec.width,dec.height);}catch(e){}
+            if(fid){rid=fid;rw=dec.width;rh=dec.height;}
+          }
         }
-        const reqStream=scanStream; /* bind this request's capture session + dims */
+        const reqStream=scanStream; /* bind this request's capture session, frame dims + ROI offset */
         const revoke=()=>{verifiedOk=false;verifiedText=null;clearTimeout(verifyTimer);fx.revoke();};
         AsyncPrismReader.read(rid,{fusion:true}).then(res=>{
           decoding=false;
@@ -709,16 +720,16 @@ async function startScan(box){
           const text=new TextDecoder().decode(res.bytes||[]);
           const m=/#\/join=([A-Z2-9]{6})/.exec(text);
           if(verifiedOk){
-            if(m&&text===verifiedText){fx.track(res.quad.map(p=>capToStage(p,capW,capH)),1);}
+            if(m&&text===verifiedText){fx.track(res.quad.map(p=>capToStage([p[0]+rox,p[1]+roy],rw,rh)),1);}
             else revoke(); /* changed or unreadable code clears Verified */
             return;
           }
           if(!m)return;
-          window.__lastDecode={quad:res.quad.map(p=>[p[0],p[1]]),lw:res.layout.W,lh:res.layout.H,capW,capH,fused:res.fusedFrames||0};
+          window.__lastDecode={quad:res.quad.map(p=>[p[0]+rox,p[1]+roy]),lw:res.layout.W,lh:res.layout.H,capW:rw,capH:rh,roi:!!(rox||roy),fused:res.fusedFrames||0};
           /* live success: camera keeps running; brackets tighten on the real code
              in the live view and keep tracking it until the sheet closes */
           verifiedOk=true;verifiedText=text;
-          fx.track(res.quad.map(p=>capToStage(p,capW,capH)),1);
+          fx.track(res.quad.map(p=>capToStage([p[0]+rox,p[1]+roy],rw,rh)),1);
           fx.verified('Verified');
           /* close only after the window AND the last in-flight read settle:
              a stale success must never fill the form while a newer read is pending */
