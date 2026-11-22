@@ -46,8 +46,7 @@ h1{font-family:var(--font-display);font-weight:560;font-size:32px;line-height:1.
   -webkit-mask-composite:xor;mask-composite:exclude;}
 .card-names{text-align:center;font-family:var(--font-display);font-size:19px;font-weight:560;margin-bottom:14px}
 .card-names em{font-style:italic;font-weight:480;color:var(--a-ink)}
-.prism-wrap{position:relative;border-radius:18px;overflow:hidden;background:#fff;
-  box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--p) 8%,#eee);}
+.prism-wrap{position:relative;border-radius:18px;padding:4px;}
 .prism-wrap canvas{width:100%;height:auto;display:block}
 .prism-tag{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
   font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#6b6470;
@@ -83,11 +82,13 @@ h1{font-family:var(--font-display);font-weight:560;font-size:32px;line-height:1.
   <p class="alt">They can also enter the code by hand on the <a href="#">join screen</a>.</p>
 </div>
 <script src="prism.js"></script>
+<script src="styled.js"></script>
 <script>
 const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
-const bytes=new TextEncoder().encode(link);
-const code=Prism.encode(bytes,{});
+const code=Prism.encode(new TextEncoder().encode(link),{});
 const cv=document.getElementById('prism');
-Prism.render(code,12,cv);
+const styled=styledPrism(code,11);
+cv.width=styled.width;cv.height=styled.height;
+cv.getContext('2d').drawImage(styled,0,0);
 </script>
 </body></html>

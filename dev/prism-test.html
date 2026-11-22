@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><title>prism decode test</title>
+<body><pre id="out">running...</pre>
+<script src="prism.js"></script>
+<script src="styled.js"></script>
+<script>
+(async()=>{
+const out=[];
+const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
+for(const offset of [2.0,1.6,2.6]){
+  const code=Prism.encode(new TextEncoder().encode(link),{});
+  const styled=styledPrism(code,11,{offset});
+  // flatten over white like a screenshot would see
+  const flat=document.createElement('canvas');flat.width=styled.width;flat.height=styled.height;
+  const fx=flat.getContext('2d');fx.fillStyle='#fff';fx.fillRect(0,0,flat.width,flat.height);fx.drawImage(styled,0,0);
+  const id=fx.getImageData(0,0,flat.width,flat.height);
+  try{
+    const res=Prism.readImage({width:flat.width,height:flat.height,data:id.data});
+    const text=new TextDecoder().decode(res.bytes);
+    out.push('offset '+offset+': PASS decoded="'+text+'" match='+(text===link));
+  }catch(e){out.push('offset '+offset+': FAIL '+e.message);}
+}
+document.getElementById('out').textContent=out.join('\n');
+})();
+</script>
