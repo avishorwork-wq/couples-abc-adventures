@@ -86,7 +86,7 @@ h1{font-family:var(--font-display);font-weight:560;font-size:32px;line-height:1.
 const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
 const code=Prism.encode(new TextEncoder().encode(link),{});
 const cv=document.getElementById('prism');
-const styled=styledPrism(code,11);
+const styled=styledPrism(code,11,{offset:1.6,ring:0});
 cv.width=styled.width;cv.height=styled.height;
 cv.getContext('2d').drawImage(styled,0,0);
 </script>
