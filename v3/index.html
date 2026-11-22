@@ -909,12 +909,12 @@ function scanSuccess(cap,res,text,code6){
   // pre-straightened camera crop for the post-warp phase
   const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
   try{
-    const inv=Prism.homography(quad,[[0,0],[W,0],[W,H],[0,H]]);
+    const fwd=Prism.homography([[0,0],[W,0],[W,H],[0,H]],quad);
     const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
     const dst=straight.getContext('2d').createImageData(S,S);
     const scale=S/W,cw2=cap.width,ch2=cap.height;
     for(let y=0;y<S;y++)for(let x=0;x<S;x++){
-      const p=Prism.map(inv,x/scale,y/(S/H));
+      const p=Prism.map(fwd,x/scale,y/(S/H));
       const fx=p[0]-0.5,fy=p[1]-0.5,x0=Math.floor(fx),y0=Math.floor(fy),di=(y*S+x)*4;
       if(x0<0||y0<0||x0>=cw2-1||y0>=ch2-1){dst.data[di+3]=0;continue;}
       const ax=fx-x0,ay=fy-y0;
