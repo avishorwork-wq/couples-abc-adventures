@@ -607,7 +607,7 @@ async function startScan(box){
     L.push('Camera applied: '+JSON.stringify(s));
     L.push('Camera modes: focus='+JSON.stringify(c.focusMode||null)+' exposure='+JSON.stringify(c.exposureMode||null)+' whiteBalance='+JSON.stringify(c.whiteBalanceMode||null)+' size='+JSON.stringify({w:c.width||null,h:c.height||null}));
     if(D0.settingsError)L.push('Camera settings: could not be read');
-    L.push('Checked '+ticks.length+' frames: '+det+' with a code shape in view, best cell match '+best);
+    L.push('Checked '+ticks.length+' frames ('+(D0.skipped||0)+' skipped, camera not ready): '+det+' with a code passing the format check, best cell match '+best);
     L.push('Read attempts: '+reads.length+' ('+reads.filter(r=>r.ok&&r.hit).length+' codes read, '+reads.filter(r=>!r.ok).length+' failed)'
       +(ms.length?'; middle '+ms[Math.floor(ms.length/2)]+'ms, slowest '+ms[ms.length-1]+'ms':''));
     const ek=Object.keys(errs);if(ek.length)L.push('Top read failures: '+ek.sort((a,b)=>errs[b]-errs[a]).slice(0,3).map(k=>k+' x'+errs[k]).join(' | '));
