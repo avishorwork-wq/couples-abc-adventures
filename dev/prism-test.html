@@ -8,7 +8,7 @@ const out=[];
 const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
 for(const offset of [2.0,1.6,2.6]){
   const code=Prism.encode(new TextEncoder().encode(link),{});
-  const styled=styledPrism(code,11,{offset});
+  const styled=styledPrism(code,11,{offset,ring:0});
   // flatten over white like a screenshot would see
   const flat=document.createElement('canvas');flat.width=styled.width;flat.height=styled.height;
   const fx=flat.getContext('2d');fx.fillStyle='#fff';fx.fillRect(0,0,flat.width,flat.height);fx.drawImage(styled,0,0);
