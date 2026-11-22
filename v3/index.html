@@ -898,18 +898,22 @@ function scanSuccess(cap,res,text,code6){
   const cx0=ow/2,cy0=oh/2,sq=Math.min(ow,oh)*0.74;
   const sqX=cx0-sq/2,sqY=cy0-sq/2;
   // canonical clean code, re-encoded from the decoded payload
-  let clean;
-  try{const cc=Prism.encode(new TextEncoder().encode(text),{});clean=Prism.render(cc,9);}
+  let clean,cn=[[0,0],[1,0],[1,1],[0,1]];
+  try{const cc=Prism.encode(new TextEncoder().encode(text),{});clean=Prism.render(cc,9);cn=Prism.corners(cc.layout);}
   catch(e){clean=cap;}
+  const fx0=cn[0][0]/clean.width, fy0=cn[0][1]/clean.height,
+        fsx=(cn[1][0]-cn[0][0])/clean.width, fsy=(cn[2][1]-cn[1][1])/clean.height;
+  const inX=sqX+fx0*sq, inY=sqY+fy0*sq, inW=fsx*sq, inH=fsy*sq;
   // pre-straightened camera crop for the post-warp phase
   const S=480,straight=document.createElement('canvas');straight.width=S;straight.height=S;
   try{
     const inv=Prism.homography(quad,[[0,0],[W,0],[W,H],[0,H]]);
     const src=cap.getContext('2d',{willReadFrequently:true}).getImageData(0,0,cap.width,cap.height);
     const dst=straight.getContext('2d').createImageData(S,S);
-    const padU=3.2,scale=S/(W+2*padU);
+    const sx2=S, sy2=Math.round(S*H/W);
+    const padU=0,scale=S/W;
     for(let y=0;y<S;y++)for(let x=0;x<S;x++){
-      const p=Prism.map(inv,x/scale-padU,y/scale-padU);
+      const p=Prism.map(inv,x/scale,y/(S/H));
       const sx=Math.round(p[0]),sy=Math.round(p[1]),di=(y*S+x)*4;
       if(sx<0||sy<0||sx>=cap.width||sy>=cap.height){dst.data[di+3]=0;continue;}
       const si=(sy*cap.width+sx)*4;
@@ -923,7 +927,7 @@ function scanSuccess(cap,res,text,code6){
     const bx=quad[3][0]+(quad[2][0]-quad[3][0])*u, by=quad[3][1]+(quad[2][1]-quad[3][1])*u;
     return [ax+(bx-ax)*v, ay+(by-ay)*v];
   };
-  const sqPt=(u,v)=>[sqX+u*sq,sqY+v*sq];
+  const sqPt=(u,v)=>[inX+u*inW,inY+v*inH];
   // reticle start pose: wider, slightly rotated/translated -> converges onto real corners
   const startQ=quad.map(p=>{
     const dx=p[0]-qC[0],dy=p[1]-qC[1],a=-0.12;
@@ -954,7 +958,7 @@ function scanSuccess(cap,res,text,code6){
   }
   function drawWarped(k){
     if(k<=0.001){g.drawImage(cap,0,0);return;}
-    if(k>=0.999){g.drawImage(straight,sqX,sqY,sq,sq);return;}
+    if(k>=0.999){g.drawImage(straight,inX,inY,inW,inH);return;}
     g.save();
     g.filter='contrast('+(1+0.35*k)+') saturate('+(1+0.25*k)+') brightness('+(1+0.06*k)+')';
     for(let j=0;j<N;j++)for(let i=0;i<N;i++){
@@ -971,12 +975,13 @@ function scanSuccess(cap,res,text,code6){
   const stamped=new Uint8Array(W*H);
   const rLayer=document.createElement('canvas');rLayer.width=ow;rLayer.height=oh;
   const rg=rLayer.getContext('2d');
-  const cw=sq/W,ch=sq/H;
-  const cellSrc=(i,j)=>[(i/W)*clean.width,(j/H)*clean.height,clean.width/W,clean.height/H];
-  const cellDst=(i,j)=>[sqX+i*cw,sqY+j*ch,cw,ch];
+  const cw=inW/W,ch=inH/H;
+  const csw=(cn[1][0]-cn[0][0])/W, csh=(cn[2][1]-cn[1][1])/H;
+  const cellSrc=(i,j)=>[cn[0][0]+i*csw,cn[0][1]+j*csh,csw,csh];
+  const cellDst=(i,j)=>[inX+i*cw,inY+j*ch,cw,ch];
   const cellT=(i,j)=>{
-    const rowY=sqY+(j+.5)*ch;
-    const f=Math.min(1,Math.max(0,(rowY-(sqY-20))/(sq+40)));
+    const rowY=inY+(j+.5)*ch;
+    const f=Math.min(1,Math.max(0,(rowY-(inY-20))/(inH+40)));
     return tSweep+PSC*f+((i*7+j*13)%3)*28;
   };
   function stamp(i,j){
@@ -1012,7 +1017,7 @@ function scanSuccess(cap,res,text,code6){
     // resolved layer + resolving cells
     if(t>tSweep){
       g.drawImage(rLayer,0,0);
-      const yTop=sqY-20,sy=yTop+(sq+40)*eIO(Math.min(1,(t-tSweep)/PSC));
+      const yTop=inY-20,sy=yTop+(inH+40)*eIO(Math.min(1,(t-tSweep)/PSC));
       for(let j=0;j<H;j++)for(let i=0;i<W;i++){
         const idx=j*W+i;if(stamped[idx])continue;
         const r=cellT(i,j),a=t-r;
@@ -1030,8 +1035,8 @@ function scanSuccess(cap,res,text,code6){
       if(t<tSweep+PSC+60){
         const grd=g.createLinearGradient(0,sy-46,0,sy+46);
         grd.addColorStop(0,'rgba(46,184,217,0)');grd.addColorStop(.5,'rgba(140,240,255,.5)');grd.addColorStop(1,'rgba(46,184,217,0)');
-        g.fillStyle=grd;g.fillRect(sqX-14,sy-46,sq+28,92);
-        g.fillStyle='rgba(190,250,255,.95)';g.fillRect(sqX-14,sy-1.2,sq+28,2.4);
+        g.fillStyle=grd;g.fillRect(inX-14,sy-46,inW+28,92);
+        g.fillStyle='rgba(190,250,255,.95)';g.fillRect(inX-14,sy-1.2,inW+28,2.4);
       }
     }
     // reticle: converges from wide pose onto the REAL detected corners, snap at PA
@@ -1108,8 +1113,9 @@ window.__mkScene=function(kind){
   cx.fillStyle=bg;cx.fillRect(0,0,640,480);
   let truth;
   if(kind==='skew'){
-    truth=[[150,118],[468,82],[516,384],[172,404]];
-    const H=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],truth);
+    const cc0=Prism.corners(code.layout);
+    truth=cc0.map(p=>Prism.map(Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]),p[0],p[1]));
+    const H=Prism.homography([[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]],[[150,118],[468,82],[516,384],[172,404]]);
     const src=rc.getContext('2d').getImageData(0,0,rc.width,rc.height);
     const out=cx.getImageData(0,0,640,480);
     const inv=Prism.homography(truth,[[0,0],[rc.width,0],[rc.width,rc.height],[0,rc.height]]);
@@ -1122,8 +1128,8 @@ window.__mkScene=function(kind){
     cx.putImageData(out,0,0);
   }else{
     cx.save();cx.translate(320,240);cx.rotate(.17);cx.drawImage(rc,-rc.width/2,-rc.height/2);cx.restore();
-    const c=Math.cos(.17),s2=Math.sin(.17),hw=rc.width/2,hh=rc.height/2;
-    truth=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(p=>[320+p[0]*c-p[1]*s2,240+p[0]*s2+p[1]*c]);
+    const c=Math.cos(.17),s2=Math.sin(.17);
+    truth=Prism.corners(code.layout).map(p=>{const x=p[0]-rc.width/2,y=p[1]-rc.height/2;return [320+x*c-y*s2,240+x*s2+y*c];});
   }
   // camera noise
   const id=cx.getImageData(0,0,640,480);
