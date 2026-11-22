@@ -1014,12 +1014,11 @@ function scanSuccess(cap,res,text,code6){
   if(CAP){
     // deterministic frame-by-frame capture: manual clock, composite cam+overlay
     const fps=CAP.fps||30;
-    for(let t=0;;t+=1000/fps){
+    for(let t=0;t<T-1;t+=1000/fps){
       draw(T0+t);
       CAP.ctx.drawImage(cap,0,0,CAP.cw,CAP.ch);
       CAP.ctx.drawImage(ov,0,0,CAP.cw,CAP.ch);
       CAP.frames.push(CAP.canvas.toDataURL('image/jpeg',0.85));
-      if(CAP.done||CAP.frames.length>400)break;
     }
     // tail: hold last frame ~0.7s so the success beat reads
     const last=CAP.frames[CAP.frames.length-1];
