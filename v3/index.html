@@ -961,7 +961,7 @@ function scanSuccess(cap,res,text,code6){
       g.restore();
       g.save();g.strokeStyle='rgba(120,235,255,.9)';g.lineWidth=1.5;g.shadowColor='#2EB8D9';g.shadowBlur=12;
       g.beginPath();g.roundRect(x0,y0,size,size,18);g.stroke();g.restore();
-    }else if(t<T){ // resolve sweep + settle
+    }else if(t<D1+D2+D3){ // resolve sweep + settle
       const k=(t-D1-D2)/D3;
       const size=sq,x0=cx0-size/2,y0=cy0-size/2;
       g.save();g.beginPath();g.roundRect(x0,y0,size,size,18);g.clip();
