@@ -108,8 +108,49 @@ h1,h2,h3{font-family:var(--font-display);font-weight:560;line-height:1.12;letter
 /* ---------- layout shell ---------- */
 #view{min-height:100dvh;display:flex;flex-direction:column}
 .screen{flex:1;display:flex;flex-direction:column;width:100%;max-width:460px;margin:0 auto;padding-bottom:96px;
-  padding:calc(var(--sp-5) + env(safe-area-inset-top)) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom));
-  animation:screen-in .32s var(--ease)}
+  padding:calc(var(--sp-5) + env(safe-area-inset-top)) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom))}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.screen>*{opacity:0;animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
+.screen>*:nth-child(1){animation-delay:.02s}
+.screen>*:nth-child(2){animation-delay:.10s}
+.screen>*:nth-child(3){animation-delay:.18s}
+.screen>*:nth-child(4){animation-delay:.26s}
+.screen>*:nth-child(5){animation-delay:.33s}
+.screen>*:nth-child(6){animation-delay:.40s}
+.screen>*:nth-child(7){animation-delay:.46s}
+.screen>*:nth-child(n+8){animation-delay:.52s}
+.screen .stag>*{opacity:0;animation:rise .55s cubic-bezier(.22,1,.36,1) forwards}
+.screen .stag>*:nth-child(1){animation-delay:.30s}
+.screen .stag>*:nth-child(2){animation-delay:.40s}
+.screen .stag>*:nth-child(n+3){animation-delay:.48s}
+.tile{opacity:0;animation:rise .45s cubic-bezier(.22,1,.36,1) forwards}
+.tile:nth-child(1){animation-delay:142ms}
+.tile:nth-child(2){animation-delay:164ms}
+.tile:nth-child(3){animation-delay:186ms}
+.tile:nth-child(4){animation-delay:208ms}
+.tile:nth-child(5){animation-delay:230ms}
+.tile:nth-child(6){animation-delay:252ms}
+.tile:nth-child(7){animation-delay:274ms}
+.tile:nth-child(8){animation-delay:296ms}
+.tile:nth-child(9){animation-delay:318ms}
+.tile:nth-child(10){animation-delay:340ms}
+.tile:nth-child(11){animation-delay:362ms}
+.tile:nth-child(12){animation-delay:384ms}
+.tile:nth-child(13){animation-delay:406ms}
+.tile:nth-child(14){animation-delay:428ms}
+.tile:nth-child(15){animation-delay:450ms}
+.tile:nth-child(16){animation-delay:472ms}
+.tile:nth-child(17){animation-delay:494ms}
+.tile:nth-child(18){animation-delay:516ms}
+.tile:nth-child(19){animation-delay:538ms}
+.tile:nth-child(20){animation-delay:560ms}
+.tile:nth-child(21){animation-delay:582ms}
+.tile:nth-child(22){animation-delay:604ms}
+.tile:nth-child(23){animation-delay:626ms}
+.tile:nth-child(24){animation-delay:648ms}
+.tile:nth-child(25){animation-delay:670ms}
+.tile:nth-child(26){animation-delay:692ms}
+
 @keyframes screen-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(min-width:960px){
   .screen{max-width:600px}
@@ -342,7 +383,7 @@ function renderWelcome(){
   const v=$('#view');v.innerHTML='';
   const s=el('div','screen center-wrap');
   s.innerHTML=`
-    <div style="text-align:center;margin-bottom:var(--sp-7)">
+    <div class="stag" style="text-align:center;margin-bottom:var(--sp-7)">
       <div id="wIcon" style="width:96px;height:96px;margin:0 auto var(--sp-4)"></div>
       <h1 style="font-size:38px;margin-bottom:10px">Alphabet <span class="serif-i" style="color:var(--a-ink)">Us</span></h1>
       <p style="color:var(--ink-2);font-size:16px;max-width:300px;margin:0 auto">A private A to Z of dates for the two of you. Plan it, do it, keep the photo.</p>
