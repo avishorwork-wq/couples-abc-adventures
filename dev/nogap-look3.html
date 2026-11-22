@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>soft corners</title>
+<style>body{font-family:system-ui;background:#eef;margin:0;padding:24px;display:flex;gap:24px;flex-wrap:wrap}
+figure{margin:0;background:#fff;border-radius:16px;padding:0;box-shadow:0 2px 10px rgb(0 0 0/.08);overflow:hidden}
+figcaption{text-align:center;font-size:13px;color:#666;padding:8px}
+canvas{width:280px;height:auto;display:block}</style>
+<figure><canvas id="a"></canvas><figcaption>notch-free (sharp TL / BR corners)</figcaption></figure>
+<figure><canvas id="b"></canvas><figcaption>soft corners (corner hexes trimmed)</figcaption></figure>
+<script src="prism.js"></script>
+<script src="prism-nogap.js"></script>
+<script>
+const link='https://avishorwork-wq.github.io/couples-abc-adventures/#/join=K7QX2M';
+const bytes=new TextEncoder().encode(link);
+const a=PrismNG.encode(bytes,{});
+const b=PrismNG.encode(bytes,{});
+const l=b.layout;
+for(const cc of l.cells){if((cc.i===0&&cc.j===0)||(cc.i===l.C-1&&cc.j===l.R-1))b.symbols[cc.index]=8;}
+Prism.render(a,10,document.getElementById('a'));
+Prism.render(b,10,document.getElementById('b'));
+</script>
