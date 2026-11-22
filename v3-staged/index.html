@@ -714,8 +714,8 @@ async function startScan(box){
         return;
       }
       if(auto.evState==='eval'){
-        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<4000);
-        if(w2.length<8)return;
+        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<6000); /* wide enough for the slower corroborating read path to weigh in before judging */
+        if(w2.length<12)return;
         auto.lastAction=now;auto.busy=true;
         try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
           if(improved){auto.evState='idle';auto.evTried=2; /* accepted: stop stepping */}
@@ -727,8 +727,8 @@ async function startScan(box){
         return;
       }
       if(auto.fState==='eval'){
-        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<4000);
-        if(w2.length<8)return;
+        const w2=auto.win.filter(x=>x.t>auto.evalT0+600&&now-x.t<6000); /* wide enough for the slower corroborating read path to weigh in before judging */
+        if(w2.length<12)return;
         auto.lastAction=now;auto.busy=true;
         try{const improved=autoMed(w2)>=auto.prevMed+0.05||w2.some(x=>x.best>=0.45);
           if(improved){auto.fState='idle';auto.fTried=2; /* accepted: keep the distance */}
