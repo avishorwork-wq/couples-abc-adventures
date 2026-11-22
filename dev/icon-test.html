@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>icon engine JS vs Python</title>
+<body><pre id="out">running...</pre>
+<script src="icon-recolor.js"></script>
+<script>
+(async()=>{
+const out=[];
+const load=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
+const px=async(src)=>{const img=await load(src);const cv=document.createElement('canvas');
+  cv.width=1024;cv.height=1024;const cx=cv.getContext('2d');cx.drawImage(img,0,0);
+  return cx.getImageData(0,0,1024,1024).data;};
+await IconRecolor.init('master-1024.png');
+for(const [name,p,a,ref] of [['identity','#1c0363','#f8519b','ref-identity-1024.png'],['avitest','#FF00FF','#D99A45','ref-avitest-1024.png']]){
+  const js=IconRecolor.render(p,a).data;
+  const py=await px(ref);
+  let sum=0,mx=0;const n=js.length/4;
+  const hist=new Uint32Array(256);
+  for(let i=0;i<js.length;i+=4)for(let k=0;k<3;k++){
+    const d=Math.abs(js[i+k]-py[i+k]);sum+=d;if(d>mx)mx=d;hist[d]++;
+  }
+  const mean=sum/(n*3);
+  let acc=0,p99=0;for(let v=255;v>=0;v--){acc+=hist[v];if(acc/(n*3)>=0.01){p99=v;break;}}
+  out.push(name+': mean='+mean.toFixed(3)+' p99='+p99+' max='+mx);
+}
+document.getElementById('out').textContent=out.join('\n');
+})();
+</script>
